@@ -8,7 +8,7 @@ export default function HomePage() {
   return (
     <div className="bg-background">
       {/* Hero Section */}
-      <section className="container mx-auto max-w-7xl px-4 py-16 md:py-24">
+      <section className="container mx-auto max-w-7xl px-8 py-16 md:py-24">
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
           <div className="space-y-6">
             <h1 className="font-headline text-5xl font-extrabold tracking-tighter text-foreground md:text-7xl">
@@ -50,7 +50,7 @@ export default function HomePage() {
 
       {/* Values Section */}
       <section id="who-we-help" className="py-16 md:py-24 bg-secondary/30">
-        <div className="container mx-auto max-w-7xl px-4">
+        <div className="container mx-auto max-w-7xl px-8">
             <div className="text-center mb-12">
                 <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground md:text-5xl">
                     Where Every Child Thrives
@@ -117,7 +117,7 @@ export default function HomePage() {
 
         {/* Login Prompt Section */}
         <section className="py-16 md:py-24">
-            <div className="container mx-auto max-w-4xl px-4 text-center">
+            <div className="container mx-auto max-w-4xl px-8 text-center">
                  <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground md:text-5xl">
                     Are you a Maes Y Morfa parent?
                 </h2>

@@ -10,7 +10,7 @@ export function PublicFooter() {
 
   return (
     <footer className="bg-foreground text-background">
-      <div className="container mx-auto max-w-7xl px-4 py-16">
+      <div className="container mx-auto max-w-7xl px-8 py-16">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
             <div className="col-span-2 md:col-span-1 mb-8 md:mb-0">
                  <Link href="/" className="flex items-center gap-2">
