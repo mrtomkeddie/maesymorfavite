@@ -5,9 +5,9 @@ import { Menu, School, Search } from 'lucide-react';
 
 export function PublicHeader() {
   const navLinks = [
-    { href: '#solutions', label: 'Solutions' },
-    { href: '#who-we-help', label: 'Who we help' },
-    { href: '#resources', label: 'Resources' },
+    { href: '#about', label: 'About Us' },
+    { href: '#news', label: 'News' },
+    { href: '#contact', label: 'Contact' },
   ];
 
   return (
@@ -15,7 +15,7 @@ export function PublicHeader() {
       <div className="container flex h-20 max-w-7xl items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-bold">
           <School className="h-7 w-7 text-primary" />
-          <span className="text-xl font-extrabold tracking-tight">Juniper</span>
+          <span className="text-xl font-extrabold tracking-tight">Maes Y Morfa</span>
         </Link>
 
         <nav className="hidden md:flex md:items-center md:gap-8 text-base font-medium">
@@ -33,9 +33,6 @@ export function PublicHeader() {
           <Button asChild className="hidden sm:inline-flex">
             <Link href="/login">Parent Portal</Link>
           </Button>
-           <Button variant="outline" className="hidden sm:inline-flex">
-            <Link href="#">Contact Sales</Link>
-          </Button>
 
           <Sheet>
             <SheetTrigger asChild>
@@ -48,7 +45,7 @@ export function PublicHeader() {
               <div className="flex flex-col gap-6 pt-10">
                 <Link href="/" className="flex items-center gap-2 font-bold text-xl">
                   <School className="h-7 w-7 text-primary" />
-                  <span>Juniper</span>
+                  <span>Maes Y Morfa</span>
                 </Link>
                 <nav className="flex flex-col gap-4">
                 {navLinks.map((link) => (
@@ -60,9 +57,6 @@ export function PublicHeader() {
                  <div className="flex flex-col gap-2 mt-4">
                      <Button asChild>
                         <Link href="/login">Parent Portal</Link>
-                    </Button>
-                    <Button variant="outline">
-                        <Link href="#">Contact Sales</Link>
                     </Button>
                  </div>
               </div>

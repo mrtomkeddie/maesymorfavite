@@ -3,21 +3,21 @@ import Link from 'next/link';
 
 export function PublicFooter() {
   const footerLinks = {
-      Solutions: ['For Primary', 'For Secondary', 'For MATs', 'For Local Authorities'],
-      'Who we help': ['Primary Schools', 'Secondary Schools', 'MATs', 'Finance Teams'],
-      Resources: ['Blog', 'Case Studies', 'Webinars', 'Whitepapers'],
-      'About us': ['Our story', 'Careers', 'Contact us', 'Partners'],
+      "Our School": ['About Us', 'Our Vision', 'Admissions', 'Contact Us'],
+      'For Parents': ['Parent Portal', 'Term Dates', 'Uniform', 'School Meals'],
+      'Curriculum': ['Early Years', 'Key Stage 1', 'Key Stage 2', 'Extra-Curricular'],
   }
 
   return (
     <footer className="bg-foreground text-background">
       <div className="container mx-auto max-w-7xl px-4 py-16">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
-            <div className="col-span-2 md:col-span-1">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+            <div className="col-span-2 md:col-span-1 mb-8 md:mb-0">
                  <Link href="/" className="flex items-center gap-2">
                     <School className="h-7 w-7 text-primary" />
-                    <span className="font-extrabold text-xl">Juniper</span>
+                    <span className="font-extrabold text-xl">Maes Y Morfa</span>
                 </Link>
+                <p className="text-sm text-background/70 mt-4">Maes Y Morfa Primary School <br/>Llanelli, SA15 1EX</p>
             </div>
             {Object.entries(footerLinks).map(([title, links]) => (
                 <div key={title} className="space-y-4">
@@ -36,11 +36,11 @@ export function PublicFooter() {
         </div>
         <div className="mt-12 flex flex-col items-center justify-between gap-6 border-t border-background/20 pt-8 md:flex-row">
           <p className="text-center text-sm text-background/60">
-            © {new Date().getFullYear()} Juniper Education. All Rights Reserved.
+            © {new Date().getFullYear()} Maes Y Morfa Primary School. All Rights Reserved.
           </p>
           <nav className="flex gap-4">
             <Link href="#" className="text-sm text-background/60 hover:text-background hover:underline">Privacy Policy</Link>
-            <Link href="#" className="text-sm text-background/60 hover:text-background hover:underline">Terms of Service</Link>
+            <Link href="#" className="text-sm text-background/60 hover:text-background hover:underline">Cookie Policy</Link>
           </nav>
         </div>
       </div>
