@@ -1,14 +1,38 @@
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, School, Search } from 'lucide-react';
+import { useLanguage } from '@/app/(public)/LanguageProvider';
+
+const content = {
+    en: {
+        nav: [
+            { href: '#about', label: 'About' },
+            { href: '#news', label: 'News' },
+            { href: '#contact', label: 'Contact' },
+        ],
+        portal: 'Parent Portal',
+        lang1: 'Cymraeg',
+        lang2: 'English',
+    },
+    cy: {
+        nav: [
+            { href: '#about', label: 'Amdanom Ni' },
+            { href: '#news', label: 'Newyddion' },
+            { href: '#contact', label: 'Cysylltu' },
+        ],
+        portal: 'Porth Rieni',
+        lang1: 'Cymraeg',
+        lang2: 'English',
+    }
+}
 
 export function PublicHeader() {
-  const navLinks = [
-    { href: '#about', label: 'About' },
-    { href: '#news', label: 'News' },
-    { href: '#contact', label: 'Contact' },
-  ];
+  const { language, toggleLanguage } = useLanguage();
+  const t = content[language];
+  const navLinks = t.nav;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -28,15 +52,15 @@ export function PublicHeader() {
 
         <div className="flex items-center gap-2">
            <div className="hidden sm:flex items-center gap-1 border rounded-full p-1 text-sm">
-               <Button variant="ghost" size="sm" className="rounded-full px-3 py-1 h-auto text-xs">Cymraeg</Button>
+               <Button variant="ghost" size="sm" className={`rounded-full px-3 py-1 h-auto text-xs ${language === 'cy' ? 'bg-secondary' : ''}`} onClick={() => toggleLanguage()}>{t.lang1}</Button>
                <div className="w-px h-4 bg-border"></div>
-               <Button variant="ghost" size="sm" className="rounded-full px-3 py-1 h-auto text-xs bg-secondary">English</Button>
+               <Button variant="ghost" size="sm" className={`rounded-full px-3 py-1 h-auto text-xs ${language === 'en' ? 'bg-secondary' : ''}`} onClick={() => toggleLanguage()}>{t.lang2}</Button>
            </div>
            <Button variant="ghost" size="icon">
                 <Search className="h-5 w-5" />
            </Button>
           <Button asChild className="hidden sm:inline-flex">
-            <Link href="/login">Parent Portal</Link>
+            <Link href="/login">{t.portal}</Link>
           </Button>
 
           <Sheet>
@@ -61,7 +85,7 @@ export function PublicHeader() {
                 </nav>
                  <div className="flex flex-col gap-2 mt-4">
                      <Button asChild>
-                        <Link href="/login">Parent Portal</Link>
+                        <Link href="/login">{t.portal}</Link>
                     </Button>
                  </div>
               </div>
