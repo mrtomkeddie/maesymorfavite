@@ -5,7 +5,7 @@ import { Menu, School, Search } from 'lucide-react';
 
 export function PublicHeader() {
   const navLinks = [
-    { href: '#about', label: 'About Us' },
+    { href: '#about', label: 'About' },
     { href: '#news', label: 'News' },
     { href: '#contact', label: 'Contact' },
   ];

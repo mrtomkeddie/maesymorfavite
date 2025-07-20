@@ -3,9 +3,9 @@ import Link from 'next/link';
 
 export function PublicFooter() {
   const footerLinks = {
-      "Our School": ['About Us', 'Our Vision', 'Admissions', 'Contact Us'],
-      'For Parents': ['Parent Portal', 'Term Dates', 'Uniform', 'School Meals'],
-      'Curriculum': ['Early Years', 'Key Stage 1', 'Key Stage 2', 'Extra-Curricular'],
+      "Quick Links": ['About', 'Vision', 'Admissions', 'Contact'],
+      'For Parents': ['Parent Portal', 'Key Dates', 'Uniform', 'Meals'],
+      'Curriculum': ['Early Years', 'Key Stage 1', 'Key Stage 2', 'Beyond the Classroom'],
   }
 
   return (
