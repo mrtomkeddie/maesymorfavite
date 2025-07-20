@@ -29,7 +29,6 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -37,7 +36,6 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const [isAuth, setIsAuth] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {
-    // In a real app, this would be a check against a session context or token
     const authStatus = localStorage.getItem('isAuthenticated') === 'true';
     setIsAuth(authStatus);
     if (!authStatus) {
@@ -77,7 +75,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar variant="inset" collapsible="icon">
         <SidebarHeader>
           <div className="flex items-center gap-2">
             <School className="w-7 h-7 text-primary" />
