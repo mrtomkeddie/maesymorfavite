@@ -27,6 +27,11 @@ export function PublicHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+           <div className="hidden sm:flex items-center gap-1 border rounded-full p-1 text-sm">
+               <Button variant="ghost" size="sm" className="rounded-full px-3 py-1 h-auto text-xs">Cymraeg</Button>
+               <div className="w-px h-4 bg-border"></div>
+               <Button variant="ghost" size="sm" className="rounded-full px-3 py-1 h-auto text-xs bg-secondary">English</Button>
+           </div>
            <Button variant="ghost" size="icon">
                 <Search className="h-5 w-5" />
            </Button>
