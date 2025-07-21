@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import Image from 'next/image';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import React from "react";
 
 const content = {
     en: {
