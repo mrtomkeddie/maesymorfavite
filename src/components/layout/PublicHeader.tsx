@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -52,9 +53,9 @@ export function PublicHeader() {
 
         <div className="flex items-center gap-2">
            <div className="hidden sm:flex items-center gap-1 border rounded-full p-1 text-sm">
-               <Button variant="ghost" size="sm" className={`rounded-full px-3 py-1 h-auto text-xs ${language === 'cy' ? 'bg-secondary' : ''}`} onClick={() => toggleLanguage()}>{t.lang1}</Button>
+               <Button variant={language === 'cy' ? 'secondary' : 'ghost'} size="sm" className={`rounded-full px-3 py-1 h-auto text-xs`} onClick={() => setLanguage('cy')}>{t.lang1}</Button>
                <div className="w-px h-4 bg-border"></div>
-               <Button variant="ghost" size="sm" className={`rounded-full px-3 py-1 h-auto text-xs ${language === 'en' ? 'bg-secondary' : ''}`} onClick={() => toggleLanguage()}>{t.lang2}</Button>
+               <Button variant={language === 'en' ? 'secondary' : 'ghost'} size="sm" className={`rounded-full px-3 py-1 h-auto text-xs`} onClick={() => setLanguage('en')}>{t.lang2}</Button>
            </div>
            <Button variant="ghost" size="icon">
                 <Search className="h-5 w-5" />
