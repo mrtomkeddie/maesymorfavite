@@ -115,9 +115,8 @@ export default function HomePage() {
                    {t.hero.body}
                 </p>
                 <div className="flex gap-4">
-                    <Button size="lg">{t.hero.button1} <ArrowRight /></Button>
-                    <Button size="lg" variant="outline" asChild>
-                        <Link href="/login">{t.hero.button2}</Link>
+                    <Button size="lg" asChild>
+                        <Link href="/about">{t.hero.button1} <ArrowRight /></Link>
                     </Button>
                 </div>
               </div>
