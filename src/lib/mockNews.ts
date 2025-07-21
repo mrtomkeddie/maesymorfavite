@@ -1,3 +1,4 @@
+
 export type Attachment = {
     name: string;
     url: string;
@@ -13,7 +14,9 @@ export type NewsPost = {
     body_cy: string;
     date: string; // ISO 8601 format
     category: 'Urgent' | 'Event' | 'General';
-    attachments: Attachment[];
+    attachments: Attachment[]; // This can be deprecated in favor of attachmentUrl
+    attachmentUrl?: string;
+    attachmentName?: string;
     isUrgent: boolean;
     published: boolean;
     createdBy: string;
@@ -89,12 +92,10 @@ export const news: NewsPost[] = newsData_en.map((post_en, index) => {
         date: date.toISOString(),
         category: post_en.category as 'Urgent' | 'Event' | 'General',
         isUrgent: post_en.isUrgent,
-        attachments: post_en.category === 'Event' ? [
-            { name: 'Event-Poster.jpg', url: 'https://placehold.co/600x400.png', type: 'image' },
-            { name: 'Event-Details.pdf', url: '#', type: 'pdf' }
-        ] : [],
+        attachments: [],
         published: true,
         createdBy: 'admin@morfa.sch.uk',
         lastEdited: new Date().toISOString()
     };
 });
+

@@ -7,9 +7,9 @@ export default function AdminDashboardPage() {
 
     const managementCards = [
         { title: 'News & Alerts', icon: Newspaper, href: '/admin/news', description: 'Manage school announcements' },
-        { title: 'Calendar Events', icon: Calendar, href: '/admin/calendar', description: 'Update the school calendar' },
-        { title: 'Staff Directory', icon: Users, href: '/admin/staff', description: 'Edit staff profiles' },
-        { title: 'Documents', icon: FileText, href: '/admin/documents', description: 'Upload policies and menus' },
+        { title: 'Calendar Events', icon: Calendar, href: '#', description: 'Update the school calendar' },
+        { title: 'Staff Directory', icon: Users, href: '#', description: 'Edit staff profiles' },
+        { title: 'Documents', icon: FileText, href: '#', description: 'Upload policies and menus' },
     ];
 
     return (
