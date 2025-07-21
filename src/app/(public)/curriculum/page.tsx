@@ -5,6 +5,7 @@ import { useLanguage } from './../LanguageProvider';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { School, ArrowRight, Phone, Mail, BookOpen, Leaf, Puzzle, Users } from "lucide-react";
+import Link from 'next/link';
 
 const content = {
   en: {
@@ -111,8 +112,10 @@ export default function CurriculumPage() {
                                         <CardDescription>{stage.summary}</CardDescription>
                                     </CardContent>
                                     <div className="p-6 pt-0">
-                                        <Button variant="outline" className="w-full">
-                                            {stage.details} <ArrowRight className="ml-2 h-4 w-4" />
+                                        <Button variant="outline" className="w-full" asChild>
+                                            <Link href="/curriculum">
+                                              {stage.details} <ArrowRight className="ml-2 h-4 w-4" />
+                                            </Link>
                                         </Button>
                                     </div>
                                 </Card>

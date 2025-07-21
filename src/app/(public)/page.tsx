@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -32,9 +33,10 @@ const content = {
         description: 'Respect, kindness, and support are at the heart of everything we do.'
       },
       curriculum: {
-        title: 'Creative Curriculum',
+        title: 'Our Curriculum',
         description: 'Inspiring lessons, hands-on learning, and room for every talent to shine.'
-      }
+      },
+      learnMoreButton: 'Learn More About Our Curriculum'
     },
     latestNews: {
       heading: 'Latest News',
@@ -69,9 +71,10 @@ const content = {
         description: 'Mae parch, caredigrwydd a chefnogaeth wrth galon popeth a wnawn.'
       },
       curriculum: {
-        title: 'Cwricwlwm Creadigol',
+        title: 'Ein Cwricwlwm',
         description: 'Gwersi ysbrydoledig, dysgu ymarferol, a lle i bob talent ddisgleirio.'
-      }
+      },
+      learnMoreButton: 'Dysgwch Fwy am Ein Cwricwlwm'
     },
     latestNews: {
         heading: 'Newyddion Diweddaraf',
@@ -149,60 +152,71 @@ export default function HomePage() {
                 </h2>
             </div>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="group overflow-hidden rounded-2xl border-2 border-accent bg-accent/50 shadow-sm transition-all hover:border-primary/50 hover:shadow-lg">
-                <CardHeader>
-                    <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white shadow-inner">
-                            <Sparkles className="h-6 w-6 text-primary" />
-                        </div>
-                        <h3 className="font-headline text-2xl font-bold">{t.features.mission.title}</h3>
-                    </div>
-                     <CardDescription className="mt-4">
-                        {t.features.mission.description}
-                     </CardDescription>
-                </CardHeader>
-              <CardContent>
-                <div className="aspect-video w-full overflow-hidden">
-                    <Image src="https://placehold.co/600x400.png" alt="A child focused on a creative task" data-ai-hint="child learning" width={600} height={400} className="h-full w-full rounded-lg object-cover transition-transform group-hover:scale-105" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="group overflow-hidden rounded-2xl border-2 border-transparent bg-background shadow-sm transition-all hover:border-primary/50 hover:shadow-lg">
-                <CardHeader>
-                    <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary shadow-inner">
-                            <HeartHandshake className="h-6 w-6 text-primary" />
-                        </div>
-                        <h3 className="font-headline text-2xl font-bold">{t.features.community.title}</h3>
-                    </div>
-                     <CardDescription className="mt-4">
-                       {t.features.community.description}
-                     </CardDescription>
-                </CardHeader>
-              <CardContent>
-                <div className="aspect-video w-full overflow-hidden">
-                    <Image src="https://placehold.co/600x400.png" alt="Children working together on a project" data-ai-hint="children collaborating" width={600} height={400} className="h-full w-full rounded-lg object-cover transition-transform group-hover:scale-105" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="group overflow-hidden rounded-2xl border-2 border-transparent bg-background shadow-sm transition-all hover:border-primary/50 hover:shadow-lg">
-                <CardHeader>
-                    <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary shadow-inner">
-                            <BookOpen className="h-6 w-6 text-primary" />
-                        </div>
-                        <h3 className="font-headline text-2xl font-bold">{t.features.curriculum.title}</h3>
-                    </div>
-                     <CardDescription className="mt-4">
-                       {t.features.curriculum.description}
-                     </CardDescription>
-                </CardHeader>
-              <CardContent>
-                <div className="aspect-video w-full overflow-hidden">
-                    <Image src="https://placehold.co/600x400.png" alt="A school book open to a colourful page" data-ai-hint="school book" width={600} height={400} className="h-full w-full rounded-lg object-cover transition-transform group-hover:scale-105" />
-                </div>
-              </CardContent>
-            </Card>
+            <Link href="/about" className="block group">
+              <Card className="overflow-hidden rounded-2xl border-2 border-accent bg-accent/50 shadow-sm transition-all h-full hover:border-primary/50 hover:shadow-lg">
+                  <CardHeader>
+                      <div className="flex items-center gap-4">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white shadow-inner">
+                              <Sparkles className="h-6 w-6 text-primary" />
+                          </div>
+                          <h3 className="font-headline text-2xl font-bold">{t.features.mission.title}</h3>
+                      </div>
+                       <CardDescription className="mt-4">
+                          {t.features.mission.description}
+                       </CardDescription>
+                  </CardHeader>
+                <CardContent>
+                  <div className="aspect-video w-full overflow-hidden">
+                      <Image src="https://placehold.co/600x400.png" alt="A child focused on a creative task" data-ai-hint="child learning" width={600} height={400} className="h-full w-full rounded-lg object-cover transition-transform group-hover:scale-105" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/about" className="block group">
+              <Card className="overflow-hidden rounded-2xl border-2 border-transparent bg-background shadow-sm transition-all h-full hover:border-primary/50 hover:shadow-lg">
+                  <CardHeader>
+                      <div className="flex items-center gap-4">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary shadow-inner">
+                              <HeartHandshake className="h-6 w-6 text-primary" />
+                          </div>
+                          <h3 className="font-headline text-2xl font-bold">{t.features.community.title}</h3>
+                      </div>
+                       <CardDescription className="mt-4">
+                         {t.features.community.description}
+                       </CardDescription>
+                  </CardHeader>
+                <CardContent>
+                  <div className="aspect-video w-full overflow-hidden">
+                      <Image src="https://placehold.co/600x400.png" alt="Children working together on a project" data-ai-hint="children collaborating" width={600} height={400} className="h-full w-full rounded-lg object-cover transition-transform group-hover:scale-105" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/curriculum" className="block group">
+              <Card className="overflow-hidden rounded-2xl border-2 border-transparent bg-background shadow-sm transition-all h-full hover:border-primary/50 hover:shadow-lg">
+                  <CardHeader>
+                      <div className="flex items-center gap-4">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary shadow-inner">
+                              <BookOpen className="h-6 w-6 text-primary" />
+                          </div>
+                          <h3 className="font-headline text-2xl font-bold">{t.features.curriculum.title}</h3>
+                      </div>
+                       <CardDescription className="mt-4">
+                         {t.features.curriculum.description}
+                       </CardDescription>
+                  </CardHeader>
+                <CardContent>
+                  <div className="aspect-video w-full overflow-hidden">
+                      <Image src="https://placehold.co/600x400.png" alt="A school book open to a colourful page" data-ai-hint="school book" width={600} height={400} className="h-full w-full rounded-lg object-cover transition-transform group-hover:scale-105" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+           <div className="text-center mt-12">
+            <Button asChild size="lg">
+                <Link href="/curriculum">{t.features.learnMoreButton}</Link>
+            </Button>
           </div>
         </div>
       </section>
