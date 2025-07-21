@@ -12,6 +12,7 @@ const content = {
         nav: [
             { href: '/about', label: 'About' },
             { href: '/news', label: 'News' },
+            { href: '/admissions', label: 'Admissions' },
             { href: '#contact', label: 'Contact' },
         ],
         portal: 'Parent Portal',
@@ -22,6 +23,7 @@ const content = {
         nav: [
             { href: '/about', label: 'Amdanom Ni' },
             { href: '/news', label: 'Newyddion' },
+            { href: '/admissions', label: 'Derbyniadau' },
             { href: '#contact', label: 'Cysylltu' },
         ],
         portal: 'Porth Rieni',
