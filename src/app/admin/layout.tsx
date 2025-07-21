@@ -168,11 +168,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
-          <header className="flex h-16 items-center justify-between border-b bg-background px-6 md:justify-end">
-            <div className="md:hidden">
+          <header className="flex h-16 items-center justify-between border-b bg-background px-6 lg:justify-end">
+            <div className="lg:hidden">
               <SidebarTrigger />
             </div>
-            <h1 className="text-lg font-semibold md:hidden">Admin Panel</h1>
+            <h1 className="text-lg font-semibold lg:hidden">Admin Panel</h1>
           </header>
           <main className="p-4 md:p-6 lg:p-8">
             {children}
