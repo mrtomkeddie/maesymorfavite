@@ -36,6 +36,7 @@ const formSchema = z.object({
   isUrgent: z.boolean().default(false),
   showOnHomepage: z.boolean().default(false),
   attachment: z.any().optional(),
+  crossPostToNews: z.boolean().default(false),
 });
 
 type CalendarFormValues = z.infer<typeof formSchema>;
@@ -59,6 +60,7 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
       isUrgent: existingEvent?.isUrgent || false,
       showOnHomepage: existingEvent?.showOnHomepage || false,
       attachment: undefined,
+      crossPostToNews: !!existingEvent?.linkedNewsPostId,
     },
   });
 
@@ -81,6 +83,16 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
 
       const eventData = {
         title_en: values.title_en,
+        start: values.start.toISOString(),
+        description_en: values.description_en,
+        isUrgent: values.isUrgent,
+        showOnHomepage: values.showOnHomepage,
+        attachmentUrl: attachmentUrl,
+        attachmentName: attachmentName,
+      };
+
+      const eventPayload = {
+        title_en: values.title_en,
         title_cy: values.title_en, // For now, Welsh is same as English
         description_en: values.description_en,
         description_cy: values.description_en,
@@ -92,16 +104,18 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
         attachmentName: attachmentName,
         tags: [], // Simplified for now
         published: true,
+        linkedNewsPostId: existingEvent?.linkedNewsPostId, // Preserve existing link
       };
 
+
       if (existingEvent) {
-        await updateCalendarEvent(existingEvent.id, eventData);
+        await updateCalendarEvent(existingEvent.id, eventPayload, values.crossPostToNews);
         toast({
           title: 'Success!',
           description: 'Calendar event has been updated.',
         });
       } else {
-        await addCalendarEvent(eventData);
+        await addCalendarEvent(eventPayload, values.crossPostToNews);
         toast({
           title: 'Success!',
           description: 'New calendar event has been created.',
@@ -218,6 +232,17 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
                     </FormDescription>
                 </div>
                 <FormField control={form.control} name="showOnHomepage" render={({ field }) => (
+                    <FormItem><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>
+                )} />
+            </div>
+             <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                    <FormLabel>Cross-post to News</FormLabel>
+                    <FormDescription>
+                        Automatically create a news item for this event.
+                    </FormDescription>
+                </div>
+                <FormField control={form.control} name="crossPostToNews" render={({ field }) => (
                     <FormItem><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>
                 )} />
             </div>

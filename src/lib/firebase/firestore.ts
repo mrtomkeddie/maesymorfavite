@@ -22,7 +22,7 @@ export const getNews = async (): Promise<NewsPostWithId[]> => {
 };
 
 // Add a new news post
-export const addNews = async (newsData: Omit<NewsPost, 'id' | 'attachments'>) => {
+export const addNews = async (newsData: Omit<NewsPost, 'id' | 'attachments' | 'slug'>): Promise<string> => {
     // If a new post is marked as urgent, unmark all others
     if (newsData.isUrgent) {
         const allNews = await getNews();
@@ -32,7 +32,9 @@ export const addNews = async (newsData: Omit<NewsPost, 'id' | 'attachments'>) =>
             }
         }
     }
-    await addDoc(newsCollection, newsData);
+    const slug = newsData.title_en.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+    const docRef = await addDoc(newsCollection, {...newsData, slug});
+    return docRef.id;
 };
 
 // Update an existing news post
@@ -63,6 +65,24 @@ export type CalendarEventWithId = CalendarEvent & { id: string };
 
 const calendarCollection = collection(db, "calendar");
 
+const generateNewsDataFromEvent = (eventData: Omit<CalendarEvent, 'id' | 'attachments'>): Omit<NewsPost, 'id' | 'slug' | 'attachments'> => {
+    return {
+        title_en: `${eventData.title_en} (Event)`,
+        title_cy: `${eventData.title_cy} (Digwyddiad)`,
+        body_en: eventData.description_en || '',
+        body_cy: eventData.description_cy || '',
+        date: eventData.start,
+        category: 'Event',
+        isUrgent: eventData.isUrgent || false,
+        attachmentUrl: eventData.attachmentUrl,
+        attachmentName: eventData.attachmentName,
+        published: true,
+        createdBy: 'admin@example.com', // Or dynamically get current user
+        lastEdited: new Date().toISOString(),
+    };
+}
+
+
 // Get all calendar events, ordered by start date ascending
 export const getCalendarEvents = async (): Promise<CalendarEventWithId[]> => {
     const q = query(calendarCollection, orderBy("start", "asc"));
@@ -71,20 +91,44 @@ export const getCalendarEvents = async (): Promise<CalendarEventWithId[]> => {
 };
 
 // Add a new calendar event
-export const addCalendarEvent = async (eventData: Omit<CalendarEvent, 'id' | 'attachments'>) => {
-    await addDoc(calendarCollection, eventData);
+export const addCalendarEvent = async (eventData: Omit<CalendarEvent, 'id' | 'attachments'>, crossPost: boolean) => {
+    let finalEventData = { ...eventData };
+
+    if (crossPost) {
+        const newsData = generateNewsDataFromEvent(eventData);
+        const newsId = await addNews(newsData);
+        finalEventData.linkedNewsPostId = newsId;
+    }
+    await addDoc(calendarCollection, finalEventData);
 };
 
 // Update an existing calendar event
-export const updateCalendarEvent = async (id: string, eventData: Partial<Omit<CalendarEvent, 'id' | 'attachments'>>) => {
+export const updateCalendarEvent = async (id: string, eventData: Partial<Omit<CalendarEvent, 'id' | 'attachments'>>, crossPost: boolean) => {
     const eventDoc = doc(db, "calendar", id);
-    await updateDoc(eventDoc, eventData);
+    let finalEventData = { ...eventData };
+
+    if (crossPost) {
+        const newsData = generateNewsDataFromEvent(eventData as Omit<CalendarEvent, 'id' | 'attachments'>);
+        if (finalEventData.linkedNewsPostId) {
+            // Update existing news post
+            await updateNews(finalEventData.linkedNewsPostId, newsData);
+        } else {
+            // Create new news post and link it
+            const newsId = await addNews(newsData);
+            finalEventData.linkedNewsPostId = newsId;
+        }
+    }
+    // (Future improvement: Handle unchecking the box to delete/unlink news post)
+
+    await updateDoc(eventDoc, finalEventData);
 };
+
 
 // Delete a calendar event
 export const deleteCalendarEvent = async (id: string) => {
-    const eventDoc = doc(db, "calendar", id);
-    await deleteDoc(eventDoc);
+    const eventDocRef = doc(db, "calendar", id);
+    // TODO: Add logic to optionally delete linked news post
+    await deleteDoc(eventDocRef);
 };
 
 

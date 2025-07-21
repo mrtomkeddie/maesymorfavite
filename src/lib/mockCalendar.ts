@@ -23,6 +23,7 @@ export type CalendarEvent = {
     isUrgent?: boolean;
     showOnHomepage?: boolean;
     published: boolean;
+    linkedNewsPostId?: string; // ID of the news post if cross-posted
 };
 
 const schoolHolidays = [
