@@ -208,22 +208,25 @@ export default function HomePage() {
             </h2>
           </div>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {latestNews.map((post) => (
-              <Card key={post.id} className="flex flex-col bg-background/70 shadow-lg border-0">
-                <CardHeader>
-                  <span className="text-sm text-muted-foreground">{new Date(post.date).toLocaleDateString(language === 'cy' ? 'cy-GB' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                  <CardTitle className="text-xl font-bold">{post[`title_${language}`]}</CardTitle>
-                </CardHeader>
-                <CardContent className="flex-grow">
-                  <p className="text-muted-foreground line-clamp-3">{post[`body_${language}`].substring(0, 150)}...</p>
-                </CardContent>
-                <div className="p-6 pt-0">
-                  <Button asChild variant="link" className="p-0">
-                    <Link href={`/news/${post.slug}`}>{t.latestNews.readMore} <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                  </Button>
-                </div>
-              </Card>
-            ))}
+            {latestNews.map((post) => {
+              const plainBody = post[`body_${language}`].replace(/<[^>]*>?/gm, '');
+              return (
+                <Card key={post.id} className="flex flex-col bg-background/70 shadow-lg border-0">
+                  <CardHeader>
+                    <span className="text-sm text-muted-foreground">{new Date(post.date).toLocaleDateString(language === 'cy' ? 'cy-GB' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                    <CardTitle className="text-xl font-bold">{post[`title_${language}`]}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex-grow">
+                    <p className="text-muted-foreground line-clamp-3">{plainBody.substring(0, 150)}...</p>
+                  </CardContent>
+                  <div className="p-6 pt-0">
+                    <Button asChild variant="link" className="p-0">
+                      <Link href={`/news/${post.slug}`}>{t.latestNews.readMore} <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                    </Button>
+                  </div>
+                </Card>
+              )
+            })}
           </div>
           <div className="text-center mt-12">
             <Button asChild size="lg" variant="outline">
