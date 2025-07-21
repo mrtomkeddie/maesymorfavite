@@ -206,14 +206,20 @@ export const promoteAllChildren = async (): Promise<void> => {
     const childrenSnapshot = await getDocs(childrenCollection);
     const batch = writeBatch(db);
 
-    const finalYear = yearGroups[yearGroups.length - 1];
+    const year6 = yearGroups[yearGroups.length - 1];
+    const leaversYear = new Date().getFullYear() + 1;
+    const archiveLabel = `Archived/Leavers ${leaversYear}`;
 
     childrenSnapshot.forEach(document => {
         const child = document.data() as Child;
         const currentYearIndex = yearGroups.indexOf(child.yearGroup);
 
-        // Check if the child is in a valid year group and not the final year
-        if (currentYearIndex > -1 && child.yearGroup !== finalYear) {
+        if (child.yearGroup === year6) {
+            // Archive Year 6 students
+            const childRef = doc(db, "children", document.id);
+            batch.update(childRef, { yearGroup: archiveLabel });
+        } else if (currentYearIndex > -1) {
+            // Promote all other students
             const nextYearGroup = yearGroups[currentYearIndex + 1];
             const childRef = doc(db, "children", document.id);
             batch.update(childRef, { yearGroup: nextYearGroup });

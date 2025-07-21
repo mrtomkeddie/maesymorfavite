@@ -92,7 +92,7 @@ export default function ChildrenAdminPage() {
         await promoteAllChildren();
         toast({
             title: "Success!",
-            description: "All children have been promoted to the next year group."
+            description: "All children have been promoted, and Year 6 leavers have been archived."
         });
         fetchData(); // Refresh data to show new year groups
     } catch(error) {
@@ -113,6 +113,9 @@ export default function ChildrenAdminPage() {
       const parent = parents.find(p => p.id === parentId);
       return parent ? parent.name : 'Unknown Parent';
   }
+
+  const activeChildren = children.filter(c => !c.yearGroup.startsWith('Archived'));
+  const leaversYear = new Date().getFullYear() + 1;
 
   return (
     <div className="space-y-6">
@@ -155,7 +158,7 @@ export default function ChildrenAdminPage() {
       <Card>
         <CardHeader>
           <CardTitle>All Children</CardTitle>
-          <CardDescription>A list of all children enrolled.</CardDescription>
+          <CardDescription>A list of all currently enrolled children.</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -173,8 +176,8 @@ export default function ChildrenAdminPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {children.length > 0 ? (
-                  children.map((child) => (
+                {activeChildren.length > 0 ? (
+                  activeChildren.map((child) => (
                     <TableRow key={child.id}>
                       <TableCell className="font-medium">{child.name}</TableCell>
                       <TableCell>{child.yearGroup}</TableCell>
@@ -237,7 +240,7 @@ export default function ChildrenAdminPage() {
             <AlertDialogTitle>Promote all year groups?</AlertDialogTitle>
             <AlertDialogDescription>
                 This action will move every child up to the next year group (e.g., Year 1 → Year 2). 
-                Children in Year 6 will not be changed. This action cannot be undone.
+                Children in Year 6 will be archived as 'Leavers {leaversYear}'. This action cannot be undone.
             </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
