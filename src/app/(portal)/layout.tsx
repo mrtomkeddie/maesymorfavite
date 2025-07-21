@@ -24,7 +24,6 @@ import {
   LogOut,
   ShieldAlert,
   Loader2,
-  Info,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -55,7 +54,6 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/news', label: 'News & Alerts', icon: Newspaper },
     { href: '/calendar', label: 'Calendar', icon: Calendar },
-    { href: '/key-info', label: 'Key Info', icon: Info },
     { href: '/absence', label: 'Report Absence', icon: ClipboardCheck },
     { href: '/clubs', label: 'Clubs & Permissions', icon: Swords },
     { href: '/documents', label: 'Document Vault', icon: FolderOpen },
