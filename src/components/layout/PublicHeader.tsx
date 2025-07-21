@@ -10,7 +10,7 @@ const content = {
     en: {
         nav: [
             { href: '#about', label: 'About' },
-            { href: '#news', label: 'News' },
+            { href: '/news', label: 'News' },
             { href: '#contact', label: 'Contact' },
         ],
         portal: 'Parent Portal',
@@ -20,7 +20,7 @@ const content = {
     cy: {
         nav: [
             { href: '#about', label: 'Amdanom Ni' },
-            { href: '#news', label: 'Newyddion' },
+            { href: '/news', label: 'Newyddion' },
             { href: '#contact', label: 'Cysylltu' },
         ],
         portal: 'Porth Rieni',
