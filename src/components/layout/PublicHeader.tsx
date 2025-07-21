@@ -43,18 +43,19 @@ export function PublicHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-20 max-w-7xl items-center justify-between px-8">
-        <Link href="/" className="flex items-center gap-2 font-bold">
-          <Image src="/logo.png" alt="Maes Y Morfa logo" width={28} height={28} className="h-7 w-7" />
-          <span className="text-xl font-extrabold tracking-tight">Maes Y Morfa</span>
-        </Link>
-
-        <nav className="hidden xl:flex xl:items-center xl:gap-8 text-base font-medium">
-          {navLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="text-foreground/80 transition-colors hover:text-foreground">
-              {link.label}
+        <div className="flex items-center gap-x-8">
+            <Link href="/" className="flex items-center gap-2 font-bold shrink-0">
+              <Image src="/logo.png" alt="Maes Y Morfa logo" width={28} height={28} className="h-7 w-7" />
+              <span className="text-xl font-extrabold tracking-tight">Maes Y Morfa</span>
             </Link>
-          ))}
-        </nav>
+            <nav className="hidden xl:flex xl:items-center xl:gap-8 text-base font-medium">
+              {navLinks.map((link) => (
+                <Link key={link.href} href={link.href} className="text-foreground/80 transition-colors hover:text-foreground shrink-0">
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+        </div>
 
         <div className="flex items-center gap-2">
            <div className="hidden sm:flex items-center gap-1 border rounded-full p-1 text-sm">
