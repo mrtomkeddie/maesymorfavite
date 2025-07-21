@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,7 +18,11 @@ const formSchema = z.object({
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });
 
-export function LoginForm() {
+interface LoginFormProps {
+  userRole: 'parent' | 'admin';
+}
+
+export function LoginForm({ userRole }: LoginFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -31,18 +36,39 @@ export function LoginForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
+    // Mock authentication
+    console.log(`Attempting login for ${userRole} with email: ${values.email}`);
     await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // In a real app, you would verify credentials against a backend (e.g., Firebase Auth)
+    // and check the user's role.
+    
     localStorage.setItem('isAuthenticated', 'true');
-    router.push('/dashboard');
+    localStorage.setItem('userRole', userRole);
+
+    if (userRole === 'admin') {
+      router.push('/admin/dashboard');
+    } else {
+      router.push('/dashboard');
+    }
     router.refresh();
   }
   
   async function socialLogin(provider: 'google' | 'apple') {
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
-    localStorage.setItem('isAuthenticated', 'true');
-    router.push('/dashboard');
-    router.refresh();
+    
+    // This logic would also need to handle roles
+    if (userRole === 'parent') {
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('userRole', 'parent');
+      router.push('/dashboard');
+      router.refresh();
+    } else {
+        // Handle admin social login if necessary, or disable it.
+        console.error("Admin social login not configured.");
+        setIsLoading(false);
+    }
   }
 
   return (
@@ -56,7 +82,7 @@ export function LoginForm() {
               <FormItem>
                 <FormLabel>Email Address</FormLabel>
                 <FormControl>
-                  <Input placeholder="parent@example.com" {...field} />
+                  <Input placeholder={userRole === 'admin' ? "admin@example.com" : "parent@example.com"} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -81,19 +107,24 @@ export function LoginForm() {
           </Button>
         </form>
       </Form>
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-            <Separator />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 gap-2">
-        <Button variant="outline" onClick={() => socialLogin('google')} disabled={isLoading}>
-          Sign in with Google
-        </Button>
-      </div>
+      
+      {userRole === 'parent' && (
+        <>
+            <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                    <Separator />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+                </div>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+                <Button variant="outline" onClick={() => socialLogin('google')} disabled={isLoading}>
+                Sign in with Google
+                </Button>
+            </div>
+        </>
+      )}
     </div>
   );
 }

@@ -35,7 +35,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const [isAuth, setIsAuth] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {
-    const authStatus = localStorage.getItem('isAuthenticated') === 'true';
+    // We check for 'parent_auth' specifically for this layout.
+    const authStatus = localStorage.getItem('isAuthenticated') === 'true' && localStorage.getItem('userRole') === 'parent';
     setIsAuth(authStatus);
     if (!authStatus) {
       router.replace('/login');
@@ -44,6 +45,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('userRole');
     router.push('/login');
   };
 
@@ -51,7 +53,6 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/news', label: 'News & Alerts', icon: Newspaper },
     { href: '/calendar', label: 'Calendar', icon: Calendar },
-    { href: '/key-info', label: 'Key Info', icon: FileText},
     { href: '/absence', label: 'Report Absence', icon: ClipboardCheck },
   ];
   
@@ -85,7 +86,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.href}
+                    isActive={pathname.startsWith(item.href)}
                     tooltip={{ children: item.label }}
                   >
                     <Link href={item.href}>
