@@ -17,8 +17,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2 } from 'lucide-react';
-import { getChildren, deleteChild, ChildWithId, getParents, ParentWithId } from '@/lib/firebase/firestore';
+import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, ChevronsUp } from 'lucide-react';
+import { getChildren, deleteChild, ChildWithId, getParents, ParentWithId, promoteAllChildren } from '@/lib/firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { ChildForm } from '@/components/admin/ChildForm';
 
@@ -26,8 +26,10 @@ export default function ChildrenAdminPage() {
   const [children, setChildren] = useState<ChildWithId[]>([]);
   const [parents, setParents] = useState<ParentWithId[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [isPromoteAlertOpen, setIsPromoteAlertOpen] = useState(false);
   const [selectedChild, setSelectedChild] = useState<ChildWithId | null>(null);
   const [childToDelete, setChildToDelete] = useState<ChildWithId | null>(null);
 
@@ -84,6 +86,28 @@ export default function ChildrenAdminPage() {
       }
   };
   
+  const handlePromote = async () => {
+    setIsProcessing(true);
+    try {
+        await promoteAllChildren();
+        toast({
+            title: "Success!",
+            description: "All children have been promoted to the next year group."
+        });
+        fetchData(); // Refresh data to show new year groups
+    } catch(error) {
+        console.error("Error promoting year groups: ", error);
+        toast({
+            title: "Error",
+            description: "Could not promote year groups. Please try again.",
+            variant: "destructive",
+        });
+    } finally {
+        setIsProcessing(false);
+        setIsPromoteAlertOpen(false);
+    }
+  }
+
   const getParentName = (parentId?: string) => {
       if (!parentId) return 'Not Linked';
       const parent = parents.find(p => p.id === parentId);
@@ -97,29 +121,35 @@ export default function ChildrenAdminPage() {
             <h1 className="text-3xl font-bold font-headline">Child Management</h1>
             <p className="text-muted-foreground">Add, edit, and manage child profiles.</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
-            setIsDialogOpen(isOpen);
-            if (!isOpen) setSelectedChild(null);
-        }}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" /> Add Child
+        <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsPromoteAlertOpen(true)}>
+                <ChevronsUp className="mr-2 h-4 w-4" />
+                Promote Year Groups
             </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[625px]">
-            <DialogHeader>
-              <DialogTitle>{selectedChild ? 'Edit' : 'Add'} Child</DialogTitle>
-              <DialogDescription>
-                Fill in the details for the child.
-              </DialogDescription>
-            </DialogHeader>
-            <ChildForm
-              onSuccess={handleFormSuccess}
-              existingChild={selectedChild}
-              parents={parents}
-            />
-          </DialogContent>
-        </Dialog>
+            <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
+                setIsDialogOpen(isOpen);
+                if (!isOpen) setSelectedChild(null);
+            }}>
+            <DialogTrigger asChild>
+                <Button>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Child
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[625px]">
+                <DialogHeader>
+                <DialogTitle>{selectedChild ? 'Edit' : 'Add'} Child</DialogTitle>
+                <DialogDescription>
+                    Fill in the details for the child.
+                </DialogDescription>
+                </DialogHeader>
+                <ChildForm
+                onSuccess={handleFormSuccess}
+                existingChild={selectedChild}
+                parents={parents}
+                />
+            </DialogContent>
+            </Dialog>
+        </div>
       </div>
 
       <Card>
@@ -197,6 +227,25 @@ export default function ChildrenAdminPage() {
             <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isPromoteAlertOpen} onOpenChange={setIsPromoteAlertOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+            <AlertDialogTitle>Promote all year groups?</AlertDialogTitle>
+            <AlertDialogDescription>
+                This action will move every child up to the next year group (e.g., Year 1 → Year 2). 
+                Children in Year 6 will not be changed. This action cannot be undone.
+            </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+            <AlertDialogCancel disabled={isProcessing}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handlePromote} disabled={isProcessing}>
+                {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Confirm & Promote
+            </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

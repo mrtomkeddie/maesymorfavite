@@ -1,10 +1,11 @@
 
 
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc } from "firebase/firestore"; 
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, writeBatch, where } from "firebase/firestore"; 
 import { db } from "./config";
 import type { NewsPost } from "@/lib/mockNews";
 import type { CalendarEvent } from "@/lib/mockCalendar";
 import type { StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId } from "@/lib/types";
+import { yearGroups } from "@/components/admin/ChildForm";
 
 // === NEWS ===
 
@@ -165,10 +166,15 @@ export const updateParent = async (id: string, parentData: Partial<Parent>) => {
 export const deleteParent = async (id: string) => {
     const parentDoc = doc(db, "parents", id);
     // Unlink children before deleting parent
-    const childrenToUnlink = await getDocs(query(collection(db, 'children'), where('parentId', '==', id)));
-    const updates = childrenToUnlink.docs.map(childDoc => updateDoc(childDoc.ref, { parentId: '' }));
-    await Promise.all(updates);
-
+    const childrenToUnlinkQuery = query(collection(db, 'children'), where('parentId', '==', id));
+    const childrenToUnlinkSnapshot = await getDocs(childrenToUnlinkQuery);
+    
+    const batch = writeBatch(db);
+    childrenToUnlinkSnapshot.forEach(childDoc => {
+        batch.update(childDoc.ref, { parentId: '' });
+    });
+    
+    await batch.commit();
     await deleteDoc(parentDoc);
 }
 
@@ -194,4 +200,25 @@ export const updateChild = async (id: string, childData: Partial<Child>) => {
 export const deleteChild = async (id: string) => {
     const childDoc = doc(db, "children", id);
     await deleteDoc(childDoc);
+}
+
+export const promoteAllChildren = async (): Promise<void> => {
+    const childrenSnapshot = await getDocs(childrenCollection);
+    const batch = writeBatch(db);
+
+    const finalYear = yearGroups[yearGroups.length - 1];
+
+    childrenSnapshot.forEach(document => {
+        const child = document.data() as Child;
+        const currentYearIndex = yearGroups.indexOf(child.yearGroup);
+
+        // Check if the child is in a valid year group and not the final year
+        if (currentYearIndex > -1 && child.yearGroup !== finalYear) {
+            const nextYearGroup = yearGroups[currentYearIndex + 1];
+            const childRef = doc(db, "children", document.id);
+            batch.update(childRef, { yearGroup: nextYearGroup });
+        }
+    });
+
+    await batch.commit();
 }
