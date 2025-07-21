@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useLanguage } from '@/app/(public)/LanguageProvider';
@@ -79,7 +80,7 @@ export default function NewsPage() {
                                     </CardHeader>
                                     <CardContent>
                                         <p className="text-muted-foreground line-clamp-2">
-                                            {post[`body_${language}`]}
+                                            {post[`body_${language}`].replace(/<[^>]*>?/gm, '')}
                                         </p>
                                         <div className="flex items-center text-primary font-semibold mt-4">
                                             {t.readMore} <ArrowRight className="ml-2 h-4 w-4" />
