@@ -3,6 +3,7 @@ import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy,
 import { db } from "./config";
 import type { NewsPost } from "@/lib/mockNews";
 import type { CalendarEvent } from "@/lib/mockCalendar";
+import type { StaffMember, StaffMemberWithId } from "@/lib/types";
 
 // === NEWS ===
 
@@ -83,3 +84,31 @@ export const deleteCalendarEvent = async (id: string) => {
     const eventDoc = doc(db, "calendar", id);
     await deleteDoc(eventDoc);
 };
+
+
+// === STAFF ===
+const staffCollection = collection(db, "staff");
+
+// Get all staff members, ordered by name
+export const getStaff = async (): Promise<StaffMemberWithId[]> => {
+    const q = query(staffCollection, orderBy("name", "asc"));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ ...doc.data() as StaffMember, id: doc.id }));
+}
+
+// Add a new staff member
+export const addStaffMember = async (staffData: StaffMember) => {
+    await addDoc(staffCollection, staffData);
+};
+
+// Update an existing staff member
+export const updateStaffMember = async (id: string, staffData: Partial<StaffMember>) => {
+    const staffDoc = doc(db, "staff", id);
+    await updateDoc(staffDoc, staffData);
+}
+
+// Delete a staff member
+export const deleteStaffMember = async (id: string) => {
+    const staffDoc = doc(db, "staff", id);
+    await deleteDoc(staffDoc);
+}

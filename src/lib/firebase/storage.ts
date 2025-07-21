@@ -17,6 +17,10 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
 
 // Delete a file from Firebase Storage using its download URL
 export const deleteFile = async (downloadUrl: string): Promise<void> => {
+    if (!downloadUrl) {
+        console.warn("No download URL provided for deletion. Skipping.");
+        return;
+    }
     try {
         const fileRef = ref(storage, downloadUrl);
         await deleteObject(fileRef);
