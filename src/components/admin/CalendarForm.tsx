@@ -18,7 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addCalendarEvent, updateCalendarEvent, CalendarEventWithId } from '@/lib/firebase/firestore';
 import { uploadFile } from '@/lib/firebase/storage';
@@ -27,6 +27,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '../ui/calendar';
+import { Progress } from '../ui/progress';
 
 const formSchema = z.object({
   title_en: z.string().min(5, { message: 'Title must be at least 5 characters.' }),
@@ -34,7 +35,7 @@ const formSchema = z.object({
   description_en: z.string().optional(),
   isUrgent: z.boolean().default(false),
   showOnHomepage: z.boolean().default(false),
-  attachment: z.instanceof(File).optional(),
+  attachment: z.any().optional(),
 });
 
 type CalendarFormValues = z.infer<typeof formSchema>;
@@ -47,6 +48,7 @@ interface CalendarFormProps {
 export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   const form = useForm<CalendarFormValues>({
     resolver: zodResolver(formSchema),
@@ -66,10 +68,15 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
     try {
       let attachmentUrl = existingEvent?.attachmentUrl || '';
       let attachmentName = existingEvent?.attachmentName || '';
+      const fileToUpload = values.attachment instanceof File ? values.attachment : null;
 
-      if (values.attachment) {
-        attachmentUrl = await uploadFile(values.attachment, 'calendar-attachments');
-        attachmentName = values.attachment.name;
+      if (fileToUpload) {
+        setUploadProgress(0);
+        attachmentUrl = await uploadFile(fileToUpload, 'calendar-attachments', (progress) => {
+            setUploadProgress(progress);
+        });
+        attachmentName = fileToUpload.name;
+        setUploadProgress(100);
       }
 
       const eventData = {
@@ -113,6 +120,7 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
       });
     } finally {
       setIsLoading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -218,7 +226,7 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
          <FormField
           control={form.control}
           name="attachment"
-          render={({ field: { onChange, value, ...rest } }) => (
+          render={({ field: { onChange, ...rest } }) => (
             <FormItem>
               <FormLabel>Attachment (Optional)</FormLabel>
               <FormControl>
@@ -234,6 +242,15 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
               <FormDescription>
                 Upload a PDF or image if needed (e.g., a permission slip).
               </FormDescription>
+              {uploadProgress !== null && uploadProgress < 100 && (
+                <Progress value={uploadProgress} className="w-full mt-2" />
+              )}
+              {uploadProgress === 100 && (
+                <div className="flex items-center text-sm text-green-600 mt-2">
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <span>Upload complete!</span>
+                </div>
+              )}
               <FormMessage />
             </FormItem>
           )}

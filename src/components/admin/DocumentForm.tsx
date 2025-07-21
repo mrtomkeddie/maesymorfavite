@@ -16,7 +16,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addDocument, updateDocument } from '@/lib/firebase/firestore';
 import { uploadFile, deleteFile } from '@/lib/firebase/storage';
@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Progress } from '../ui/progress';
 
 export const documentCategories = [
     "Policy",
@@ -41,7 +42,7 @@ export const documentCategories = [
 const formSchema = z.object({
   title: z.string().min(3, { message: 'Title must be at least 3 characters.' }),
   category: z.string({ required_error: 'Please select a category.' }),
-  file: z.any().refine(file => file instanceof File || typeof file === 'string', {
+  file: z.any().refine(file => (file && typeof file.name === 'string') || typeof file === 'string', {
     message: 'A file upload is required.',
   }),
 });
@@ -56,6 +57,7 @@ interface DocumentFormProps {
 export function DocumentForm({ onSuccess, existingDocument }: DocumentFormProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   const form = useForm<DocumentFormValues>({
     resolver: zodResolver(formSchema),
@@ -71,12 +73,17 @@ export function DocumentForm({ onSuccess, existingDocument }: DocumentFormProps)
 
     try {
       let fileUrl = existingDocument?.fileUrl || '';
+      const fileToUpload = values.file instanceof File ? values.file : null;
 
-      if (values.file && values.file instanceof File) {
+      if (fileToUpload) {
+        setUploadProgress(0);
         if (existingDocument?.fileUrl) {
           await deleteFile(existingDocument.fileUrl);
         }
-        fileUrl = await uploadFile(values.file, 'documents');
+        fileUrl = await uploadFile(fileToUpload, 'documents', (progress) => {
+          setUploadProgress(progress);
+        });
+        setUploadProgress(100);
       }
 
       if (!fileUrl) {
@@ -122,6 +129,7 @@ export function DocumentForm({ onSuccess, existingDocument }: DocumentFormProps)
       });
     } finally {
       setIsLoading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -170,7 +178,7 @@ export function DocumentForm({ onSuccess, existingDocument }: DocumentFormProps)
          <FormField
           control={form.control}
           name="file"
-          render={({ field: { onChange, value, ...rest } }) => (
+          render={({ field: { onChange, ...rest } }) => (
             <FormItem>
               <FormLabel>{existingDocument ? 'Replace File' : 'File Upload'}</FormLabel>
               <FormControl>
@@ -178,11 +186,21 @@ export function DocumentForm({ onSuccess, existingDocument }: DocumentFormProps)
                     type="file" 
                     accept="application/pdf"
                     onChange={(e) => onChange(e.target.files?.[0])}
+                    {...rest}
                 />
               </FormControl>
               <FormDescription>
                 Please upload PDF files only. Max size 5MB.
               </FormDescription>
+              {uploadProgress !== null && uploadProgress < 100 && (
+                <Progress value={uploadProgress} className="w-full mt-2" />
+              )}
+              {uploadProgress === 100 && (
+                <div className="flex items-center text-sm text-green-600 mt-2">
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <span>Upload complete!</span>
+                </div>
+              )}
               <FormMessage />
             </FormItem>
           )}
@@ -198,5 +216,3 @@ export function DocumentForm({ onSuccess, existingDocument }: DocumentFormProps)
     </Form>
   );
 }
-
-    

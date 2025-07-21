@@ -1,19 +1,38 @@
 
-import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject, UploadTaskSnapshot } from "firebase/storage";
 import { storage } from "./config";
 
-// Upload a file to a specified path in Firebase Storage
-export const uploadFile = async (file: File, path: string): Promise<string> => {
+// Upload a file to a specified path in Firebase Storage with progress tracking
+export const uploadFile = (file: File, path: string, onProgress: (progress: number) => void): Promise<string> => {
     if (!file) {
-        throw new Error("No file provided for upload.");
+        return Promise.reject(new Error("No file provided for upload."));
     }
     const storageRef = ref(storage, `${path}/${Date.now()}_${file.name}`);
     
-    const snapshot = await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(snapshot.ref);
-    
-    return downloadURL;
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    return new Promise((resolve, reject) => {
+        uploadTask.on('state_changed',
+            (snapshot: UploadTaskSnapshot) => {
+                // Observe state change events such as progress, pause, and resume
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                onProgress(progress);
+            },
+            (error) => {
+                // Handle unsuccessful uploads
+                console.error("Upload failed:", error);
+                reject(error);
+            },
+            () => {
+                // Handle successful uploads on complete
+                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                    resolve(downloadURL);
+                });
+            }
+        );
+    });
 };
+
 
 // Delete a file from Firebase Storage using its download URL
 export const deleteFile = async (downloadUrl: string): Promise<void> => {

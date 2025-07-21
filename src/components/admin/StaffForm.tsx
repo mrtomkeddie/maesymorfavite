@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addStaffMember, updateStaffMember } from '@/lib/firebase/firestore';
 import { uploadFile, deleteFile } from '@/lib/firebase/storage';
@@ -29,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
+import { Progress } from '../ui/progress';
 
 export const staffTeams = [
     "Leadership Team",
@@ -61,6 +61,7 @@ interface StaffFormProps {
 export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   const form = useForm<StaffFormValues>({
     resolver: zodResolver(formSchema),
@@ -78,14 +79,19 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
 
     try {
       let photoUrl = existingStaff?.photoUrl || '';
+      const fileToUpload = values.photo instanceof File ? values.photo : null;
 
-      if (values.photo && values.photo instanceof File) {
+      if (fileToUpload) {
+        setUploadProgress(0);
         // If there's an old photo, delete it
         if (existingStaff?.photoUrl) {
           await deleteFile(existingStaff.photoUrl);
         }
         // Upload the new one
-        photoUrl = await uploadFile(values.photo, 'staff-photos');
+        photoUrl = await uploadFile(fileToUpload, 'staff-photos', (progress) => {
+          setUploadProgress(progress);
+        });
+        setUploadProgress(100);
       }
 
       const staffData = {
@@ -122,6 +128,7 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
       });
     } finally {
       setIsLoading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -201,7 +208,7 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
          <FormField
           control={form.control}
           name="photo"
-          render={({ field: { onChange, value, ...rest } }) => (
+          render={({ field: { onChange, ...rest } }) => (
             <FormItem>
               <FormLabel>Profile Photo (Optional)</FormLabel>
               <FormControl>
@@ -215,6 +222,15 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
               <FormDescription>
                 Upload a photo of the staff member.
               </FormDescription>
+               {uploadProgress !== null && uploadProgress < 100 && (
+                <Progress value={uploadProgress} className="w-full mt-2" />
+              )}
+              {uploadProgress === 100 && (
+                <div className="flex items-center text-sm text-green-600 mt-2">
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <span>Upload complete!</span>
+                </div>
+              )}
               <FormMessage />
             </FormItem>
           )}

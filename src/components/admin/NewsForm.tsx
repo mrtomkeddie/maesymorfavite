@@ -18,16 +18,17 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, Upload, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addNews, updateNews, NewsPostWithId } from '@/lib/firebase/firestore';
 import { uploadFile } from '@/lib/firebase/storage';
+import { Progress } from '../ui/progress';
 
 const formSchema = z.object({
   title_en: z.string().min(5, { message: 'Title must be at least 5 characters.' }),
   body_en: z.string().min(10, { message: 'Body must be at least 10 characters.' }),
   isUrgent: z.boolean().default(false),
-  attachment: z.instanceof(File).optional(),
+  attachment: z.any().optional(),
 });
 
 type NewsFormValues = z.infer<typeof formSchema>;
@@ -40,6 +41,7 @@ interface NewsFormProps {
 export function NewsForm({ onSuccess, existingNews }: NewsFormProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   const form = useForm<NewsFormValues>({
     resolver: zodResolver(formSchema),
@@ -56,10 +58,14 @@ export function NewsForm({ onSuccess, existingNews }: NewsFormProps) {
 
     try {
       let attachmentUrl = existingNews?.attachmentUrl || '';
-
-      if (values.attachment) {
-        // A new file is uploaded, upload it to storage
-        attachmentUrl = await uploadFile(values.attachment, 'news-attachments');
+      const fileToUpload = values.attachment instanceof File ? values.attachment : null;
+      
+      if (fileToUpload) {
+        setUploadProgress(0);
+        attachmentUrl = await uploadFile(fileToUpload, 'news-attachments', (progress) => {
+            setUploadProgress(progress);
+        });
+        setUploadProgress(100);
       }
 
       const newsData = {
@@ -69,7 +75,7 @@ export function NewsForm({ onSuccess, existingNews }: NewsFormProps) {
         body_cy: values.body_en, // For now, Welsh body is same as English
         isUrgent: values.isUrgent,
         attachmentUrl: attachmentUrl,
-        attachmentName: values.attachment ? values.attachment.name : existingNews?.attachmentName || '',
+        attachmentName: fileToUpload ? fileToUpload.name : existingNews?.attachmentName || '',
         date: existingNews?.date || new Date().toISOString(),
         slug: existingNews?.slug || values.title_en.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
         published: true,
@@ -104,6 +110,7 @@ export function NewsForm({ onSuccess, existingNews }: NewsFormProps) {
       });
     } finally {
       setIsLoading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -166,22 +173,29 @@ export function NewsForm({ onSuccess, existingNews }: NewsFormProps) {
          <FormField
           control={form.control}
           name="attachment"
-          render={({ field: { onChange, value, ...rest } }) => (
+          render={({ field: { onChange, ...rest } }) => (
             <FormItem>
               <FormLabel>Attachment (Optional)</FormLabel>
               <FormControl>
-                 <div className="relative">
-                    <Input 
-                        type="file" 
-                        accept="application/pdf,image/*" 
-                        onChange={(e) => onChange(e.target.files?.[0])}
-                        {...rest}
-                    />
-                </div>
+                <Input 
+                    type="file" 
+                    accept="application/pdf,image/*" 
+                    onChange={(e) => onChange(e.target.files?.[0])}
+                    {...rest}
+                />
               </FormControl>
               <FormDescription>
                 Upload a PDF or image if needed.
               </FormDescription>
+              {uploadProgress !== null && uploadProgress < 100 && (
+                <Progress value={uploadProgress} className="w-full mt-2" />
+              )}
+              {uploadProgress === 100 && (
+                <div className="flex items-center text-sm text-green-600 mt-2">
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <span>Upload complete!</span>
+                </div>
+              )}
               <FormMessage />
             </FormItem>
           )}
