@@ -48,7 +48,7 @@ export function PublicHeader() {
           <span className="text-xl font-extrabold tracking-tight">Maes Y Morfa</span>
         </Link>
 
-        <nav className="hidden lg:flex lg:items-center lg:gap-8 text-base font-medium">
+        <nav className="hidden xl:flex xl:items-center xl:gap-8 text-base font-medium">
           {navLinks.map((link) => (
             <Link key={link.href} href={link.href} className="text-foreground/80 transition-colors hover:text-foreground">
               {link.label}
@@ -71,7 +71,7 @@ export function PublicHeader() {
 
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="lg:hidden">
+              <Button variant="outline" size="icon" className="xl:hidden">
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle Menu</span>
               </Button>
