@@ -66,7 +66,7 @@ export function PublicHeader() {
            <Button variant="ghost" size="icon">
                 <Search className="h-5 w-5" />
            </Button>
-          <Button asChild className="hidden sm:inline-flex">
+          <Button asChild className="hidden xl:inline-flex">
             <Link href="/login">{t.portal}</Link>
           </Button>
 
