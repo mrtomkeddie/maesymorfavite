@@ -30,7 +30,8 @@ const content = {
         },
         legal: {
             privacy: 'Privacy Policy',
-            cookies: 'Cookie Policy'
+            cookies: 'Cookie Policy',
+            adminLogin: 'Admin Login'
         }
     },
     cy: {
@@ -56,7 +57,8 @@ const content = {
         },
         legal: {
             privacy: 'Polisi Preifatrwydd',
-            cookies: 'Polisi Cwcis'
+            cookies: 'Polisi Cwcis',
+            adminLogin: 'Mewngofnodi Gweinyddwr'
         }
     }
 };
@@ -101,9 +103,10 @@ export function PublicFooter() {
           <p className="text-center text-sm text-background/60">
             © {new Date().getFullYear()} {t.schoolInfo}. All Rights Reserved.
           </p>
-          <nav className="flex gap-4">
+          <nav className="flex flex-wrap justify-center gap-4">
             <Link href="#" className="text-sm text-background/60 hover:text-background hover:underline">{t.legal.privacy}</Link>
             <Link href="#" className="text-sm text-background/60 hover:text-background hover:underline">{t.legal.cookies}</Link>
+            <Link href="/admin/login" className="text-sm text-background/60 hover:text-background hover:underline">{t.legal.adminLogin}</Link>
           </nav>
         </div>
       </div>
