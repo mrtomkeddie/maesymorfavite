@@ -4,6 +4,7 @@
 import { useLanguage } from '@/app/(public)/LanguageProvider';
 import { School } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const content = {
     en: {
@@ -74,7 +75,7 @@ export function PublicFooter() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
             <div className="col-span-1 md:col-span-2 mb-8 md:mb-0">
                  <Link href="/" className="flex items-center gap-2">
-                    <School className="h-7 w-7 text-primary" />
+                    <Image src="/logo.png" alt="Maes Y Morfa logo" width={28} height={28} className="h-7 w-7" />
                     <span className="font-extrabold text-xl">Maes Y Morfa</span>
                 </Link>
                 <p className="text-sm text-background/70 mt-4">{t.schoolInfo} <br/>{t.address}</p>

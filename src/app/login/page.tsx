@@ -1,7 +1,7 @@
 import { LoginForm } from "@/components/auth/LoginForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { School } from 'lucide-react';
 import Link from "next/link";
+import Image from 'next/image';
 
 export default function LoginPage() {
   return (
@@ -12,7 +12,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-2xl border-0">
         <CardHeader className="text-center">
           <Link href="/" className="mx-auto mb-4 flex items-center justify-center">
-             <School className="h-10 w-10 text-primary" />
+             <Image src="/logo.png" alt="Maes Y Morfa logo" width={40} height={40} className="h-10 w-10" />
           </Link>
           <CardTitle className="font-headline text-2xl">Parent Portal</CardTitle>
           <CardDescription>Sign in to access MorfaConnect</CardDescription>

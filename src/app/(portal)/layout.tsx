@@ -23,7 +23,6 @@ import {
   Settings,
   LogOut,
   ShieldAlert,
-  School,
   Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -31,6 +30,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LanguageProvider } from '../(public)/LanguageProvider';
+import Image from 'next/image';
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -81,7 +81,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         <Sidebar variant="inset" collapsible="icon">
           <SidebarHeader>
             <div className="flex items-center gap-2">
-              <School className="w-7 h-7 text-primary" />
+              <Image src="/logo.png" alt="Maes Y Morfa logo" width={28} height={28} className="w-7 h-7" />
               <span className="text-lg font-semibold text-foreground group-data-[collapsible=icon]:hidden">
                 MorfaConnect
               </span>

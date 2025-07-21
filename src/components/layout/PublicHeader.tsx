@@ -4,8 +4,9 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, School, Search } from 'lucide-react';
+import { Menu, Search } from 'lucide-react';
 import { useLanguage } from '@/app/(public)/LanguageProvider';
+import Image from 'next/image';
 
 const content = {
     en: {
@@ -43,7 +44,7 @@ export function PublicHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-20 max-w-7xl items-center justify-between px-8">
         <Link href="/" className="flex items-center gap-2 font-bold">
-          <School className="h-7 w-7 text-primary" />
+          <Image src="/logo.png" alt="Maes Y Morfa logo" width={28} height={28} className="h-7 w-7" />
           <span className="text-xl font-extrabold tracking-tight">Maes Y Morfa</span>
         </Link>
 
@@ -78,7 +79,7 @@ export function PublicHeader() {
             <SheetContent side="right">
               <div className="flex flex-col gap-6 pt-10">
                 <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-                  <School className="h-7 w-7 text-primary" />
+                  <Image src="/logo.png" alt="Maes Y Morfa logo" width={28} height={28} className="h-7 w-7" />
                   <span>Maes Y Morfa</span>
                 </Link>
                 <nav className="flex flex-col gap-4">
