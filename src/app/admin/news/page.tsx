@@ -108,7 +108,7 @@ export default function NewsAdminPage() {
               <PlusCircle className="mr-2 h-4 w-4" /> Add News Post
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[625px]">
+          <DialogContent className="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{selectedNews ? 'Edit' : 'Create'} News Post</DialogTitle>
               <DialogDescription>
@@ -215,4 +215,3 @@ export default function NewsAdminPage() {
     </div>
   );
 }
-
