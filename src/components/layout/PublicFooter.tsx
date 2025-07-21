@@ -16,6 +16,7 @@ const content = {
                 {label: 'About', href: '/about'},
                 {label: 'Admissions', href: '/admissions'},
                 {label: 'Curriculum', href: '/curriculum'},
+                {label: 'Key Info', href: '/key-info'},
                 {label: 'Contact', href: '/contact'},
             ]
         },
@@ -41,6 +42,7 @@ const content = {
                 {label: 'Amdanom Ni', href: '/about'},
                 {label: 'Derbyniadau', href: '/admissions'},
                 {label: 'Cwricwlwm', href: '/curriculum'},
+                {label: 'Gwybodaeth Allweddol', href: '/key-info'},
                 {label: 'Cysylltu', href: '/contact'},
             ]
         },

@@ -4,7 +4,7 @@
 import { useLanguage } from './../LanguageProvider';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { School, ArrowRight, Phone, Mail, BookOpen, Leaf, Puzzle, Users } from "lucide-react";
+import { ArrowRight, Mail, BookOpen, Leaf, Puzzle, Users } from "lucide-react";
 import Link from 'next/link';
 
 const content = {
@@ -16,25 +16,29 @@ const content = {
         icon: Puzzle,
         title: "Early Years (Nursery & Reception)",
         summary: "Learning through play, building strong foundations in literacy and numeracy in a nurturing environment.",
-        details: "View Details" 
+        details: "View Details",
+        href: "/curriculum/early-years"
       },
       { 
         icon: BookOpen,
         title: "Key Stage 1 (Years 1 & 2)",
         summary: "Developing core skills in reading, writing, and maths while exploring a broad and balanced range of subjects.",
-        details: "View Details"
+        details: "View Details",
+        href: "/curriculum/key-stage-1"
       },
       { 
         icon: Users,
         title: "Key Stage 2 (Years 3-6)",
         summary: "Fostering independent learning and deeper subject knowledge to prepare pupils for their transition to secondary school.",
-        details: "View Details"
+        details: "View Details",
+        href: "/curriculum/key-stage-2"
       },
       { 
         icon: Leaf,
         title: "Beyond the Classroom",
         summary: "Enriching the curriculum through outdoor learning, educational trips, and a wide variety of after-school clubs.",
-        details: "View Details"
+        details: "View Details",
+        href: "/curriculum/beyond-the-classroom"
       }
     ],
     learnMoreTitle: "Learn More",
@@ -49,25 +53,29 @@ const content = {
         icon: Puzzle,
         title: "Blynyddoedd Cynnar (Meithrin a Derbyn)",
         summary: "Dysgu drwy chwarae, adeiladu sylfeini cryf mewn llythrennedd a rhifedd mewn amgylchedd meithringar.",
-        details: "Gweld Manylion" 
+        details: "Gweld Manylion",
+        href: "/curriculum/early-years"
       },
       { 
         icon: BookOpen,
         title: "Cyfnod Allweddol 1 (Blynyddoedd 1 a 2)",
         summary: "Datblygu sgiliau craidd mewn darllen, ysgrifennu, a mathemateg wrth archwilio ystod eang a chytbwys o bynciau.",
-        details: "Gweld Manylion"
+        details: "Gweld Manylion",
+        href: "/curriculum/key-stage-1"
       },
       { 
         icon: Users,
         title: "Cyfnod Allweddol 2 (Blynyddoedd 3-6)",
         summary: "Meithrin dysgu annibynnol a gwybodaeth bwnc ddyfnach i baratoi disgyblion ar gyfer eu trosglwyddiad i'r ysgol uwchradd.",
-        details: "Gweld Manylion"
+        details: "Gweld Manylion",
+        href: "/curriculum/key-stage-2"
       },
       { 
         icon: Leaf,
         title: "Y Tu Hwnt i'r Ystafell Ddosbarth",
         summary: "Cyfoethogi'r cwricwlwm drwy ddysgu yn yr awyr agored, teithiau addysgol, ac amrywiaeth eang o glybiau ar ôl ysgol.",
-        details: "Gweld Manylion"
+        details: "Gweld Manylion",
+        href: "/curriculum/beyond-the-classroom"
       }
     ],
     learnMoreTitle: "Dysgu Mwy",
@@ -113,7 +121,7 @@ export default function CurriculumPage() {
                                     </CardContent>
                                     <div className="p-6 pt-0">
                                         <Button variant="outline" className="w-full" asChild>
-                                            <Link href="/curriculum">
+                                            <Link href={stage.href}>
                                               {stage.details} <ArrowRight className="ml-2 h-4 w-4" />
                                             </Link>
                                         </Button>
