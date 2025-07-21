@@ -1,9 +1,10 @@
 
+
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc } from "firebase/firestore"; 
 import { db } from "./config";
 import type { NewsPost } from "@/lib/mockNews";
 import type { CalendarEvent } from "@/lib/mockCalendar";
-import type { StaffMember, StaffMemberWithId } from "@/lib/types";
+import type { StaffMember, StaffMemberWithId, Document, DocumentWithId } from "@/lib/types";
 
 // === NEWS ===
 
@@ -20,7 +21,7 @@ export const getNews = async (): Promise<NewsPostWithId[]> => {
 };
 
 // Add a new news post
-export const addNews = async (newsData: Omit<NewsPost, 'id'>) => {
+export const addNews = async (newsData: Omit<NewsPost, 'id' | 'attachments'>) => {
     // If a new post is marked as urgent, unmark all others
     if (newsData.isUrgent) {
         const allNews = await getNews();
@@ -34,7 +35,7 @@ export const addNews = async (newsData: Omit<NewsPost, 'id'>) => {
 };
 
 // Update an existing news post
-export const updateNews = async (id: string, newsData: Partial<Omit<NewsPost, 'id'>>) => {
+export const updateNews = async (id: string, newsData: Partial<Omit<NewsPost, 'id' | 'attachments'>>) => {
     // If this post is being marked as urgent, unmark all others
     if (newsData.isUrgent) {
         const allNews = await getNews();
@@ -69,12 +70,12 @@ export const getCalendarEvents = async (): Promise<CalendarEventWithId[]> => {
 };
 
 // Add a new calendar event
-export const addCalendarEvent = async (eventData: Omit<CalendarEvent, 'id'>) => {
+export const addCalendarEvent = async (eventData: Omit<CalendarEvent, 'id' | 'attachments'>) => {
     await addDoc(calendarCollection, eventData);
 };
 
 // Update an existing calendar event
-export const updateCalendarEvent = async (id: string, eventData: Partial<Omit<CalendarEvent, 'id'>>) => {
+export const updateCalendarEvent = async (id: string, eventData: Partial<Omit<CalendarEvent, 'id' | 'attachments'>>) => {
     const eventDoc = doc(db, "calendar", id);
     await updateDoc(eventDoc, eventData);
 };
@@ -112,3 +113,33 @@ export const deleteStaffMember = async (id: string) => {
     const staffDoc = doc(db, "staff", id);
     await deleteDoc(staffDoc);
 }
+
+
+// === DOCUMENTS ===
+const documentsCollection = collection(db, "documents");
+
+// Get all documents, ordered by upload date descending
+export const getDocuments = async (): Promise<DocumentWithId[]> => {
+    const q = query(documentsCollection, orderBy("uploadedAt", "desc"));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ ...doc.data() as Document, id: doc.id }));
+}
+
+// Add a new document
+export const addDocument = async (docData: Document) => {
+    await addDoc(documentsCollection, docData);
+}
+
+// Update an existing document
+export const updateDocument = async (id: string, docData: Partial<Document>) => {
+    const documentDoc = doc(db, "documents", id);
+    await updateDoc(documentDoc, docData);
+}
+
+// Delete a document
+export const deleteDocument = async (id: string) => {
+    const documentDoc = doc(db, "documents", id);
+    await deleteDoc(documentDoc);
+}
+
+    
