@@ -77,21 +77,23 @@ export function PublicHeader() {
                 <span className="sr-only">Toggle Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right">
-              <div className="flex flex-col gap-6 pt-10">
-                <Link href="/" className="flex items-center gap-2 font-bold text-xl">
+            <SheetContent side="right" className="w-[18rem] bg-sidebar p-0 text-sidebar-foreground">
+              <div className="flex h-full flex-col">
+                <div className="flex items-center gap-2 p-4 border-b border-sidebar-border">
                   <Image src="/logo.png" alt="Maes Y Morfa logo" width={28} height={28} className="h-7 w-7" />
-                  <span>Maes Y Morfa</span>
-                </Link>
-                <nav className="flex flex-col gap-4">
-                {navLinks.map((link) => (
-                  <Link key={link.href} href={link.href} className="text-lg font-medium text-foreground/80 transition-colors hover:text-foreground">
-                    {link.label}
-                  </Link>
-                ))}
-                </nav>
-                 <div className="flex flex-col gap-2 mt-4">
-                     <Button asChild>
+                   <span className="text-lg font-semibold text-foreground">
+                     MorfaConnect
+                  </span>
+                </div>
+                 <div className="flex flex-1 flex-col gap-4 p-4">
+                    {navLinks.map((link) => (
+                      <Link key={link.href} href={link.href} className="text-lg font-medium text-foreground/80 transition-colors hover:text-foreground">
+                        {link.label}
+                      </Link>
+                    ))}
+                 </div>
+                 <div className="p-4 border-t border-sidebar-border">
+                     <Button asChild className="w-full">
                         <Link href="/login">{t.portal}</Link>
                     </Button>
                  </div>

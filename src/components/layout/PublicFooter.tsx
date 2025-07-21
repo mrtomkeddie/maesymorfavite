@@ -2,14 +2,15 @@
 'use client';
 
 import { useLanguage } from '@/app/(public)/LanguageProvider';
-import { School } from 'lucide-react';
+import { School, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { getSiteSettings, SiteSettings } from '@/lib/firebase/firestore';
 
 const content = {
     en: {
         schoolInfo: 'Maes Y Morfa Primary School',
-        address: 'Llanelli, SA15 1EX',
         quickLinks: {
             title: 'Quick Links',
             links: [
@@ -36,7 +37,6 @@ const content = {
     },
     cy: {
         schoolInfo: 'Ysgol Gynradd Maes Y Morfa',
-        address: 'Llanelli, SA15 1EX',
         quickLinks: {
             title: 'Cysylltiadau Cyflym',
             links: [
@@ -67,6 +67,11 @@ const content = {
 export function PublicFooter() {
   const { language } = useLanguage();
   const t = content[language];
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+
+  useEffect(() => {
+    getSiteSettings().then(setSettings).catch(console.error);
+  }, []);
   
   const footerLinkGroups = [
       t.quickLinks,
@@ -82,7 +87,13 @@ export function PublicFooter() {
                     <Image src="/logo.png" alt="Maes Y Morfa logo" width={28} height={28} className="h-7 w-7" />
                     <span className="font-extrabold text-xl">Maes Y Morfa</span>
                 </Link>
-                <p className="text-sm text-background/70 mt-4">{t.schoolInfo} <br/>{t.address}</p>
+                <div className="text-sm text-background/70 mt-4">
+                    {settings ? (
+                        <p>{settings.address}</p>
+                    ) : (
+                       <div className="h-5 w-48 bg-gray-600 animate-pulse rounded-md mt-1"></div>
+                    )}
+                </div>
             </div>
             {footerLinkGroups.map((group) => (
                 <div key={group.title} className="space-y-4">

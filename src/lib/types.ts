@@ -1,5 +1,4 @@
 
-
 export type StaffMember = {
     name: string;
     role: string;
@@ -33,3 +32,9 @@ export type Child = {
 }
 
 export type ChildWithId = Child & { id: string };
+
+export type SiteSettings = {
+    address: string;
+    phone: string;
+    email: string;
+}

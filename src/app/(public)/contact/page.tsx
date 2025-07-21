@@ -11,19 +11,17 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { getSiteSettings, SiteSettings } from '@/lib/firebase/firestore';
 
 const content = {
   en: {
     title: "Contact Us",
     intro: "We’re here to help. Reach out with any questions or to arrange a visit.",
     addressTitle: "School Address",
-    address: "Maes Y Morfa Primary School, School Road, Llanelli, SA15 1EX",
     phoneTitle: "Phone",
-    phone: "01234 567890",
     emailTitle: "Email",
-    email: "admin@maesymorfa.cymru",
     formTitle: "Send us a Message",
     formName: "Your Name",
     formEmail: "Your Email Address",
@@ -33,16 +31,14 @@ const content = {
     mapPlaceholder: "Interactive map coming soon.",
     toastSuccessTitle: "Message Sent!",
     toastSuccessDesc: "Thank you for getting in touch. We'll get back to you soon.",
+    loading: "Loading contact information...",
   },
   cy: {
     title: "Cysylltu â Ni",
     intro: "Rydym yma i helpu. Cysylltwch ag unrhyw gwestiynau neu i drefnu ymweliad.",
     addressTitle: "Cyfeiriad yr Ysgol",
-    address: "Ysgol Gynradd Maes Y Morfa, Heol Ysgol, Llanelli, SA15 1EX",
     phoneTitle: "Ffôn",
-    phone: "01234 567890",
     emailTitle: "E-bost",
-    email: "admin@maesymorfa.cymru",
     formTitle: "Anfonwch neges atom",
     formName: "Eich Enw",
     formEmail: "Eich Cyfeiriad E-bost",
@@ -52,6 +48,7 @@ const content = {
     mapPlaceholder: "Map rhyngweithiol yn dod yn fuan.",
     toastSuccessTitle: "Neges wedi'i hanfon!",
     toastSuccessDesc: "Diolch am gysylltu â ni. Byddwn yn ymateb yn fuan.",
+    loading: "Wrthi'n llwytho gwybodaeth gyswllt...",
   }
 };
 
@@ -67,6 +64,27 @@ export default function ContactPage() {
     const t = content[language];
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
+    const [settings, setSettings] = useState<SiteSettings | null>(null);
+    const [isSettingsLoading, setIsSettingsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const siteSettings = await getSiteSettings();
+                setSettings(siteSettings);
+            } catch (error) {
+                console.error("Failed to fetch site settings:", error);
+                 toast({
+                    title: "Error",
+                    description: "Could not load school information.",
+                    variant: "destructive",
+                });
+            } finally {
+                setIsSettingsLoading(false);
+            }
+        };
+        fetchSettings();
+    }, [toast]);
 
     const form = useForm<z.infer<ReturnType<typeof formSchema>>>({
         resolver: zodResolver(formSchema(t)),
@@ -83,6 +101,15 @@ export default function ContactPage() {
             description: t.toastSuccessDesc,
         });
         console.log("Form submitted:", values);
+    }
+
+    if (isSettingsLoading) {
+        return (
+             <div className="flex h-96 w-full items-center justify-center bg-background">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="ml-4 text-muted-foreground">{t.loading}</p>
+            </div>
+        )
     }
 
     return (
@@ -108,7 +135,7 @@ export default function ContactPage() {
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <p className="text-muted-foreground">{t.address}</p>
+                                    <p className="text-muted-foreground">{settings?.address || 'Address not available'}</p>
                                 </CardContent>
                             </Card>
                             <Card>
@@ -118,7 +145,7 @@ export default function ContactPage() {
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <a href={`tel:${t.phone}`} className="text-muted-foreground hover:underline">{t.phone}</a>
+                                    <a href={`tel:${settings?.phone}`} className="text-muted-foreground hover:underline">{settings?.phone || 'Phone not available'}</a>
                                 </CardContent>
                             </Card>
                             <Card>
@@ -128,7 +155,7 @@ export default function ContactPage() {
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                     <a href={`mailto:${t.email}`} className="text-muted-foreground hover:underline">{t.email}</a>
+                                     <a href={`mailto:${settings?.email}`} className="text-muted-foreground hover:underline">{settings?.email || 'Email not available'}</a>
                                 </CardContent>
                             </Card>
                         </div>

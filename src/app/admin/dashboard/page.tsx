@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Newspaper, Calendar, Users, FileText } from "lucide-react";
+import { Newspaper, Calendar, Users, FileText, Settings } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminDashboardPage() {
@@ -10,6 +10,7 @@ export default function AdminDashboardPage() {
         { title: 'Calendar Events', icon: Calendar, href: '/admin/calendar', description: 'Update the school calendar' },
         { title: 'Staff Directory', icon: Users, href: '/admin/staff', description: 'Edit staff profiles' },
         { title: 'Documents', icon: FileText, href: '/admin/documents', description: 'Upload policies and menus' },
+        { title: 'Site Settings', icon: Settings, href: '/admin/settings', description: 'Edit contact details' },
     ];
 
     return (

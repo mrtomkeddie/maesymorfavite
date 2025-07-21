@@ -28,6 +28,7 @@ import {
   Users2,
   BookUser,
   HelpCircle,
+  Settings,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -66,6 +67,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const userManagementItems = [
       { href: '/admin/parents', label: 'Parents', icon: Users2 },
       { href: '/admin/children', label: 'Children', icon: BookUser },
+  ];
+  
+  const settingsItems = [
+    { href: '/admin/settings', label: 'Site Settings', icon: Settings },
+    { href: '/admin/help', label: 'Help', icon: HelpCircle },
   ];
 
   if (pathname === '/admin/login') {
@@ -136,18 +142,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     ))}
                  </SidebarGroupContent>
                </SidebarGroup>
+                <SidebarSeparator />
+                 <SidebarGroup>
+                    <SidebarGroupLabel>System</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        {settingsItems.map((item) => (
+                            <SidebarMenuItem key={item.href}>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={pathname.startsWith(item.href)}
+                                    tooltip={{ children: item.label }}
+                                >
+                                    <Link href={item.href}>
+                                    <item.icon />
+                                    <span>{item.label}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        ))}
+                    </SidebarGroupContent>
+                </SidebarGroup>
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip={{children: 'Help & Instructions'}} asChild>
-                    <Link href="/admin/help">
-                        <HelpCircle />
-                        <span>Help</span>
-                    </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton onClick={handleLogout} tooltip={{ children: 'Logout' }}>
                   <LogOut />

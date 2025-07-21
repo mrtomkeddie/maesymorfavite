@@ -1,11 +1,9 @@
 
-
-
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, writeBatch, where } from "firebase/firestore"; 
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, writeBatch, where, getDoc } from "firebase/firestore"; 
 import { db } from "./config";
 import type { NewsPost } from "@/lib/mockNews";
 import type { CalendarEvent } from "@/lib/mockCalendar";
-import type { StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId } from "@/lib/types";
+import type { StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings } from "@/lib/types";
 import { yearGroups } from "@/components/admin/ChildForm";
 
 // === NEWS ===
@@ -292,4 +290,24 @@ export const bulkUpdateChildren = async (ids: string[], data: Partial<Child>) =>
     await batch.commit();
 };
 
-    
+
+// === SITE SETTINGS ===
+const settingsDocRef = doc(db, "settings", "site");
+
+export const getSiteSettings = async (): Promise<SiteSettings | null> => {
+    const docSnap = await getDoc(settingsDocRef);
+    if (docSnap.exists()) {
+        return docSnap.data() as SiteSettings;
+    } else {
+        // Return default values if document doesn't exist
+        return {
+            address: "Maes Y Morfa Primary School, School Road, Llanelli, SA15 1EX",
+            phone: "01234 567890",
+            email: "admin@maesymorfa.cymru"
+        };
+    }
+};
+
+export const updateSiteSettings = async (settings: SiteSettings) => {
+    await setDoc(settingsDocRef, settings, { merge: true });
+};
