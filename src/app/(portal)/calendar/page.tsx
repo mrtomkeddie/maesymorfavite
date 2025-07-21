@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { calendarEvents, CalendarEvent } from '@/lib/mockCalendar';
 import { format } from 'date-fns';
-import { createICalFile } from '@/lib/ical';
+import { createICalFeed } from '@/lib/ical';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -28,7 +28,8 @@ const content = {
     description: 'Upcoming events, holidays, and important dates for the school year.',
     allDay: 'All Day',
     noEventsList: 'No events found.',
-    addToCalendar: 'Add to Calendar',
+    subscribeButton: 'Subscribe to the School Calendar',
+    subscribeDescription: '(Events auto-update in your calendar app)',
     attachments: 'Attachments',
     tags: {
       Holiday: 'Holiday',
@@ -43,7 +44,8 @@ const content = {
     description: 'Digwyddiadau, gwyliau, a dyddiadau pwysig ar gyfer y flwyddyn ysgol.',
     allDay: 'Trwy\'r Dydd',
     noEventsList: 'Ni chanfuwyd unrhyw ddigwyddiadau.',
-    addToCalendar: 'Ychwanegu at y Calendr',
+    subscribeButton: 'Tanysgrifiwch i Galendr yr Ysgol',
+    subscribeDescription: '(Mae digwyddiadau\'n diweddaru\'n awtomatig yn eich ap calendr)',
     attachments: 'Atodiadau',
     tags: {
       Holiday: 'Gwyliau',
@@ -67,13 +69,13 @@ export default function CalendarPage() {
   const { language } = useLanguage();
   const t = content[language];
 
-  const handleDownloadICal = (event: CalendarEvent) => {
-    const icalData = createICalFile(event);
+  const handleDownloadICalFeed = () => {
+    const icalData = createICalFeed(calendarEvents);
     if (icalData) {
       const blob = new Blob([icalData], { type: 'text/calendar;charset=utf-8' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = `${event.title_en.replace(/ /g, '_')}.ics`;
+      link.download = 'MaesYMorfa_School_Calendar.ics';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -115,10 +117,6 @@ export default function CalendarPage() {
             </div>
           )}
         </div>
-         <Button variant="ghost" size="icon" className="absolute top-2 right-2 sm:relative sm:top-0 sm:right-0" onClick={() => handleDownloadICal(event)}>
-            <CalendarPlus className="h-5 w-5" />
-            <span className="sr-only">{t.addToCalendar}</span>
-        </Button>
       </div>
     </div>
   );
@@ -142,6 +140,13 @@ export default function CalendarPage() {
         <div>
           <h1 className="text-3xl font-bold font-headline">{t.title}</h1>
           <p className="text-muted-foreground">{t.description}</p>
+        </div>
+        <div className="text-right">
+            <Button onClick={handleDownloadICalFeed}>
+              <CalendarPlus className="mr-2 h-4 w-4" />
+              {t.subscribeButton}
+            </Button>
+            <p className="text-xs text-muted-foreground mt-1">{t.subscribeDescription}</p>
         </div>
       </div>
 
