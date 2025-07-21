@@ -177,8 +177,16 @@ export default function ContactPage() {
                          <h2 className="font-headline text-3xl font-extrabold tracking-tighter text-foreground text-center mb-6">
                            {t.mapTitle}
                         </h2>
-                        <div className="aspect-video w-full bg-muted rounded-lg flex items-center justify-center">
-                            <p className="text-muted-foreground">{t.mapPlaceholder}</p>
+                        <div className="aspect-video w-full bg-muted rounded-lg overflow-hidden shadow-lg">
+                           <iframe
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2482.331502934825!2d-4.166649684462157!3d51.68114697966427!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x486efbe53038699d%3A0x6b8f36598bff7635!2sMaes-Y-Morfa%20Community%20Primary%20School!5e0!3m2!1sen!2suk!4v1678886472573!5m2!1sen!2suk"
+                                width="100%"
+                                height="100%"
+                                style={{ border: 0 }}
+                                allowFullScreen={true}
+                                loading="lazy"
+                                referrerPolicy="no-referrer-when-downgrade"
+                            ></iframe>
                         </div>
                     </div>
 
@@ -187,4 +195,3 @@ export default function ContactPage() {
         </div>
     );
 }
-
