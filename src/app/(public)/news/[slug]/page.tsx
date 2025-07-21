@@ -3,31 +3,21 @@
 import { useLanguage } from "@/app/(public)/LanguageProvider";
 import { Badge } from "@/components/ui/badge";
 import { news as mockNews, NewsPost } from "@/lib/mockNews";
-import { ArrowLeft, Calendar, Download, Tag } from "lucide-react";
+import { ArrowLeft, Calendar, Download } from "lucide-react";
 import { notFound } from "next/navigation";
-import Image from 'next/image';
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import React from "react";
 
 const content = {
     en: {
         back: 'Back to News',
         attachments: 'Attachments',
-        categories: {
-            Urgent: 'Urgent',
-            Event: 'Event',
-            General: 'General',
-        }
+        urgent: 'Urgent'
     },
     cy: {
         back: 'Yn ôl i Newyddion',
         attachments: 'Atodiadau',
-        categories: {
-            Urgent: 'Pwysig',
-            Event: 'Digwyddiad',
-            General: 'Cyffredinol',
-        }
+        urgent: 'Pwysig'
     }
 }
 
@@ -40,14 +30,6 @@ export default function NewsArticlePage({ params }: { params: { slug: string }})
         notFound();
     }
     
-    const getCategoryVariant = (category: 'Urgent' | 'Event' | 'General'): 'destructive' | 'secondary' | 'outline' => {
-        switch (category) {
-            case 'Urgent': return 'destructive';
-            case 'Event': return 'secondary';
-            default: return 'outline';
-        }
-    }
-
     return (
         <div className="bg-background">
             <article className="w-full py-16 md:py-24">
@@ -64,12 +46,11 @@ export default function NewsArticlePage({ params }: { params: { slug: string }})
                                 <Calendar className="h-4 w-4" />
                                 <span>{new Date(post.date).toLocaleDateString(language === 'cy' ? 'cy-GB' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Tag className="h-4 w-4" />
-                                <Badge variant={getCategoryVariant(post.category)}>
-                                    {t.categories[post.category]}
+                            {post.isUrgent && (
+                                <Badge variant="destructive">
+                                    {t.urgent}
                                 </Badge>
-                            </div>
+                            )}
                         </div>
                         <h1 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tighter text-foreground">
                             {post[`title_${language}`]}
@@ -88,7 +69,8 @@ export default function NewsArticlePage({ params }: { params: { slug: string }})
                                 {post.attachments.map((att, index) => (
                                     <div key={index}>
                                         {att.type === 'image' && (
-                                             <Image src={att.url} alt={`Attachment ${index+1}`} width={600} height={400} className="rounded-lg object-cover w-full h-auto" />
+                                             // eslint-disable-next-line @next/next/no-img-element
+                                             <img src={att.url} alt={`Attachment ${index+1}`} className="rounded-lg object-cover w-full h-auto" />
                                         )}
                                         {att.type === 'pdf' && (
                                             <a href={att.url} target="_blank" rel="noopener noreferrer" className="block p-4 border rounded-lg hover:bg-secondary transition-colors">

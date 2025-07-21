@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import { useLanguage } from '@/app/(public)/LanguageProvider';
 import {
   Card,
@@ -10,41 +10,24 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Calendar as CalendarIcon,
-  List,
-  Paperclip,
   CalendarPlus,
-  Filter,
-  PartyPopper
+  Paperclip,
 } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { calendarEvents, calendarTags, CalendarEvent, CalendarTag } from '@/lib/mockCalendar';
-import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, isWithinInterval } from 'date-fns';
+import { calendarEvents, CalendarEvent } from '@/lib/mockCalendar';
+import { format } from 'date-fns';
 import { createICalFile } from '@/lib/ical';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuCheckboxItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+
 
 const content = {
   en: {
-    title: 'Key Dates & Calendar',
+    title: 'School Calendar',
     description: 'Upcoming events, holidays, and important dates for the school year.',
-    listView: 'List View',
-    calendarView: 'Calendar View',
     allDay: 'All Day',
-    filter: 'Filter by Category',
-    noEventsForDay: 'No events scheduled for this day.',
-    noEventsList: 'No events match your selected filters.',
-    selectDate: 'Select a date to see events.',
+    noEventsList: 'No events found.',
     addToCalendar: 'Add to Calendar',
     attachments: 'Attachments',
     tags: {
@@ -56,15 +39,10 @@ const content = {
     }
   },
   cy: {
-    title: 'Dyddiadau Allweddol a Chaledr',
+    title: 'Calendr yr Ysgol',
     description: 'Digwyddiadau, gwyliau, a dyddiadau pwysig ar gyfer y flwyddyn ysgol.',
-    listView: 'Gweld fel Rhestr',
-    calendarView: 'Gweld fel Calendr',
     allDay: 'Trwy\'r Dydd',
-    filter: 'Hidlo yn ôl Categori',
-    noEventsForDay: 'Dim digwyddiadau wedi\'u hamserlennu ar gyfer y diwrnod hwn.',
-    noEventsList: 'Dim digwyddiadau yn cyd-fynd â\'ch hidlwyr.',
-    selectDate: 'Dewiswch ddyddiad i weld digwyddiadau.',
+    noEventsList: 'Ni chanfuwyd unrhyw ddigwyddiadau.',
     addToCalendar: 'Ychwanegu at y Calendr',
     attachments: 'Atodiadau',
     tags: {
@@ -77,7 +55,7 @@ const content = {
   },
 };
 
-const tagColors: Record<CalendarTag, string> = {
+const tagColors: Record<(typeof calendarEvents[0]['tags'][0]), string> = {
     Holiday: 'bg-blue-100 text-blue-800 border-blue-200',
     INSET: 'bg-yellow-100 text-yellow-800 border-yellow-200',
     Event: 'bg-green-100 text-green-800 border-green-200',
@@ -88,22 +66,6 @@ const tagColors: Record<CalendarTag, string> = {
 export default function CalendarPage() {
   const { language } = useLanguage();
   const t = content[language];
-  const [view, setView] = useState<'list' | 'calendar'>('list');
-  const [currentDate, setCurrentDate] = useState(new Date()); // For month navigation
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [selectedFilters, setSelectedFilters] = useState<Record<CalendarTag, boolean>>(
-    calendarTags.reduce((acc, tag) => ({...acc, [tag]: true}), {} as Record<CalendarTag, boolean>)
-  );
-
-  const handleFilterChange = (tag: CalendarTag) => {
-    setSelectedFilters(prev => ({...prev, [tag]: !prev[tag]}));
-  };
-
-  const filteredEvents = useMemo(() => {
-    const activeTags = Object.entries(selectedFilters).filter(([, value]) => value).map(([key]) => key);
-    if (activeTags.length === calendarTags.length) return calendarEvents;
-    return calendarEvents.filter(event => event.tags.some(tag => activeTags.includes(tag)));
-  }, [selectedFilters]);
 
   const handleDownloadICal = (event: CalendarEvent) => {
     const icalData = createICalFile(event);
@@ -135,7 +97,7 @@ export default function CalendarPage() {
           <p className="text-sm mb-3">
             {event[language === 'en' ? 'description_en' : 'description_cy']}
           </p>
-          <div className="flex flex-wrap gap-2">
+           <div className="flex flex-wrap gap-2">
             {event.tags.map(tag => (
               <Badge key={tag} className={cn('font-normal', tagColors[tag])}>{t.tags[tag]}</Badge>
             ))}
@@ -161,85 +123,11 @@ export default function CalendarPage() {
     </div>
   );
 
-  const CalendarView = () => {
-    const monthStart = startOfMonth(currentDate);
-    const monthEnd = endOfMonth(currentDate);
-    
-    const eventsForMonth = useMemo(() => filteredEvents.filter(event => 
-        isWithinInterval(new Date(event.start), { start: monthStart, end: monthEnd })
-    ), [monthStart, monthEnd, filteredEvents]);
-    
-    const eventsForSelectedDay = useMemo(() => {
-        if (!selectedDate) return [];
-        return filteredEvents.filter(e => isSameDay(new Date(e.start), selectedDate));
-    }, [selectedDate, filteredEvents]);
-
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-            <Card className="lg:col-span-2">
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>{format(currentDate, 'MMMM yyyy')}</CardTitle>
-                    <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => setCurrentDate(prev => new Date(prev.setMonth(prev.getMonth() - 1)))}>Prev</Button>
-                        <Button variant="outline" onClick={() => { setCurrentDate(new Date()); setSelectedDate(new Date()); }}>Today</Button>
-                        <Button variant="outline" onClick={() => setCurrentDate(prev => new Date(prev.setMonth(prev.getMonth() + 1)))}>Next</Button>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={setSelectedDate}
-                        className="p-0"
-                        month={currentDate}
-                        onMonthChange={setCurrentDate}
-                        components={{
-                            DayContent: ({ date }) => {
-                                 const dayEvents = eventsForMonth.filter(e => isSameDay(new Date(e.start), date));
-                                 return (
-                                     <div className="relative h-full">
-                                        <p>{format(date, 'd')}</p>
-                                        {dayEvents.length > 0 && (
-                                            <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
-                                                {dayEvents.slice(0,3).map(e => (
-                                                    <div key={e.id} className={cn('h-1.5 w-1.5 rounded-full', tagColors[e.tags[0]])}></div>
-                                                ))}
-                                            </div>
-                                        )}
-                                     </div>
-                                 )
-                            }
-                        }}
-                    />
-                </CardContent>
-            </Card>
-
-            <div className="lg:col-span-1 space-y-4">
-                <h2 className="font-bold text-lg">{selectedDate ? format(selectedDate, 'eeee, MMMM do') : t.selectDate}</h2>
-                 {selectedDate && (
-                    eventsForSelectedDay.length > 0 ? (
-                        eventsForSelectedDay.map(event => <EventItem key={event.id} event={event} />)
-                    ) : (
-                        <Card className="text-center p-8 border-dashed">
-                             <PartyPopper className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
-                            <p className="text-muted-foreground">{t.noEventsForDay}</p>
-                        </Card>
-                    )
-                 )}
-                 {!selectedDate && (
-                     <Card className="text-center p-8 border-dashed">
-                        <p className="text-muted-foreground">{t.selectDate}</p>
-                    </Card>
-                 )}
-            </div>
-        </div>
-    )
-  }
 
   const ListView = () => (
     <div className="space-y-4">
-        {filteredEvents.length > 0 ? (
-            filteredEvents.map(event => <EventItem key={event.id} event={event} />)
+        {calendarEvents.length > 0 ? (
+            calendarEvents.map(event => <EventItem key={event.id} event={event} />)
         ) : (
             <Card className="text-center p-8">
                 <p className="text-muted-foreground">{t.noEventsList}</p>
@@ -255,43 +143,9 @@ export default function CalendarPage() {
           <h1 className="text-3xl font-bold font-headline">{t.title}</h1>
           <p className="text-muted-foreground">{t.description}</p>
         </div>
-        <div className="flex items-center gap-2">
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
-                        <Filter className="mr-2 h-4 w-4" />
-                        {t.filter}
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                    <DropdownMenuLabel>Filter by Category</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {calendarTags.map(tag => (
-                        <DropdownMenuCheckboxItem
-                            key={tag}
-                            checked={selectedFilters[tag]}
-                            onCheckedChange={() => handleFilterChange(tag)}
-                        >
-                            {t.tags[tag]}
-                        </DropdownMenuCheckboxItem>
-                    ))}
-                </DropdownMenuContent>
-            </DropdownMenu>
-
-            <div className="bg-muted p-1 rounded-lg flex items-center">
-                <Button variant={view === 'list' ? 'secondary' : 'ghost'} size="sm" onClick={() => setView('list')} className="flex items-center gap-2">
-                    <List className="h-4 w-4" /> {t.listView}
-                </Button>
-                <Button variant={view === 'calendar' ? 'secondary' : 'ghost'} size="sm" onClick={() => setView('calendar')} className="flex items-center gap-2">
-                    <CalendarIcon className="h-4 w-4" /> {t.calendarView}
-                </Button>
-            </div>
-        </div>
       </div>
 
-      {view === 'list' ? <ListView /> : <CalendarView />}
+      <ListView />
     </div>
   );
 }
-
-  

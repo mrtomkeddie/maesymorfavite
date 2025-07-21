@@ -18,12 +18,9 @@ import {
   Newspaper,
   Calendar,
   ClipboardCheck,
-  Swords,
-  FolderOpen,
-  Settings,
   LogOut,
-  ShieldAlert,
   Loader2,
+  FileText,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -54,15 +51,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/news', label: 'News & Alerts', icon: Newspaper },
     { href: '/calendar', label: 'Calendar', icon: Calendar },
+    { href: '/key-info', label: 'Key Info', icon: FileText},
     { href: '/absence', label: 'Report Absence', icon: ClipboardCheck },
-    { href: '/clubs', label: 'Clubs & Permissions', icon: Swords },
-    { href: '/documents', label: 'Document Vault', icon: FolderOpen },
   ];
   
-  const adminMenuItems = [
-    { href: '/admin/announcements', label: 'Announcements AI', icon: ShieldAlert },
-  ];
-
   if (isAuth === undefined) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -104,36 +96,9 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
-            
-            <SidebarMenu className="mt-4">
-                <p className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground group-data-[collapsible=icon]:hidden">Admin Tools</p>
-              {adminMenuItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname.startsWith(item.href)}
-                    tooltip={{ children: item.label }}
-                  >
-                    <Link href={item.href}>
-                      <item.icon />
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-
           </SidebarContent>
           <SidebarFooter>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === '/settings'} tooltip={{ children: 'Settings' }}>
-                  <Link href="#">
-                    <Settings />
-                    <span>Settings</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton onClick={handleLogout} tooltip={{ children: 'Logout' }}>
                   <LogOut />

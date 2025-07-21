@@ -10,13 +10,16 @@ import { Button } from '@/components/ui/button';
 import { Newspaper, Bell, FileText, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { news as mockNews } from '@/lib/mockNews';
 
 export default function DashboardPage() {
-  const notices = [
-    { title: 'Parent-Teacher meetings next week', date: '2 days ago' },
-    { title: 'School photos are now available to order', date: '4 days ago' },
-    { title: 'Reminder: Half-day on Friday', date: '5 days ago' },
-  ];
+  const notices = mockNews.filter(n => n.published).slice(0, 3);
+
+  const keyDocuments = [
+      { title: 'Term Dates 2024-25.pdf', href: '#' },
+      { title: 'Lunch Menu - Summer.pdf', href: '#' },
+      { title: 'Uniform Policy.pdf', href: '#' },
+  ]
 
   const newsletters = [
     { title: 'June 2024 Edition', image: 'https://placehold.co/300x400.png', imageHint: 'newsletter cover' },
@@ -44,11 +47,11 @@ export default function DashboardPage() {
                 {notices.map((notice, index) => (
                   <li key={index} className="flex items-center justify-between gap-4 rounded-lg p-3 transition-colors hover:bg-secondary">
                     <div>
-                      <p className="font-medium">{notice.title}</p>
-                      <p className="text-sm text-muted-foreground">{notice.date}</p>
+                      <p className="font-medium">{notice.title_en}</p>
+                      <p className="text-sm text-muted-foreground">{new Date(notice.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}</p>
                     </div>
                     <Button variant="ghost" size="icon" asChild>
-                      <Link href="#"><ArrowRight className="h-4 w-4" /></Link>
+                      <Link href={`/news/${notice.slug}`}><ArrowRight className="h-4 w-4" /></Link>
                     </Button>
                   </li>
                 ))}
@@ -106,9 +109,13 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-2">
-                <li><Link href="#" className="flex items-center gap-2 rounded-md p-2 text-sm font-medium transition-colors hover:bg-secondary hover:underline">Term Dates 2024-25.pdf</Link></li>
-                <li><Link href="#" className="flex items-center gap-2 rounded-md p-2 text-sm font-medium transition-colors hover:bg-secondary hover:underline">Lunch Menu - Summer.pdf</Link></li>
-                <li><Link href="#" className="flex items-center gap-2 rounded-md p-2 text-sm font-medium transition-colors hover:bg-secondary hover:underline">Uniform Policy.pdf</Link></li>
+                {keyDocuments.map(doc => (
+                  <li key={doc.title}>
+                    <Link href={doc.href} className="flex items-center gap-2 rounded-md p-2 text-sm font-medium transition-colors hover:bg-secondary hover:underline">
+                      {doc.title}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </CardContent>
           </Card>
