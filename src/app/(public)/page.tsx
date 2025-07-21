@@ -213,11 +213,6 @@ export default function HomePage() {
               </Card>
             </Link>
           </div>
-           <div className="text-center mt-12">
-            <Button asChild size="lg">
-                <Link href="/curriculum">{t.features.learnMoreButton}</Link>
-            </Button>
-          </div>
         </div>
       </section>
 
