@@ -272,3 +272,14 @@ export const promoteAllChildren = async (): Promise<void> => {
 
     await batch.commit();
 }
+
+export const bulkUpdateChildren = async (ids: string[], data: Partial<Child>) => {
+    const batch = writeBatch(db);
+    ids.forEach(id => {
+        const childRef = doc(db, "children", id);
+        batch.update(childRef, data);
+    });
+    await batch.commit();
+};
+
+    

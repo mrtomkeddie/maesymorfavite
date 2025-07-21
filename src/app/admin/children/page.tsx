@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -17,10 +18,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, ChevronsUp } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, ChevronsUp, Edit } from 'lucide-react';
 import { getChildren, deleteChild, ChildWithId, getParents, ParentWithId, promoteAllChildren } from '@/lib/firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { ChildForm } from '@/components/admin/ChildForm';
+import { BulkEditChildForm } from '@/components/admin/BulkEditChildForm';
 
 export default function ChildrenAdminPage() {
   const [children, setChildren] = useState<ChildWithId[]>([]);
@@ -28,10 +30,13 @@ export default function ChildrenAdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isPromoteAlertOpen, setIsPromoteAlertOpen] = useState(false);
   const [selectedChild, setSelectedChild] = useState<ChildWithId | null>(null);
   const [childToDelete, setChildToDelete] = useState<ChildWithId | null>(null);
+  const [selectedChildrenIds, setSelectedChildrenIds] = useState<string[]>([]);
+
 
   const { toast } = useToast();
 
@@ -52,6 +57,12 @@ export default function ChildrenAdminPage() {
     setSelectedChild(null);
     fetchData();
   };
+  
+  const handleBulkFormSuccess = () => {
+    setIsBulkEditOpen(false);
+    fetchData();
+    setSelectedChildrenIds([]);
+  }
 
   const handleEdit = (child: ChildWithId) => {
     setSelectedChild(child);
@@ -117,6 +128,22 @@ export default function ChildrenAdminPage() {
   const activeChildren = children.filter(c => !c.yearGroup.startsWith('Archived'));
   const leaversYear = new Date().getFullYear() + 1;
 
+  const handleSelectAll = (checked: boolean) => {
+      if (checked) {
+          setSelectedChildrenIds(activeChildren.map(c => c.id));
+      } else {
+          setSelectedChildrenIds([]);
+      }
+  }
+
+  const handleSelectChild = (childId: string, checked: boolean) => {
+      if (checked) {
+          setSelectedChildrenIds(prev => [...prev, childId]);
+      } else {
+          setSelectedChildrenIds(prev => prev.filter(id => id !== childId));
+      }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -154,6 +181,36 @@ export default function ChildrenAdminPage() {
             </Dialog>
         </div>
       </div>
+      
+       <div className="flex items-center gap-4">
+        <Dialog open={isBulkEditOpen} onOpenChange={setIsBulkEditOpen}>
+            <DialogTrigger asChild>
+                <Button disabled={selectedChildrenIds.length === 0}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Bulk Edit ({selectedChildrenIds.length})
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[625px]">
+                <DialogHeader>
+                    <DialogTitle>Bulk Edit Children</DialogTitle>
+                    <DialogDescription>
+                        Update the selected fields for all {selectedChildrenIds.length} selected children. Fields left blank will not be changed.
+                    </DialogDescription>
+                </DialogHeader>
+                <BulkEditChildForm 
+                    selectedIds={selectedChildrenIds}
+                    parents={parents}
+                    onSuccess={handleBulkFormSuccess}
+                />
+            </DialogContent>
+        </Dialog>
+
+        {selectedChildrenIds.length > 0 && (
+            <span className="text-sm text-muted-foreground">
+                {selectedChildrenIds.length} of {activeChildren.length} selected.
+            </span>
+        )}
+      </div>
 
       <Card>
         <CardHeader>
@@ -169,6 +226,13 @@ export default function ChildrenAdminPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead padding="checkbox">
+                    <Checkbox
+                        checked={selectedChildrenIds.length === activeChildren.length && activeChildren.length > 0}
+                        onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                        aria-label="Select all"
+                    />
+                  </TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Year Group</TableHead>
                   <TableHead>Linked Parent</TableHead>
@@ -179,6 +243,13 @@ export default function ChildrenAdminPage() {
                 {activeChildren.length > 0 ? (
                   activeChildren.map((child) => (
                     <TableRow key={child.id}>
+                       <TableCell padding="checkbox">
+                         <Checkbox
+                            checked={selectedChildrenIds.includes(child.id)}
+                            onCheckedChange={(checked) => handleSelectChild(child.id, !!checked)}
+                            aria-label={`Select ${child.name}`}
+                        />
+                       </TableCell>
                       <TableCell className="font-medium">{child.name}</TableCell>
                       <TableCell>{child.yearGroup}</TableCell>
                       <TableCell>{getParentName(child.parentId)}</TableCell>
@@ -208,7 +279,7 @@ export default function ChildrenAdminPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center">
+                    <TableCell colSpan={5} className="h-24 text-center">
                       No children found.
                     </TableCell>
                   </TableRow>
@@ -254,4 +325,5 @@ export default function ChildrenAdminPage() {
       </AlertDialog>
     </div>
   );
-}
+
+    
