@@ -18,6 +18,19 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: '/templates/:path*',
+        headers: [
+          {
+            key: 'Content-Disposition',
+            value: 'attachment',
+          },
+        ],
+      },
+    ]
+  },
 };
 
 export default nextConfig;
