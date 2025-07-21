@@ -2,7 +2,7 @@
 'use client';
 
 import { useLanguage } from '@/app/(public)/LanguageProvider';
-import { School, Loader2 } from 'lucide-react';
+import { Loader2, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
@@ -78,25 +78,49 @@ export function PublicFooter() {
       t.forParents,
   ];
 
+  const socialLinks = [
+    { platform: 'Facebook', url: settings?.facebookUrl, icon: Facebook },
+    { platform: 'Twitter', url: settings?.twitterUrl, icon: Twitter },
+    { platform: 'Instagram', url: settings?.instagramUrl, icon: Instagram },
+    { platform: 'YouTube', url: settings?.youtubeUrl, icon: Youtube },
+  ].filter(link => link.url);
+
+
   return (
     <footer className="bg-foreground text-background">
       <div className="container mx-auto max-w-7xl px-8 py-16">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-4 lg:grid-cols-5">
             <div className="col-span-1 md:col-span-2 mb-8 md:mb-0">
                  <Link href="/" className="flex items-center gap-2">
                     <Image src="/logo.png" alt="Maes Y Morfa logo" width={28} height={28} className="h-7 w-7" />
                     <span className="font-extrabold text-xl">Maes Y Morfa</span>
                 </Link>
-                <div className="text-sm text-background/70 mt-4">
+                <div className="text-sm text-background/70 mt-4 space-y-1">
                     {settings ? (
+                       <>
                         <p>{settings.address}</p>
+                        <p>{settings.phone}</p>
+                        <p>{settings.email}</p>
+                       </>
                     ) : (
-                       <div className="h-5 w-48 bg-gray-600 animate-pulse rounded-md mt-1"></div>
+                       <>
+                         <div className="h-5 w-48 bg-gray-600 animate-pulse rounded-md mt-1"></div>
+                         <div className="h-5 w-32 bg-gray-600 animate-pulse rounded-md mt-1"></div>
+                       </>
                     )}
                 </div>
+                 {socialLinks.length > 0 && (
+                    <div className="flex items-center gap-4 mt-6">
+                        {socialLinks.map(({ platform, url, icon: Icon }) => (
+                           <a key={platform} href={url} target="_blank" rel="noopener noreferrer" aria-label={`Follow us on ${platform}`}>
+                             <Icon className="h-6 w-6 text-background/70 hover:text-background transition-colors" />
+                           </a>
+                        ))}
+                    </div>
+                )}
             </div>
             {footerLinkGroups.map((group) => (
-                <div key={group.title} className="space-y-4">
+                <div key={group.title} className="space-y-4 lg:col-span-1">
                     <h4 className="font-bold text-base">{group.title}</h4>
                     <ul className="space-y-2">
                         {group.links.map((link) => (

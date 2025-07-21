@@ -20,11 +20,18 @@ import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getSiteSettings, updateSiteSettings, SiteSettings } from '@/lib/firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+
+const urlValidation = z.string().url({ message: "Please enter a valid URL starting with https://" }).optional().or(z.literal(''));
 
 const formSchema = z.object({
   address: z.string().min(10, { message: 'Address must be at least 10 characters.' }),
   phone: z.string().min(10, { message: 'A valid phone number is required.' }),
   email: z.string().email({ message: 'A valid email is required.' }),
+  facebookUrl: urlValidation,
+  twitterUrl: urlValidation,
+  instagramUrl: urlValidation,
+  youtubeUrl: urlValidation,
 });
 
 type SettingsFormValues = z.infer<typeof formSchema>;
@@ -40,6 +47,10 @@ export default function SettingsAdminPage() {
       address: '',
       phone: '',
       email: '',
+      facebookUrl: '',
+      twitterUrl: '',
+      instagramUrl: '',
+      youtubeUrl: '',
     },
   });
 
@@ -94,7 +105,7 @@ export default function SettingsAdminPage() {
 
         <Card>
             <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
+                <CardTitle>Global Information</CardTitle>
                 <CardDescription>
                     This information is displayed on the public "Contact Us" page and in the footer.
                 </CardDescription>
@@ -107,45 +118,109 @@ export default function SettingsAdminPage() {
                 ) : (
                     <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                        <FormField
-                        control={form.control}
-                        name="address"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>School Address</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Maes Y Morfa Primary School, School Road, Llanelli, SA15 1EX" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                         <FormField
-                        control={form.control}
-                        name="phone"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Phone Number</FormLabel>
-                            <FormControl>
-                                <Input placeholder="01234 567890" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                         <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Public Email Address</FormLabel>
-                            <FormControl>
-                                <Input type="email" placeholder="admin@maesymorfa.cymru" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-medium">Contact Details</h3>
+                             <FormField
+                                control={form.control}
+                                name="address"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>School Address</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Maes Y Morfa Primary School, School Road, Llanelli, SA15 1EX" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                                <FormField
+                                control={form.control}
+                                name="phone"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Phone Number</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="01234 567890" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                                <FormField
+                                control={form.control}
+                                name="email"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Public Email Address</FormLabel>
+                                    <FormControl>
+                                        <Input type="email" placeholder="admin@maesymorfa.cymru" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <Separator />
+
+                        <div className="space-y-4">
+                             <h3 className="text-lg font-medium">Social Media Links</h3>
+                             <p className="text-sm text-muted-foreground">Enter the full URL for each social media profile. Leave blank to hide the icon.</p>
+                              <FormField
+                                control={form.control}
+                                name="facebookUrl"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Facebook Page URL</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="https://facebook.com/yourschool" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                                 <FormField
+                                control={form.control}
+                                name="twitterUrl"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>X (Twitter) URL</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="https://x.com/yourschool" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                                 <FormField
+                                control={form.control}
+                                name="instagramUrl"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Instagram URL</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="https://instagram.com/yourschool" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                                 <FormField
+                                control={form.control}
+                                name="youtubeUrl"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>YouTube Channel URL</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="https://youtube.com/yourschool" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                        </div>
+
+
                         <div className="flex justify-end">
                             <Button type="submit" disabled={isLoading}>
                                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

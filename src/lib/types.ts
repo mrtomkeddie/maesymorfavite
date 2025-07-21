@@ -37,4 +37,8 @@ export type SiteSettings = {
     address: string;
     phone: string;
     email: string;
+    facebookUrl?: string;
+    twitterUrl?: string;
+    instagramUrl?: string;
+    youtubeUrl?: string;
 }
