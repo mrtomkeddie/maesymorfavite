@@ -10,7 +10,7 @@ import { useLanguage } from '@/app/(public)/LanguageProvider';
 const content = {
     en: {
         nav: [
-            { href: '#about', label: 'About' },
+            { href: '/about', label: 'About' },
             { href: '/news', label: 'News' },
             { href: '#contact', label: 'Contact' },
         ],
@@ -20,7 +20,7 @@ const content = {
     },
     cy: {
         nav: [
-            { href: '#about', label: 'Amdanom Ni' },
+            { href: '/about', label: 'Amdanom Ni' },
             { href: '/news', label: 'Newyddion' },
             { href: '#contact', label: 'Cysylltu' },
         ],
@@ -31,7 +31,7 @@ const content = {
 }
 
 export function PublicHeader() {
-  const { language, toggleLanguage } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const t = content[language];
   const navLinks = t.nav;
 
