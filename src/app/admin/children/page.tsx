@@ -154,12 +154,12 @@ export default function ChildrenAdminPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
             <h1 className="text-3xl font-bold font-headline">Child Management</h1>
             <p className="text-muted-foreground">Add, edit, and manage child profiles.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" onClick={() => setIsPromoteAlertOpen(true)}>
                 <ChevronsUp className="mr-2 h-4 w-4" />
                 Promote Year Groups
@@ -256,7 +256,7 @@ export default function ChildrenAdminPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead padding="checkbox">
+                  <TableHead className="w-[40px]">
                     <Checkbox
                         checked={selectedChildrenIds.length === activeChildren.length && activeChildren.length > 0}
                         onCheckedChange={(checked) => handleSelectAll(!!checked)}
@@ -266,14 +266,14 @@ export default function ChildrenAdminPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Year Group</TableHead>
                   <TableHead>Linked Parent</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right w-[80px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {activeChildren.length > 0 ? (
                   activeChildren.map((child) => (
                     <TableRow key={child.id}>
-                       <TableCell padding="checkbox">
+                       <TableCell>
                          <Checkbox
                             checked={selectedChildrenIds.includes(child.id)}
                             onCheckedChange={(checked) => handleSelectChild(child.id, !!checked)}
@@ -355,3 +355,5 @@ export default function ChildrenAdminPage() {
       </AlertDialog>
     </div>
   );
+
+    
