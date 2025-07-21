@@ -2,10 +2,12 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowRight, BookOpen, HeartHandshake, Sparkles } from 'lucide-react';
+import { ArrowRight, BookOpen, HeartHandshake, Sparkles, Newspaper } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from './LanguageProvider';
+import { UrgentBanner } from '@/components/ui/UrgentBanner';
+import { news as mockNews, UrgentNewsPost } from '@/lib/mockNews';
 
 const content = {
   en: {
@@ -33,6 +35,11 @@ const content = {
         title: 'Creative Curriculum',
         description: 'Inspiring lessons, hands-on learning, and room for every talent to shine.'
       }
+    },
+    latestNews: {
+      heading: 'Latest News',
+      readMore: 'Read More',
+      viewAll: 'View All News'
     },
     cta: {
       heading: 'Are you a Maes Y Morfa parent?',
@@ -66,6 +73,11 @@ const content = {
         description: 'Gwersi ysbrydoledig, dysgu ymarferol, a lle i bob talent ddisgleirio.'
       }
     },
+    latestNews: {
+        heading: 'Newyddion Diweddaraf',
+        readMore: 'Darllen Mwy',
+        viewAll: 'Gweld Pob Newyddion'
+    },
     cta: {
       heading: 'Ydych chi’n rhiant Maes Y Morfa?',
       body: 'Mewngofnodwch i MorfaConnect i wirio cynnydd eich plentyn, riportio absenoldebau, a chael y diweddariadau diweddaraf—yn gyflym ac yn ddiogel.',
@@ -78,9 +90,13 @@ const content = {
 export default function HomePage() {
   const { language } = useLanguage();
   const t = content[language];
+  const latestNews = mockNews.filter(n => n.published).slice(0, 3);
+  const urgentNews: UrgentNewsPost | undefined = mockNews.find(p => p.isUrgent && p.published) as UrgentNewsPost;
 
   return (
     <div className="bg-background">
+      {urgentNews && <UrgentBanner post={urgentNews} />}
+
       {/* Hero Section */}
       <section className="w-full py-16 md:py-24">
         <div className="container mx-auto max-w-7xl px-8">
@@ -125,7 +141,7 @@ export default function HomePage() {
       </section>
 
       {/* Values Section */}
-      <section id="who-we-help" className="w-full py-16 md:py-24 bg-secondary/30">
+      <section className="w-full py-16 md:py-24 bg-secondary/30">
         <div className="container mx-auto max-w-7xl px-8">
             <div className="text-center mb-12">
                 <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground md:text-5xl">
@@ -191,8 +207,42 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Latest News Section */}
+      <section className="w-full py-16 md:py-24">
+        <div className="container mx-auto max-w-7xl px-8">
+          <div className="text-center mb-12">
+            <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground md:text-5xl">
+              {t.latestNews.heading}
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {latestNews.map((post) => (
+              <Card key={post.id} className="flex flex-col">
+                <CardHeader>
+                  <span className="text-sm text-muted-foreground">{new Date(post.date).toLocaleDateString(language === 'cy' ? 'cy-GB' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                  <CardTitle className="text-xl font-bold">{post[`title_${language}`]}</CardTitle>
+                </CardHeader>
+                <CardContent className="flex-grow">
+                  <p className="text-muted-foreground line-clamp-3">{post[`body_${language}`].substring(0, 150)}...</p>
+                </CardContent>
+                <div className="p-6 pt-0">
+                  <Button asChild variant="link" className="p-0">
+                    <Link href={`/news/${post.slug}`}>{t.latestNews.readMore} <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+          <div className="text-center mt-12">
+            <Button asChild size="lg" variant="outline">
+                <Link href="/news">{t.latestNews.viewAll}</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
         {/* Login Prompt Section */}
-        <section className="w-full py-16 md:py-24">
+        <section className="w-full py-16 md:py-24 bg-secondary/30">
             <div className="container mx-auto max-w-4xl px-8 text-center">
                  <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground md:text-5xl">
                     {t.cta.heading}
