@@ -18,11 +18,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, ChevronsUp, Edit } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, ChevronsUp, Edit, UploadCloud } from 'lucide-react';
 import { getChildren, deleteChild, ChildWithId, getParents, ParentWithId, promoteAllChildren } from '@/lib/firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { ChildForm } from '@/components/admin/ChildForm';
 import { BulkEditChildForm } from '@/components/admin/BulkEditChildForm';
+import { CsvImportDialog } from '@/components/admin/CsvImportDialog';
+import { Child } from '@/lib/types';
 
 export default function ChildrenAdminPage() {
   const [children, setChildren] = useState<ChildWithId[]>([]);
@@ -33,6 +35,7 @@ export default function ChildrenAdminPage() {
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isPromoteAlertOpen, setIsPromoteAlertOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedChild, setSelectedChild] = useState<ChildWithId | null>(null);
   const [childToDelete, setChildToDelete] = useState<ChildWithId | null>(null);
   const [selectedChildrenIds, setSelectedChildrenIds] = useState<string[]>([]);
@@ -62,6 +65,11 @@ export default function ChildrenAdminPage() {
     setIsBulkEditOpen(false);
     fetchData();
     setSelectedChildrenIds([]);
+  }
+
+  const handleImportSuccess = () => {
+      setIsImportOpen(false);
+      fetchData();
   }
 
   const handleEdit = (child: ChildWithId) => {
@@ -156,6 +164,28 @@ export default function ChildrenAdminPage() {
                 <ChevronsUp className="mr-2 h-4 w-4" />
                 Promote Year Groups
             </Button>
+            <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline">
+                        <UploadCloud className="mr-2 h-4 w-4" />
+                        Import from CSV
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[725px]">
+                    <DialogHeader>
+                        <DialogTitle>Import Children from CSV</DialogTitle>
+                        <DialogDescription>
+                            Upload a CSV file to bulk-add children. Make sure the CSV columns match the required format.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <CsvImportDialog<Child>
+                        onSuccess={handleImportSuccess}
+                        requiredFields={['name', 'yearGroup']}
+                        templateUrl="/templates/children_template.csv"
+                        templateName="children_template.csv"
+                    />
+                </DialogContent>
+            </Dialog>
             <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
                 setIsDialogOpen(isOpen);
                 if (!isOpen) setSelectedChild(null);

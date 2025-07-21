@@ -1,5 +1,6 @@
 
 
+
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, writeBatch, where } from "firebase/firestore"; 
 import { db } from "./config";
 import type { NewsPost } from "@/lib/mockNews";
@@ -234,6 +235,15 @@ export const getChildren = async (): Promise<ChildWithId[]> => {
 
 export const addChild = async (childData: Child) => {
     await addDoc(childrenCollection, childData);
+}
+
+export const bulkAddChildren = async (childrenData: Child[]) => {
+    const batch = writeBatch(db);
+    childrenData.forEach(child => {
+        const newChildRef = doc(childrenCollection);
+        batch.set(newChildRef, child);
+    });
+    await batch.commit();
 }
 
 export const updateChild = async (id: string, childData: Partial<Child>) => {
