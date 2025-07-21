@@ -1,3 +1,4 @@
+
 export type CalendarTag = 'Holiday' | 'INSET' | 'Event' | 'Trip' | 'Parents Evening';
 
 export type CalendarAttachment = {
@@ -16,7 +17,11 @@ export type CalendarEvent = {
     end?: string; // ISO 8601 format
     allDay: boolean;
     tags: CalendarTag[];
-    attachments: CalendarAttachment[];
+    attachments: CalendarAttachment[]; // Can be deprecated for attachmentUrl
+    attachmentUrl?: string;
+    attachmentName?: string;
+    isUrgent?: boolean;
+    showOnHomepage?: boolean;
     published: boolean;
 };
 
