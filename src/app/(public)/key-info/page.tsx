@@ -104,7 +104,7 @@ export default function KeyInfoPage() {
                                         <p className="text-muted-foreground text-sm mb-4">{card.data.body}</p>
                                     </CardContent>
                                     <div className="p-6 pt-0">
-                                        <Button className="w-full" asChild>
+                                        <Button className="w-full whitespace-normal h-auto py-2" asChild>
                                             <a href="#" download>
                                                 <Download className="mr-2 h-4 w-4" />
                                                 {card.data.button}
@@ -124,7 +124,7 @@ export default function KeyInfoPage() {
                         </CardHeader>
                         <CardContent>
                             <p className="text-muted-foreground mb-4">{t.policies.body}</p>
-                            <div className="space-y-2">
+                            <div className="flex flex-wrap gap-2">
                                 {t.policies.links.map(link => (
                                     <Button asChild variant="outline" key={link.label}>
                                         <a href={link.href} target="_blank" rel="noopener noreferrer">
