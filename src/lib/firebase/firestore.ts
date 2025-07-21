@@ -4,7 +4,7 @@ import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy,
 import { db } from "./config";
 import type { NewsPost } from "@/lib/mockNews";
 import type { CalendarEvent } from "@/lib/mockCalendar";
-import type { StaffMember, StaffMemberWithId, Document, DocumentWithId } from "@/lib/types";
+import type { StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId } from "@/lib/types";
 
 // === NEWS ===
 
@@ -142,4 +142,56 @@ export const deleteDocument = async (id: string) => {
     await deleteDoc(documentDoc);
 }
 
-    
+
+// === PARENTS ===
+const parentsCollection = collection(db, "parents");
+
+export const getParents = async (): Promise<ParentWithId[]> => {
+    const q = query(parentsCollection, orderBy("name", "asc"));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ ...doc.data() as Parent, id: doc.id }));
+}
+
+export const addParent = async (parentData: Parent): Promise<string> => {
+    const docRef = await addDoc(parentsCollection, parentData);
+    return docRef.id;
+}
+
+export const updateParent = async (id: string, parentData: Partial<Parent>) => {
+    const parentDoc = doc(db, "parents", id);
+    await updateDoc(parentDoc, parentData);
+}
+
+export const deleteParent = async (id: string) => {
+    const parentDoc = doc(db, "parents", id);
+    // Unlink children before deleting parent
+    const childrenToUnlink = await getDocs(query(collection(db, 'children'), where('parentId', '==', id)));
+    const updates = childrenToUnlink.docs.map(childDoc => updateDoc(childDoc.ref, { parentId: '' }));
+    await Promise.all(updates);
+
+    await deleteDoc(parentDoc);
+}
+
+
+// === CHILDREN ===
+const childrenCollection = collection(db, "children");
+
+export const getChildren = async (): Promise<ChildWithId[]> => {
+    const q = query(childrenCollection, orderBy("name", "asc"));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ ...doc.data() as Child, id: doc.id }));
+}
+
+export const addChild = async (childData: Child) => {
+    await addDoc(childrenCollection, childData);
+}
+
+export const updateChild = async (id: string, childData: Partial<Child>) => {
+    const childDoc = doc(db, "children", id);
+    await updateDoc(childDoc, childData);
+}
+
+export const deleteChild = async (id: string) => {
+    const childDoc = doc(db, "children", id);
+    await deleteDoc(childDoc);
+}

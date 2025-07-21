@@ -19,4 +19,17 @@ export type Document = {
 
 export type DocumentWithId = Document & { id: string };
 
-    
+export type Parent = {
+    name: string;
+    email: string;
+}
+
+export type ParentWithId = Parent & { id: string };
+
+export type Child = {
+    name: string;
+    yearGroup: string;
+    parentId?: string;
+}
+
+export type ChildWithId = Child & { id: string };
