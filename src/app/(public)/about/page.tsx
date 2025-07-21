@@ -25,9 +25,11 @@ const content = {
     team: [
         { name: "Jane Morgan", role: "Headteacher", imageHint: "woman headteacher portrait" },
         { name: "Alex Evans", role: "Deputy Head", imageHint: "man teacher portrait" },
-        { name: "Sarah Davies", role: "Teacher", imageHint: "woman teacher classroom" },
-        { name: "Tom Rees", role: "Teacher", imageHint: "man teacher books" },
+        { name: "Ceri Lloyd", role: "SENCo", imageHint: "woman teacher friendly" },
+        { name: "Mark Phillips", role: "Office Manager", imageHint: "man administrator office" },
     ],
+    teamCaption: "The Maes Y Morfa Team, September 2025",
+    teamBlurb: "Our dedicated team of teachers and support staff work together to create a caring, inspiring school for every child. For a full list of staff and classes, please contact the school office.",
     ctaTitle: "Want to see for yourself?",
     ctaText: "The best way to experience Maes Y Morfa is to visit us. We’d love to show you around.",
     ctaButton: "Arrange a Visit"
@@ -48,9 +50,11 @@ const content = {
     team: [
         { name: "Jane Morgan", role: "Pennaeth", imageHint: "woman headteacher portrait" },
         { name: "Alex Evans", role: "Dirprwy Bennaeth", imageHint: "man teacher portrait" },
-        { name: "Sarah Davies", role: "Athro/Athrawes", imageHint: "woman teacher classroom" },
-        { name: "Tom Rees", role: "Athro/Athrawes", imageHint: "man teacher books" },
+        { name: "Ceri Lloyd", role: "Cydlynydd AAA", imageHint: "woman teacher friendly" },
+        { name: "Mark Phillips", role: "Rheolwr Swyddfa", imageHint: "man administrator office" },
     ],
+    teamCaption: "Tîm Maes Y Morfa, Medi 2025",
+    teamBlurb: "Mae ein tîm ymroddedig o athrawon a staff cymorth yn cydweithio i greu ysgol ofalgar, ysbrydoledig i bob plentyn. Am restr lawn o staff a dosbarthiadau, cysylltwch â swyddfa'r ysgol.",
     ctaTitle: "Am weld drosoch eich hun?",
     ctaText: "Y ffordd orau o brofi Maes Y Morfa yw ymweld â ni. Byddem wrth ein bodd yn eich tywys o gwmpas.",
     ctaButton: "Trefnu Ymweliad"
@@ -116,6 +120,11 @@ export default function AboutPage() {
                                 <p className="text-sm text-primary">{member.role}</p>
                             </div>
                         ))}
+                    </div>
+                    <div className="mt-12 text-center">
+                        <Image src="https://placehold.co/800x400.png" data-ai-hint="school staff group photo" alt="Maes Y Morfa staff team" width={800} height={400} className="rounded-2xl object-cover w-full max-w-4xl mx-auto shadow-lg" />
+                        <p className="text-sm text-muted-foreground mt-4 italic">{t.teamCaption}</p>
+                        <p className="mt-4 max-w-2xl mx-auto text-foreground/80">{t.teamBlurb}</p>
                     </div>
                 </div>
 
