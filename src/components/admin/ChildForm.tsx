@@ -153,14 +153,17 @@ export function ChildForm({ onSuccess, existingChild, parents }: ChildFormProps)
             render={({ field }) => (
             <FormItem>
                 <FormLabel>Link to Parent (Optional)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select 
+                  onValueChange={(value) => field.onChange(value === '__none__' ? '' : value)} 
+                  defaultValue={field.value || '__none__'}
+                >
                 <FormControl>
                     <SelectTrigger>
                     <SelectValue placeholder="Select a parent" />
                     </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="__none__">None</SelectItem>
                     {parents.map((parent) => (
                     <SelectItem key={parent.id} value={parent.id}>
                         {parent.name} ({parent.email})
