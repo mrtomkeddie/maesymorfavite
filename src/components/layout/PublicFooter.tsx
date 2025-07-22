@@ -78,12 +78,12 @@ export function PublicFooter() {
       t.forParents,
   ];
 
-  const socialLinks = [
-    { platform: 'Facebook', url: settings?.facebookUrl, icon: Facebook },
-    { platform: 'Twitter', url: settings?.twitterUrl, icon: Twitter },
-    { platform: 'Instagram', url: settings?.instagramUrl, icon: Instagram },
-    { platform: 'YouTube', url: settings?.youtubeUrl, icon: Youtube },
-  ].filter(link => link.url);
+  const socialLinks = settings ? [
+    { platform: 'Facebook', url: settings.facebookUrl, icon: Facebook },
+    { platform: 'Twitter', url: settings.twitterUrl, icon: Twitter },
+    { platform: 'Instagram', url: settings.instagramUrl, icon: Instagram },
+    { platform: 'YouTube', url: settings.youtubeUrl, icon: Youtube },
+  ].filter((link): link is { platform: string; url: string; icon: React.ElementType } => !!link.url) : [];
 
 
   return (
@@ -112,7 +112,7 @@ export function PublicFooter() {
                  {socialLinks.length > 0 && (
                     <div className="flex items-center gap-4 mt-6">
                         {socialLinks.map(({ platform, url, icon: Icon }) => (
-                           <a key={platform} href={url} target="_blank" rel="noopener noreferrer" aria-label={`Follow us on ${platform}`}>
+                           <a key={platform} href={url!} target="_blank" rel="noopener noreferrer" aria-label={`Follow us on ${platform}`}>
                              <Icon className="h-6 w-6 text-background/70 hover:text-background transition-colors" />
                            </a>
                         ))}
