@@ -1,10 +1,11 @@
 
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, writeBatch, where, getDoc } from "firebase/firestore"; 
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, writeBatch, where, getDoc, limit, startAfter } from "firebase/firestore"; 
 import { db } from "./config";
 import type { NewsPost } from "@/lib/mockNews";
 import type { CalendarEvent } from "@/lib/mockCalendar";
 import type { StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings } from "@/lib/types";
 import { yearGroups } from "@/components/admin/ChildForm";
+import { QueryDocumentSnapshot } from "firebase/firestore";
 
 // === NEWS ===
 
@@ -66,8 +67,8 @@ const calendarCollection = collection(db, "calendar");
 
 const generateNewsDataFromEvent = (eventData: Omit<CalendarEvent, 'id' | 'attachments'>): Omit<NewsPost, 'id' | 'slug' | 'attachments'> => {
     return {
-        title_en: `${eventData.title_en} (Event)`,
-        title_cy: `${eventData.title_cy} (Digwyddiad)`,
+        title_en: `${eventData.title_en} (Event)` as string,
+        title_cy: `${eventData.title_cy} (Digwyddiad)` as string,
         body_en: eventData.description_en || '',
         body_cy: eventData.description_cy || '',
         date: eventData.start,
@@ -311,3 +312,56 @@ export const getSiteSettings = async (): Promise<SiteSettings | null> => {
 export const updateSiteSettings = async (settings: SiteSettings) => {
     await setDoc(settingsDocRef, settings, { merge: true });
 };
+
+// === PAGINATED FETCH HELPERS ===
+
+export const getPaginatedCalendarEvents = async (limitNum = 20, lastDoc?: QueryDocumentSnapshot): Promise<{ data: CalendarEventWithId[], lastDoc?: QueryDocumentSnapshot }> => {
+    let q = query(calendarCollection, orderBy("start", "asc"), limit(limitNum));
+    if (lastDoc) q = query(calendarCollection, orderBy("start", "asc"), startAfter(lastDoc), limit(limitNum));
+    const querySnapshot = await getDocs(q);
+    const data = querySnapshot.docs.map(doc => ({ ...doc.data() as CalendarEvent, id: doc.id }));
+    return { data, lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] };
+};
+
+export const getPaginatedChildren = async (limitNum = 20, lastDoc?: QueryDocumentSnapshot): Promise<{ data: ChildWithId[], lastDoc?: QueryDocumentSnapshot }> => {
+    let q = query(childrenCollection, orderBy("name", "asc"), limit(limitNum));
+    if (lastDoc) q = query(childrenCollection, orderBy("name", "asc"), startAfter(lastDoc), limit(limitNum));
+    const querySnapshot = await getDocs(q);
+    const data = querySnapshot.docs.map(doc => ({ ...doc.data() as Child, id: doc.id }));
+    return { data, lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] };
+};
+
+export const getPaginatedNews = async (limitNum = 20, lastDoc?: QueryDocumentSnapshot): Promise<{ data: NewsPostWithId[], lastDoc?: QueryDocumentSnapshot }> => {
+    let q = query(newsCollection, orderBy("date", "desc"), limit(limitNum));
+    if (lastDoc) q = query(newsCollection, orderBy("date", "desc"), startAfter(lastDoc), limit(limitNum));
+    const querySnapshot = await getDocs(q);
+    const data = querySnapshot.docs.map(doc => ({ ...doc.data() as NewsPost, id: doc.id }));
+    return { data, lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] };
+};
+
+export const getPaginatedStaff = async (limitNum = 20, lastDoc?: QueryDocumentSnapshot): Promise<{ data: StaffMemberWithId[], lastDoc?: QueryDocumentSnapshot }> => {
+    let q = query(staffCollection, orderBy("name", "asc"), limit(limitNum));
+    if (lastDoc) q = query(staffCollection, orderBy("name", "asc"), startAfter(lastDoc), limit(limitNum));
+    const querySnapshot = await getDocs(q);
+    const data = querySnapshot.docs.map(doc => ({ ...doc.data() as StaffMember, id: doc.id }));
+    return { data, lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] };
+};
+
+export const getPaginatedDocuments = async (limitNum = 20, lastDoc?: QueryDocumentSnapshot): Promise<{ data: DocumentWithId[], lastDoc?: QueryDocumentSnapshot }> => {
+    let q = query(documentsCollection, orderBy("uploadedAt", "desc"), limit(limitNum));
+    if (lastDoc) q = query(documentsCollection, orderBy("uploadedAt", "desc"), startAfter(lastDoc), limit(limitNum));
+    const querySnapshot = await getDocs(q);
+    const data = querySnapshot.docs.map(doc => ({ ...doc.data() as Document, id: doc.id }));
+    return { data, lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] };
+};
+
+export const getPaginatedParents = async (limitNum = 20, lastDoc?: QueryDocumentSnapshot): Promise<{ data: ParentWithId[], lastDoc?: QueryDocumentSnapshot }> => {
+    let q = query(parentsCollection, orderBy("name", "asc"), limit(limitNum));
+    if (lastDoc) q = query(parentsCollection, orderBy("name", "asc"), startAfter(lastDoc), limit(limitNum));
+    const querySnapshot = await getDocs(q);
+    const data = querySnapshot.docs.map(doc => ({ ...doc.data() as Parent, id: doc.id }));
+    return { data, lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] };
+};
+
+export type ChildWithId = Child & { id: string };
+export type ParentWithId = Parent & { id: string };

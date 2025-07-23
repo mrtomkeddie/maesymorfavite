@@ -18,16 +18,21 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, Link as LinkIcon } from 'lucide-react';
-import { getDocuments, deleteDocument, DocumentWithId } from '@/lib/firebase/firestore';
+import { getDocuments, deleteDocument, getPaginatedDocuments } from '@/lib/firebase/firestore';
+import type { DocumentWithId } from '@/lib/types';
 import { deleteFile } from '@/lib/firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { DocumentForm } from '@/components/admin/DocumentForm';
 import Link from 'next/link';
+import { QueryDocumentSnapshot } from 'firebase/firestore';
 
 export default function DocumentsAdminPage() {
   const [documents, setDocuments] = useState<DocumentWithId[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | undefined>(undefined);
+  const [hasMore, setHasMore] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<DocumentWithId | null>(null);
@@ -35,21 +40,70 @@ export default function DocumentsAdminPage() {
 
   const { toast } = useToast();
 
-  const fetchDocuments = async () => {
-    setIsLoading(true);
-    const docData = await getDocuments();
-    setDocuments(docData);
+  const generateMockDocuments = () => {
+    const categories = ['Policy', 'Form', 'Newsletter'];
+    const mockDocs: DocumentWithId[] = [];
+    
+    for (let i = 1; i <= 30; i++) {
+      mockDocs.push({
+        id: `mock_doc_${i}`,
+        title: `Document ${i}`,
+        category: categories[i % categories.length],
+        fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        uploadedAt: new Date(Date.now() - i * 86400000).toISOString(),
+      });
+    }
+    return mockDocs;
+  };
+
+  const fetchDocuments = async (initial = false) => {
+    if (initial) {
+      setIsLoading(true);
+      setLastDoc(undefined);
+      setHasMore(true);
+    } else {
+      setIsLoadingMore(true);
+    }
+    
+    try {
+      // Check if Firebase is properly configured
+      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+        throw new Error('Firebase not configured');
+      }
+      
+      const { data, lastDoc: newLastDoc } = await getPaginatedDocuments(20, initial ? undefined : lastDoc);
+      if (initial) {
+        setDocuments(data);
+      } else {
+        setDocuments(prev => [...prev, ...data]);
+      }
+      setLastDoc(newLastDoc);
+      setHasMore(!!newLastDoc && data.length === 20);
+    } catch (error) {
+      console.log('Firebase not configured, using mock data');
+      // Use mock data if Firebase fails
+      const mockDocsData = generateMockDocuments();
+      
+      if (initial) {
+        setDocuments(mockDocsData);
+      } else {
+        setDocuments(prev => [...prev, ...mockDocsData]);
+      }
+      setHasMore(false); // No more mock data to load
+    }
+    
     setIsLoading(false);
+    setIsLoadingMore(false);
   };
 
   useEffect(() => {
-    fetchDocuments();
+    fetchDocuments(true);
   }, []);
 
   const handleFormSuccess = () => {
     setIsDialogOpen(false);
     setSelectedDocument(null);
-    fetchDocuments();
+    fetchDocuments(true);
   };
 
   const handleEdit = (doc: DocumentWithId) => {
@@ -76,7 +130,7 @@ export default function DocumentsAdminPage() {
             description: "Document deleted successfully.",
             variant: "default",
         });
-        fetchDocuments();
+        fetchDocuments(true);
       } catch (error) {
         console.error("Error deleting document:", error);
         toast({
@@ -132,61 +186,71 @@ export default function DocumentsAdminPage() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>File</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {documents.length > 0 ? (
-                  documents.map((doc) => (
-                    <TableRow key={doc.id}>
-                      <TableCell className="font-medium">{doc.title}</TableCell>
-                      <TableCell><Badge variant="outline">{doc.category}</Badge></TableCell>
-                       <TableCell>
-                        <Button variant="link" asChild className="p-0 h-auto">
-                            <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm">
-                                <LinkIcon className="h-4 w-4" /> View File
-                            </a>
-                        </Button>
-                       </TableCell>
-                      <TableCell className="text-right">
-                         <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                    <span className="sr-only">Open menu</span>
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => handleEdit(doc)}>
-                                    <Pencil className="mr-2 h-4 w-4" />
-                                    Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => openDeleteAlert(doc)} className="text-destructive focus:text-destructive">
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>File</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {documents.length > 0 ? (
+                    documents.map((doc) => (
+                      <TableRow key={doc.id}>
+                        <TableCell className="font-medium">{doc.title}</TableCell>
+                        <TableCell><Badge variant="outline">{doc.category}</Badge></TableCell>
+                         <TableCell>
+                          <Button variant="link" asChild className="p-0 h-auto">
+                              <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm">
+                                  <LinkIcon className="h-4 w-4" /> View File
+                              </a>
+                          </Button>
+                         </TableCell>
+                        <TableCell className="text-right">
+                           <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" className="h-8 w-8 p-0">
+                                      <span className="sr-only">Open menu</span>
+                                      <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuItem onClick={() => handleEdit(doc)}>
+                                      <Pencil className="mr-2 h-4 w-4" />
+                                      Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => openDeleteAlert(doc)} className="text-destructive focus:text-destructive">
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Delete
+                                  </DropdownMenuItem>
+                              </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="h-24 text-center">
+                        No documents found.
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center">
-                      No documents found.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
+              {hasMore && (
+                <div className="flex justify-center mt-4">
+                  <Button onClick={() => fetchDocuments(false)} disabled={isLoadingMore}>
+                    {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+                    Load More
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

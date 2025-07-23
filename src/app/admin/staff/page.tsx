@@ -41,18 +41,24 @@ import {
   Loader2,
   User,
 } from 'lucide-react';
-import { getStaff, deleteStaffMember, StaffMemberWithId } from '@/lib/firebase/firestore';
+import { getPaginatedStaff, deleteStaffMember } from '@/lib/firebase/firestore';
+import { QueryDocumentSnapshot } from 'firebase/firestore';
+import type { StaffMemberWithId } from '@/lib/types';
 import { deleteFile } from '@/lib/firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { StaffForm } from '@/components/admin/StaffForm';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { db } from '@/lib/firebase/config';
 
 
 export default function StaffAdminPage() {
   const [staff, setStaff] = useState<StaffMemberWithId[]>([]);
   const [groupedStaff, setGroupedStaff] = useState<Record<string, StaffMemberWithId[]>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | undefined>(undefined);
+  const [hasMore, setHasMore] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffMemberWithId | null>(null);
@@ -60,33 +66,100 @@ export default function StaffAdminPage() {
 
   const { toast } = useToast();
 
-  const fetchStaff = async () => {
-    setIsLoading(true);
-    const staffData = await getStaff();
-    setStaff(staffData);
-
-    // Group staff by team
-    const groups = staffData.reduce((acc, member) => {
-        const team = member.team || 'Other';
-        if (!acc[team]) {
-            acc[team] = [];
-        }
-        acc[team].push(member);
-        return acc;
+  const groupStaff = (staffList: StaffMemberWithId[]) => {
+    console.log('Grouping staff list:', staffList.length, 'items');
+    const grouped = staffList.reduce((acc, member) => {
+      const team = member.team || 'Other';
+      if (!acc[team]) {
+        acc[team] = [];
+      }
+      acc[team].push(member);
+      return acc;
     }, {} as Record<string, StaffMemberWithId[]>);
-    setGroupedStaff(groups);
+    console.log('Grouped staff result:', Object.keys(grouped), 'teams');
+    return grouped;
+  };
 
+  const generateMockStaff = () => {
+    const teams = ['Teaching', 'Support', 'Admin'];
+    const roles = ['Teacher', 'Teaching Assistant', 'Head Teacher', 'Admin Assistant'];
+    const mockStaff: StaffMemberWithId[] = [];
+    
+    for (let i = 1; i <= 25; i++) {
+      mockStaff.push({
+        id: `mock_staff_${i}`,
+        name: `Staff Member ${i}`,
+        role: roles[i % roles.length],
+        team: teams[i % teams.length],
+        bio: `This is a short bio for staff member ${i}.`,
+        photoUrl: undefined,
+      });
+    }
+    return mockStaff;
+  };
+
+  const fetchStaff = async (initial = false) => {
+    if (initial) {
+      setIsLoading(true);
+      setLastDoc(undefined);
+      setHasMore(true);
+    } else {
+      setIsLoadingMore(true);
+    }
+    
+    try {
+      // Check if Firebase is properly configured
+      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+        throw new Error('Firebase not configured');
+      }
+      
+      const { data, lastDoc: newLastDoc } = await getPaginatedStaff(20, initial ? undefined : lastDoc);
+      let newStaff: StaffMemberWithId[] = [];
+      if (initial) {
+        setStaff(data);
+        newStaff = data;
+      } else {
+        setStaff(prev => {
+          const combined = [...prev, ...data];
+          newStaff = combined;
+          return combined;
+        });
+      }
+      setGroupedStaff(groupStaff(initial ? data : newStaff));
+      setLastDoc(newLastDoc);
+      setHasMore(!!newLastDoc && data.length === 20);
+    } catch (error) {
+      console.log('Firebase not configured, using mock data');
+      // Use mock data if Firebase fails
+      const mockStaffData = generateMockStaff();
+      console.log('Generated mock staff data:', mockStaffData.length, 'items');
+      
+      if (initial) {
+        setStaff(mockStaffData);
+        setGroupedStaff(groupStaff(mockStaffData));
+        console.log('Set initial mock staff data');
+      } else {
+        setStaff(prev => {
+          const combined = [...prev, ...mockStaffData];
+          setGroupedStaff(groupStaff(combined));
+          return combined;
+        });
+      }
+      setHasMore(false); // No more mock data to load
+    }
+    
     setIsLoading(false);
+    setIsLoadingMore(false);
   };
 
   useEffect(() => {
-    fetchStaff();
+    fetchStaff(true);
   }, []);
 
   const handleFormSuccess = () => {
     setIsDialogOpen(false);
     setSelectedStaff(null);
-    fetchStaff();
+    fetchStaff(true);
   };
 
   const handleEdit = (member: StaffMemberWithId) => {
@@ -171,47 +244,62 @@ export default function StaffAdminPage() {
             <div className="flex justify-center items-center h-48">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : Object.keys(groupedStaff).length > 0 ? (
-            <Accordion type="multiple" className="w-full">
-              {Object.entries(groupedStaff).map(([team, members]) => (
-                <AccordionItem value={team} key={team}>
-                  <AccordionTrigger className="text-lg font-semibold">{team}</AccordionTrigger>
-                  <AccordionContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
-                      {members.map((member) => (
-                        <Card key={member.id} className="flex flex-col">
-                            <CardHeader className="flex flex-row items-center gap-4">
-                                <Avatar className="h-16 w-16">
-                                    <AvatarImage src={member.photoUrl} alt={member.name} />
-                                    <AvatarFallback><User /></AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <CardTitle className="text-xl">{member.name}</CardTitle>
-                                    <p className="text-sm text-primary">{member.role}</p>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="flex-grow">
-                                {member.bio && <p className="text-sm text-muted-foreground">{member.bio}</p>}
-                            </CardContent>
-                            <div className="flex items-center justify-end p-4 border-t">
-                                <Button variant="ghost" size="sm" onClick={() => handleEdit(member)}>
-                                    <Pencil className="mr-2 h-4 w-4" /> Edit
-                                </Button>
-                                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => openDeleteAlert(member)}>
-                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                </Button>
-                            </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
           ) : (
-             <div className="h-24 text-center flex items-center justify-center">
-                <p>No staff members found. Add one to get started.</p>
-            </div>
+            <>
+              {console.log('Rendering staff page, groupedStaff keys:', Object.keys(groupedStaff), 'staff length:', staff.length)}
+              {Object.keys(groupedStaff).length > 0 ? (
+                <>
+                  <Accordion type="multiple" className="w-full">
+                    {Object.entries(groupedStaff).map(([team, members]) => (
+                      <AccordionItem value={team} key={team}>
+                        <AccordionTrigger className="text-lg font-semibold">{team}</AccordionTrigger>
+                        <AccordionContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+                            {members.map((member) => (
+                              <Card key={member.id} className="flex flex-col">
+                                  <CardHeader className="flex flex-row items-center gap-4">
+                                      <Avatar className="h-16 w-16">
+                                          <AvatarImage src={member.photoUrl} alt={member.name} />
+                                          <AvatarFallback><User /></AvatarFallback>
+                                      </Avatar>
+                                      <div>
+                                          <CardTitle className="text-xl">{member.name}</CardTitle>
+                                          <p className="text-sm text-primary">{member.role}</p>
+                                      </div>
+                                  </CardHeader>
+                                  <CardContent className="flex-grow">
+                                      {member.bio && <p className="text-sm text-muted-foreground">{member.bio}</p>}
+                                  </CardContent>
+                                  <div className="flex items-center justify-end p-4 border-t">
+                                      <Button variant="ghost" size="sm" onClick={() => handleEdit(member)}>
+                                          <Pencil className="mr-2 h-4 w-4" /> Edit
+                                      </Button>
+                                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => openDeleteAlert(member)}>
+                                          <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                      </Button>
+                                  </div>
+                              </Card>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                  {hasMore && (
+                    <div className="flex justify-center mt-4">
+                      <Button onClick={() => fetchStaff(false)} disabled={isLoadingMore}>
+                        {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+                        Load More
+                      </Button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="h-24 text-center flex items-center justify-center">
+                  <p>No staff members found. Add one to get started.</p>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

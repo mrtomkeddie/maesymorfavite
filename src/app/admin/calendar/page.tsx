@@ -18,16 +18,21 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, FileText, ExternalLink } from 'lucide-react';
-import { getCalendarEvents, deleteCalendarEvent, CalendarEventWithId } from '@/lib/firebase/firestore';
+import { getCalendarEvents, deleteCalendarEvent, CalendarEventWithId, getPaginatedCalendarEvents } from '@/lib/firebase/firestore';
 import { deleteFile } from '@/lib/firebase/storage';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { CalendarForm } from '@/components/admin/CalendarForm';
+import { QueryDocumentSnapshot } from 'firebase/firestore';
+import { calendarEvents } from '@/lib/mockCalendar';
 
 export default function CalendarAdminPage() {
   const [events, setEvents] = useState<CalendarEventWithId[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | undefined>(undefined);
+  const [hasMore, setHasMore] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEventWithId | null>(null);
@@ -35,21 +40,57 @@ export default function CalendarAdminPage() {
 
   const { toast } = useToast();
 
-  const fetchEvents = async () => {
-    setIsLoading(true);
-    const eventData = await getCalendarEvents();
-    setEvents(eventData);
+  const fetchEvents = async (initial = false) => {
+    if (initial) {
+      setIsLoading(true);
+      setLastDoc(undefined);
+      setHasMore(true);
+    } else {
+      setIsLoadingMore(true);
+    }
+    
+    try {
+      // Check if Firebase is properly configured
+      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+        throw new Error('Firebase not configured');
+      }
+      
+      const { data, lastDoc: newLastDoc } = await getPaginatedCalendarEvents(20, initial ? undefined : lastDoc);
+      if (initial) {
+        setEvents(data);
+      } else {
+        setEvents(prev => [...prev, ...data]);
+      }
+      setLastDoc(newLastDoc);
+      setHasMore(!!newLastDoc && data.length === 20);
+    } catch (error) {
+      console.log('Firebase not configured, using mock data');
+      // Use mock data if Firebase fails
+      const mockEvents = calendarEvents.map((event, index) => ({
+        ...event,
+        id: `mock_${index}`
+      }));
+      
+      if (initial) {
+        setEvents(mockEvents);
+      } else {
+        setEvents(prev => [...prev, ...mockEvents]);
+      }
+      setHasMore(false); // No more mock data to load
+    }
+    
     setIsLoading(false);
+    setIsLoadingMore(false);
   };
 
   useEffect(() => {
-    fetchEvents();
+    fetchEvents(true);
   }, []);
 
   const handleFormSuccess = () => {
     setIsDialogOpen(false);
     setSelectedEvent(null);
-    fetchEvents();
+    fetchEvents(true);
   };
 
   const handleEdit = (event: CalendarEventWithId) => {
@@ -133,68 +174,78 @@ export default function CalendarAdminPage() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Attachment</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {events.length > 0 ? (
-                  events.map((event) => (
-                    <TableRow key={event.id}>
-                      <TableCell className="font-medium">{event.title_en}</TableCell>
-                      <TableCell>{format(new Date(event.start), 'dd MMM yyyy')}</TableCell>
-                       <TableCell>
-                        <div className="flex flex-col gap-1">
-                          {event.isUrgent && <Badge variant="destructive">Urgent</Badge>}
-                          {event.showOnHomepage && <Badge variant="secondary">Homepage</Badge>}
-                        </div>
-                       </TableCell>
-                       <TableCell>
-                        {event.attachmentUrl && (
-                            <a href={event.attachmentUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-primary hover:underline">
-                                <FileText className="h-4 w-4" /> View
-                            </a>
-                        )}
-                       </TableCell>
-                      <TableCell className="text-right">
-                         <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                    <span className="sr-only">Open menu</span>
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => handleEdit(event)}>
-                                    <Pencil className="mr-2 h-4 w-4" />
-                                    Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => openDeleteAlert(event)} className="text-destructive focus:text-destructive">
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Attachment</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {events.length > 0 ? (
+                    events.map((event) => (
+                      <TableRow key={event.id}>
+                        <TableCell className="font-medium">{event.title_en}</TableCell>
+                        <TableCell>{format(new Date(event.start), 'dd MMM yyyy')}</TableCell>
+                         <TableCell>
+                          <div className="flex flex-col gap-1">
+                            {event.isUrgent && <Badge variant="destructive">Urgent</Badge>}
+                            {event.showOnHomepage && <Badge variant="secondary">Homepage</Badge>}
+                          </div>
+                         </TableCell>
+                         <TableCell>
+                          {event.attachmentUrl && (
+                              <a href={event.attachmentUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-primary hover:underline">
+                                  <FileText className="h-4 w-4" /> View
+                              </a>
+                          )}
+                         </TableCell>
+                        <TableCell className="text-right">
+                           <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" className="h-8 w-8 p-0">
+                                      <span className="sr-only">Open menu</span>
+                                      <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuItem onClick={() => handleEdit(event)}>
+                                      <Pencil className="mr-2 h-4 w-4" />
+                                      Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => openDeleteAlert(event)} className="text-destructive focus:text-destructive">
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Delete
+                                  </DropdownMenuItem>
+                              </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-24 text-center">
+                        No upcoming events found.
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
-                      No upcoming events found.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
+              {hasMore && (
+                <div className="flex justify-center mt-4">
+                  <Button onClick={() => fetchEvents(false)} disabled={isLoadingMore}>
+                    {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+                    Load More
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

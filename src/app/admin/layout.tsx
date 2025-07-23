@@ -16,6 +16,7 @@ import {
   SidebarGroupLabel,
   SidebarGroupContent,
   SidebarSeparator,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
@@ -35,6 +36,18 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
+
+function SidebarAutoClose() {
+  const { setOpen } = useSidebar();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    // Close sidebar when pathname changes (navigation occurs)
+    setOpen(false);
+  }, [pathname, setOpen]);
+
+  return null;
+}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -92,6 +105,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   
   return (
       <SidebarProvider>
+        <SidebarAutoClose />
         <Sidebar variant="inset" collapsible="icon">
           <SidebarHeader>
             <div className="flex items-center gap-2">

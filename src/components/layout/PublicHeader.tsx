@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/components/ui/sheet';
 import { Menu, Home, Info, Newspaper, School, Briefcase, Mail, X } from 'lucide-react';
 import { useLanguage } from '@/app/(public)/LanguageProvider';
 import Image from 'next/image';
@@ -51,8 +51,7 @@ export function PublicHeader() {
       <div className="container flex h-20 max-w-7xl items-center justify-between px-8">
         <div className="flex items-center gap-x-8">
             <Link href="/" className="flex items-center gap-2 font-bold shrink-0">
-              <Image src="/logo.png" alt="Maes Y Morfa logo" width={28} height={28} className="h-7 w-7" />
-              <span className="text-xl font-extrabold tracking-tight">Maes Y Morfa</span>
+              <Image src="/logo-header.png" alt="Maes Y Morfa logo" width={1640} height={403} className="h-14 w-auto max-h-14" />
             </Link>
         </div>
 
@@ -74,11 +73,11 @@ export function PublicHeader() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[18rem] bg-background p-0 text-foreground" closeIcon={false}>
+              <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
               <div className="flex h-full flex-col">
                 <div className="flex h-20 items-center justify-between border-b border-border/40 px-6">
                     <Link href="/" className="flex items-center gap-3">
-                        <Image src="/logo.png" alt="Maes Y Morfa logo" width={32} height={32} className="h-8 w-8" />
-                        <span className="text-lg font-bold">Maes Y Morfa</span>
+                        <Image src="/logo-header.png" alt="Maes Y Morfa logo" width={1640} height={403} className="h-14 w-auto max-h-14" />
                     </Link>
                     <SheetClose asChild>
                         <Button variant="ghost" size="icon" className='h-9 w-9'>

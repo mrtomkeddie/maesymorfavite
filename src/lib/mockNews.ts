@@ -9,7 +9,7 @@ export type NewsPost = {
     id: string;
     slug: string;
     title_en: string;
-    title_cy: "string";
+    title_cy: string;
     body_en: string;
     body_cy: string;
     date: string; // ISO 8601 format
@@ -86,7 +86,7 @@ export const news: NewsPost[] = newsData_en.map((post_en, index) => {
         id: `news_${index + 1}`,
         slug: generateSlug(post_en.title_en),
         title_en: post_en.title_en,
-        title_cy: post_cy.title_cy as "string",
+        title_cy: post_cy.title_cy,
         body_en: post_en.body_en,
         body_cy: post_cy.body_cy,
         date: date.toISOString(),
