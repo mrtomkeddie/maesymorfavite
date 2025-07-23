@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useLanguage } from "@/app/(public)/LanguageProvider";
@@ -21,10 +22,10 @@ const content = {
     }
 }
 
-export default function NewsArticlePage({ params }: { params: { slug: string }}) {
+export default function NewsArticlePage({ params: { slug } }: { params: { slug: string }}) {
     const { language } = useLanguage();
     const t = content[language];
-    const post = mockNews.find(p => p.slug === params.slug && p.published) as NewsPost | undefined;
+    const post = mockNews.find(p => p.slug === slug && p.published) as NewsPost | undefined;
 
     if (!post) {
         notFound();
