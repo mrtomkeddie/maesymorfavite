@@ -6,7 +6,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -24,7 +23,6 @@ import { getChildren, deleteChild, getParents, promoteAllChildren } from '@/lib/
 import type { ChildWithId, ParentWithId } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { ChildForm, yearGroups } from '@/components/admin/ChildForm';
-import { BulkEditChildForm } from '@/components/admin/BulkEditChildForm';
 import { CsvImportDialog } from '@/components/admin/CsvImportDialog';
 import { Child } from '@/lib/types';
 import { getPaginatedChildren } from '@/lib/firebase/firestore';
@@ -44,13 +42,11 @@ export default function ChildrenAdminPage() {
   const [hasMore, setHasMore] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isPromoteAlertOpen, setIsPromoteAlertOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedChild, setSelectedChild] = useState<ChildWithId | null>(null);
   const [childToDelete, setChildToDelete] = useState<ChildWithId | null>(null);
-  const [selectedChildrenIds, setSelectedChildrenIds] = useState<string[]>([]);
   const [isViewChildDialogOpen, setIsViewChildDialogOpen] = useState(false);
   const [childToView, setChildToView] = useState<ChildWithId | null>(null);
   const [yearFilter, setYearFilter] = useState('all');
@@ -111,12 +107,6 @@ export default function ChildrenAdminPage() {
     fetchChildrenAndParents(true);
   };
   
-  const handleBulkFormSuccess = () => {
-    setIsBulkEditOpen(false);
-    fetchChildrenAndParents(true);
-    setSelectedChildrenIds([]);
-  }
-
   const handleImportSuccess = () => {
       setIsImportOpen(false);
       fetchChildrenAndParents(true);
@@ -219,22 +209,6 @@ export default function ChildrenAdminPage() {
   }, [activeChildren, yearFilter, sortOrder, searchQuery]);
 
 
-  const handleSelectAll = (checked: boolean) => {
-      if (checked) {
-          setSelectedChildrenIds(filteredAndSortedChildren.map(c => c.id));
-      } else {
-          setSelectedChildrenIds([]);
-      }
-  }
-
-  const handleSelectChild = (childId: string, checked: boolean) => {
-      if (checked) {
-          setSelectedChildrenIds(prev => [...prev, childId]);
-      } else {
-          setSelectedChildrenIds(prev => prev.filter(id => id !== childId));
-      }
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -275,20 +249,21 @@ export default function ChildrenAdminPage() {
             }}>
             <DialogTrigger asChild>
                 <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Child
+                <PlusCircle className="mr-2 h-4 w-4" /> Enrol Child
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                <DialogTitle>{selectedChild ? 'Edit' : 'Add'} Child</DialogTitle>
+                <DialogTitle>{selectedChild ? 'Edit' : 'Enrol'} Child</DialogTitle>
                 <DialogDescription>
-                    Fill in the details for the child.
+                    Fill in the details for the child and link their parents.
                 </DialogDescription>
                 </DialogHeader>
                 <ChildForm
                 onSuccess={handleFormSuccess}
                 existingChild={selectedChild}
-                parents={parents}
+                allParents={parents}
+                allChildren={children}
                 />
             </DialogContent>
             </Dialog>
@@ -335,45 +310,9 @@ export default function ChildrenAdminPage() {
             </div>
           ) : (
             <>
-            <div className="flex items-center gap-4 mb-4">
-                <Dialog open={isBulkEditOpen} onOpenChange={setIsBulkEditOpen}>
-                    <DialogTrigger asChild>
-                        <Button disabled={selectedChildrenIds.length === 0}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Bulk Edit ({selectedChildrenIds.length})
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[625px]">
-                        <DialogHeader>
-                            <DialogTitle>Bulk Edit Children</DialogTitle>
-                            <DialogDescription>
-                                Update the selected fields for all {selectedChildrenIds.length} selected children. Fields left blank will not be changed.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <BulkEditChildForm 
-                            selectedIds={selectedChildrenIds}
-                            parents={parents}
-                            onSuccess={handleBulkFormSuccess}
-                        />
-                    </DialogContent>
-                </Dialog>
-
-                {selectedChildrenIds.length > 0 && (
-                    <span className="text-sm text-muted-foreground">
-                        {selectedChildrenIds.length} of {filteredAndSortedChildren.length} selected.
-                    </span>
-                )}
-              </div>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[40px]">
-                      <Checkbox
-                          checked={selectedChildrenIds.length === filteredAndSortedChildren.length && filteredAndSortedChildren.length > 0}
-                          onCheckedChange={(checked) => handleSelectAll(!!checked)}
-                          aria-label="Select all"
-                      />
-                    </TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Year Group</TableHead>
                     <TableHead>Linked Parent(s)</TableHead>
@@ -384,13 +323,6 @@ export default function ChildrenAdminPage() {
                   {filteredAndSortedChildren.length > 0 ? (
                     filteredAndSortedChildren.map((child) => (
                       <TableRow key={child.id}>
-                         <TableCell>
-                           <Checkbox
-                              checked={selectedChildrenIds.includes(child.id)}
-                              onCheckedChange={(checked) => handleSelectChild(child.id, !!checked)}
-                              aria-label={`Select ${child.name}`}
-                          />
-                         </TableCell>
                         <TableCell className="font-medium">{child.name}</TableCell>
                         <TableCell>{child.yearGroup}</TableCell>
                         <TableCell>{getParentNames(child.parentIds)}</TableCell>
