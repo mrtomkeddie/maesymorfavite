@@ -80,6 +80,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [parentSearch, setParentSearch] = useState('');
+  const currentYear = new Date().getFullYear();
 
   const form = useForm<EnrolFormValues>({
     resolver: zodResolver(formSchema),
@@ -175,9 +176,9 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
   const linkedParentIds = new Set(form.watch('linkedParents').map(p => p.parentId));
 
   return (
-    <ScrollArea className="max-h-[80vh]">
+    <ScrollArea className="max-h-[80vh] px-6">
         <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-2 pb-6">
             <div>
                 <h3 className="text-lg font-medium">Child's Details</h3>
                 <div className="space-y-4 mt-2">
@@ -252,6 +253,9 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                                     onSelect={field.onChange}
                                     disabled={(date) => date > new Date()}
                                     initialFocus
+                                    captionLayout="dropdown-buttons"
+                                    fromYear={currentYear - 12}
+                                    toYear={currentYear - 3}
                                 />
                                 </PopoverContent>
                             </Popover>
@@ -416,7 +420,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
             </div>
 
 
-            <div className="flex justify-end pt-4 border-t sticky bottom-0 bg-background z-10 p-6 -mr-6 -mb-6 -ml-6 rounded-b-lg">
+            <div className="flex justify-end pt-4 border-t sticky bottom-0 bg-background z-10">
             <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {existingChild ? 'Update Child' : 'Enrol Child'}
