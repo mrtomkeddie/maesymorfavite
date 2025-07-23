@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/select';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
+import { Checkbox } from '../ui/checkbox';
 
 export const yearGroups = [
     "Nursery",
@@ -241,18 +242,18 @@ export function ChildForm({ onSuccess, existingChild, allParents, allChildren }:
                                 render={({ field }) => (
                                     <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-2">
                                         <FormControl>
-                                            <SelectValue>
-                                                <input type="checkbox"
-                                                    checked={field.value?.includes(parent.id)}
-                                                    onChange={(e) => {
-                                                        const newValues = e.target.checked
-                                                            ? [...(field.value || []), parent.id]
-                                                            : field.value?.filter(id => id !== parent.id);
-                                                        field.onChange(newValues);
-                                                    }}
-                                                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                                />
-                                            </SelectValue>
+                                            <Checkbox
+                                                checked={field.value?.includes(parent.id)}
+                                                onCheckedChange={(checked) => {
+                                                    return checked
+                                                    ? field.onChange([...(field.value || []), parent.id])
+                                                    : field.onChange(
+                                                        field.value?.filter(
+                                                        (value) => value !== parent.id
+                                                        )
+                                                    )
+                                                }}
+                                            />
                                         </FormControl>
                                         <FormLabel className="font-normal text-sm">
                                             {parent.name} ({parent.email})
