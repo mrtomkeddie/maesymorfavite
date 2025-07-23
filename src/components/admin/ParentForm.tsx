@@ -18,15 +18,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addParent, updateParent, updateChild } from '@/lib/firebase/firestore';
-import { ParentWithId, ChildWithId } from '@/lib/types';
+import { addParent, updateParent, bulkUpdateChildren } from '@/lib/firebase/firestore';
+import { ParentWithId, ChildWithId, Child } from '@/lib/types';
 import { Checkbox } from '../ui/checkbox';
 import { Separator } from '../ui/separator';
+import { ScrollArea } from '../ui/scroll-area';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   email: z.string().email({ message: 'A valid email is required.' }),
-  linkedChildren: z.array(z.string()).default([]),
+  linkedChildrenIds: z.array(z.string()).default([]),
 });
 
 type ParentFormValues = z.infer<typeof formSchema>;
@@ -44,21 +45,18 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
   const form = useForm<ParentFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: existingParent?.name || '',
-      email: existingParent?.email || '',
-      linkedChildren: existingParent
-        ? allChildren.filter(c => c.parentId === existingParent.id).map(c => c.id)
-        : [],
+      name: '',
+      email: '',
+      linkedChildrenIds: [],
     },
   });
   
-  // Re-initialize form if the parent or children list changes
   useEffect(() => {
     form.reset({
         name: existingParent?.name || '',
         email: existingParent?.email || '',
-        linkedChildren: existingParent
-            ? allChildren.filter(c => c.parentId === existingParent.id).map(c => c.id)
+        linkedChildrenIds: existingParent
+            ? allChildren.filter(c => c.parentIds?.includes(existingParent.id)).map(c => c.id)
             : [],
     })
   }, [existingParent, allChildren, form])
@@ -73,7 +71,7 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
       };
 
       let parentId: string;
-
+      
       if (existingParent) {
         parentId = existingParent.id;
         await updateParent(parentId, parentData);
@@ -81,28 +79,24 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
         parentId = await addParent(parentData);
       }
       
-      // Handle child linking/unlinking
-      const previouslyLinked = allChildren.filter(c => c.parentId === parentId);
-      const currentlyLinkedIds = new Set(values.linkedChildren);
+      const originalLinkedChildren = allChildren.filter(c => c.parentIds?.includes(parentId));
+      const newLinkedChildrenIds = new Set(values.linkedChildrenIds);
 
-      // Unlink children who are no longer selected
-      for (const child of previouslyLinked) {
-          if (!currentlyLinkedIds.has(child.id)) {
-              await updateChild(child.id, { parentId: '' });
-          }
+      // Unlink children who are no longer selected for this parent
+      const childrenToUnlink = originalLinkedChildren.filter(c => !newLinkedChildrenIds.has(c.id));
+      for (const child of childrenToUnlink) {
+          const updatedParentIds = child.parentIds?.filter(id => id !== parentId);
+          await updateChild(child.id, { parentIds: updatedParentIds });
       }
 
-      // Link new children
-      for (const childId of currentlyLinkedIds) {
-          const child = allChildren.find(c => c.id === childId);
-          if (child && child.parentId !== parentId) {
-             // Unlink from old parent if any
-             if(child.parentId) {
-                // In a multi-parent scenario, this logic would need to be more complex
-             }
-             await updateChild(child.id, { parentId: parentId });
-          }
-      }
+      // Link children who are newly selected for this parent
+      const childrenToLink = allChildren.filter(c => newLinkedChildrenIds.has(c.id));
+       for (const child of childrenToLink) {
+           if (!child.parentIds?.includes(parentId)) {
+               const updatedParentIds = [...(child.parentIds || []), parentId];
+               await updateChild(child.id, { parentIds: updatedParentIds });
+           }
+       }
 
 
       toast({
@@ -124,7 +118,9 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
     }
   };
 
-  const availableChildren = allChildren.filter(child => !child.parentId || child.parentId === existingParent?.id);
+  // A child is available to be linked if they are not already linked to this parent.
+  // We don't restrict based on other parents, as a child can have multiple.
+  const availableChildren = allChildren;
 
   return (
     <Form {...form}>
@@ -163,7 +159,7 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
 
         <FormField
             control={form.control}
-            name="linkedChildren"
+            name="linkedChildrenIds"
             render={() => (
                 <FormItem>
                      <div className="mb-4">
@@ -173,43 +169,45 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
                         </FormDescription>
                     </div>
                     {availableChildren.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">No unlinked children available. Add a new child first.</p>
+                        <p className="text-sm text-muted-foreground">No children available. Add a new child first.</p>
                     ) : (
-                        <div className="space-y-2">
-                         {availableChildren.map((child) => (
-                            <FormField
-                                key={child.id}
-                                control={form.control}
-                                name="linkedChildren"
-                                render={({ field }) => {
-                                return (
-                                    <FormItem
+                        <ScrollArea className="h-40 w-full rounded-md border p-4">
+                            <div className="space-y-2">
+                            {availableChildren.map((child) => (
+                                <FormField
                                     key={child.id}
-                                    className="flex flex-row items-start space-x-3 space-y-0"
-                                    >
-                                    <FormControl>
-                                        <Checkbox
-                                        checked={field.value?.includes(child.id)}
-                                        onCheckedChange={(checked) => {
-                                            return checked
-                                            ? field.onChange([...(field.value || []), child.id])
-                                            : field.onChange(
-                                                field.value?.filter(
-                                                (value) => value !== child.id
+                                    control={form.control}
+                                    name="linkedChildrenIds"
+                                    render={({ field }) => {
+                                    return (
+                                        <FormItem
+                                        key={child.id}
+                                        className="flex flex-row items-start space-x-3 space-y-0"
+                                        >
+                                        <FormControl>
+                                            <Checkbox
+                                            checked={field.value?.includes(child.id)}
+                                            onCheckedChange={(checked) => {
+                                                return checked
+                                                ? field.onChange([...(field.value || []), child.id])
+                                                : field.onChange(
+                                                    field.value?.filter(
+                                                    (value) => value !== child.id
+                                                    )
                                                 )
-                                            )
-                                        }}
-                                        />
-                                    </FormControl>
-                                    <FormLabel className="font-normal">
-                                        {child.name} ({child.yearGroup})
-                                    </FormLabel>
-                                    </FormItem>
-                                )
-                                }}
-                            />
-                            ))}
-                        </div>
+                                            }}
+                                            />
+                                        </FormControl>
+                                        <FormLabel className="font-normal text-sm">
+                                            {child.name} ({child.yearGroup})
+                                        </FormLabel>
+                                        </FormItem>
+                                    )
+                                    }}
+                                />
+                                ))}
+                            </div>
+                        </ScrollArea>
                     )}
                      <FormMessage />
                 </FormItem>

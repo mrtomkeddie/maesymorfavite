@@ -208,18 +208,23 @@ export const updateParent = async (id: string, parentData: Partial<Parent>) => {
 }
 
 export const deleteParent = async (id: string) => {
-    const parentDoc = doc(db, "parents", id);
-    // Unlink children before deleting parent
-    const childrenToUnlinkQuery = query(collection(db, 'children'), where('parentId', '==', id));
-    const childrenToUnlinkSnapshot = await getDocs(childrenToUnlinkQuery);
+    const parentDocRef = doc(db, "parents", id);
     
+    // Unlink this parent from all their children
+    const childrenQuery = query(collection(db, 'children'), where('parentIds', 'array-contains', id));
+    const childrenSnapshot = await getDocs(childrenQuery);
+
     const batch = writeBatch(db);
-    childrenToUnlinkSnapshot.forEach(childDoc => {
-        batch.update(childDoc.ref, { parentId: '' });
+    childrenSnapshot.forEach(childDoc => {
+        const childData = childDoc.data() as Child;
+        const updatedParentIds = childData.parentIds?.filter(pid => pid !== id);
+        batch.update(childDoc.ref, { parentIds: updatedParentIds });
     });
-    
+
     await batch.commit();
-    await deleteDoc(parentDoc);
+
+    // Now delete the parent document
+    await deleteDoc(parentDocRef);
 }
 
 

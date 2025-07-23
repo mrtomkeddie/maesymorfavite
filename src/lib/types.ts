@@ -28,7 +28,7 @@ export type ParentWithId = Parent & { id: string };
 export type Child = {
     name: string;
     yearGroup: string;
-    parentId?: string;
+    parentIds?: string[];
 }
 
 export type ChildWithId = Child & { id: string };

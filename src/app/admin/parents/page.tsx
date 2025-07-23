@@ -17,13 +17,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, UserPlus } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, UserPlus, Eye } from 'lucide-react';
 import { getParents, deleteParent, ParentWithId, getChildren, ChildWithId, getPaginatedParents } from '@/lib/firebase/firestore';
 import { QueryDocumentSnapshot } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
 import { ParentForm } from '@/components/admin/ParentForm';
 import { Label } from '@/components/ui/label';
+import { generateMockData } from '@/lib/mockData';
 
 export default function ParentsAdminPage() {
   const [parents, setParents] = useState<ParentWithId[]>([]);
@@ -36,35 +36,10 @@ export default function ParentsAdminPage() {
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [selectedParent, setSelectedParent] = useState<ParentWithId | null>(null);
   const [parentToDelete, setParentToDelete] = useState<ParentWithId | null>(null);
-  const [viewParentDialog, setViewParentDialog] = useState(false);
+  const [isViewParentDialogOpen, setIsViewParentDialogOpen] = useState(false);
   const [parentToView, setParentToView] = useState<ParentWithId | null>(null);
 
   const { toast } = useToast();
-
-  const generateMockData = () => {
-    const yearGroups = ['Nursery', 'Reception', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'];
-    const mockParents: ParentWithId[] = [];
-    const mockChildren: ChildWithId[] = [];
-    
-    for (let i = 1; i <= 20; i++) {
-      mockParents.push({
-        id: `mock_parent_${i}`,
-        name: `Parent ${i}`,
-        email: `parent${i}@example.com`,
-      });
-    }
-    
-    for (let i = 1; i <= 60; i++) {
-      mockChildren.push({
-        id: `mock_child_${i}`,
-        name: `Child ${i}`,
-        yearGroup: yearGroups[i % yearGroups.length],
-        parentId: mockParents[Math.floor(Math.random() * mockParents.length)].id,
-      });
-    }
-    
-    return { mockParents, mockChildren };
-  };
 
   const fetchParentsAndChildren = async (initial = false) => {
     if (initial) {
@@ -98,8 +73,9 @@ export default function ParentsAdminPage() {
         if (initial) {
             setParents(mockParents);
             setChildren(mockChildren);
+        } else {
+            setHasMore(false);
         }
-        setHasMore(false); // No more mock data
     } finally {
         setIsLoading(false);
         setIsLoadingMore(false);
@@ -118,18 +94,14 @@ export default function ParentsAdminPage() {
   };
 
   const handleEdit = (parent: ParentWithId) => {
+    setIsViewParentDialogOpen(false); // Close view dialog if open
     setSelectedParent(parent);
     setIsDialogOpen(true);
   };
 
   const handleViewParent = (parent: ParentWithId) => {
     setParentToView(parent);
-    setViewParentDialog(true);
-  };
-
-  const closeViewParentDialog = () => {
-    setViewParentDialog(false);
-    setParentToView(null);
+    setIsViewParentDialogOpen(true);
   };
 
   const openDeleteAlert = (parent: ParentWithId) => {
@@ -161,7 +133,8 @@ export default function ParentsAdminPage() {
   };
   
   const getLinkedChildrenNames = (parentId: string) => {
-      const linkedChildren = children.filter(c => c.parentId === parentId);
+      const linkedChildren = children.filter(c => c.parentIds?.includes(parentId));
+      if (linkedChildren.length === 0) return <span className="text-muted-foreground">None</span>;
       return linkedChildren.map(c => c.name).join(', ');
   }
 
@@ -225,7 +198,7 @@ export default function ParentsAdminPage() {
                         <TableCell className="font-medium">{parent.name}</TableCell>
                         <TableCell>{parent.email}</TableCell>
                          <TableCell>
-                          {getLinkedChildrenNames(parent.id) || <span className="text-muted-foreground">None</span>}
+                          {getLinkedChildrenNames(parent.id)}
                          </TableCell>
                         <TableCell className="text-right">
                            <DropdownMenu>
@@ -237,13 +210,13 @@ export default function ParentsAdminPage() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuItem onClick={() => handleViewParent(parent)}>
+                                      <Eye className="mr-2 h-4 w-4" />
+                                      View
+                                  </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => handleEdit(parent)}>
                                       <Pencil className="mr-2 h-4 w-4" />
                                       Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleViewParent(parent)}>
-                                      <UserPlus className="mr-2 h-4 w-4" />
-                                      View
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem onClick={() => openDeleteAlert(parent)} className="text-destructive focus:text-destructive">
@@ -293,38 +266,32 @@ export default function ParentsAdminPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={viewParentDialog} onOpenChange={closeViewParentDialog}>
-        <DialogContent className="sm:max-w-[625px]">
+      <Dialog open={isViewParentDialogOpen} onOpenChange={setIsViewParentDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Parent Details</DialogTitle>
+            <DialogTitle>{parentToView?.name}</DialogTitle>
             <DialogDescription>
-              View detailed information about this parent and their linked children.
+              Parent Details
             </DialogDescription>
           </DialogHeader>
           {parentToView && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium">Name</Label>
-                  <p className="text-sm text-muted-foreground">{parentToView.name}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Email</Label>
-                  <p className="text-sm text-muted-foreground">{parentToView.email}</p>
-                </div>
+            <div className="space-y-4 py-4">
+              <div>
+                  <Label className="font-semibold">Email Address</Label>
+                  <p className="text-muted-foreground">{parentToView.email}</p>
               </div>
               
-              <div>
-                <Label className="text-sm font-medium">Linked Children</Label>
+              <div className="border-t pt-4">
+                <Label className="font-semibold">Linked Children</Label>
                 {(() => {
-                  const linkedChildren = children.filter(c => c.parentId === parentToView.id);
+                  const linkedChildren = children.filter(c => c.parentIds?.includes(parentToView.id));
                   return linkedChildren.length > 0 ? (
-                    <div className="mt-2 space-y-2">
+                    <div className="mt-2 space-y-3">
                       {linkedChildren.map((child) => (
-                        <div key={child.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div key={child.id} className="flex items-center justify-between rounded-lg p-3 bg-secondary">
                           <div>
-                            <p className="font-medium">{child.name}</p>
-                            <p className="text-sm text-muted-foreground">{child.yearGroup}</p>
+                            <p className="font-medium text-secondary-foreground">{child.name}</p>
+                            <p className="text-sm text-secondary-foreground/80">{child.yearGroup}</p>
                           </div>
                         </div>
                       ))}
@@ -336,6 +303,11 @@ export default function ParentsAdminPage() {
               </div>
             </div>
           )}
+          <div className="flex justify-end pt-4">
+            <Button onClick={() => handleEdit(parentToView!)}>
+                <Pencil className="mr-2 h-4 w-4" /> Edit Parent
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

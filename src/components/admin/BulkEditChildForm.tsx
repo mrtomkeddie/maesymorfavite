@@ -31,7 +31,10 @@ import { Separator } from '../ui/separator';
 
 const formSchema = z.object({
   yearGroup: z.string().optional(),
-  parentId: z.string().optional(),
+  // Bulk editing parent relationships is complex with a many-to-many model,
+  // so we will disable it for now to avoid unintended data loss.
+  // A more sophisticated UI would be needed for this.
+  // parentId: z.string().optional(),
 });
 
 type BulkEditFormValues = z.infer<typeof formSchema>;
@@ -50,7 +53,7 @@ export function BulkEditChildForm({ onSuccess, selectedIds, parents }: BulkEditC
     resolver: zodResolver(formSchema),
     defaultValues: {
       yearGroup: '',
-      parentId: '',
+      // parentId: '',
     },
   });
 
@@ -62,10 +65,10 @@ export function BulkEditChildForm({ onSuccess, selectedIds, parents }: BulkEditC
       if (values.yearGroup) {
           updateData.yearGroup = values.yearGroup;
       }
-      if (values.parentId) {
-          // Handle the special '__none__' value to unlink a parent
-          updateData.parentId = values.parentId === '__none__' ? '' : values.parentId;
-      }
+      // if (values.parentId) {
+      //     // Handle the special '__none__' value to unlink a parent
+      //     updateData.parentId = values.parentId === '__none__' ? '' : values.parentId;
+      // }
       
       if (Object.keys(updateData).length === 0) {
         toast({
@@ -129,31 +132,13 @@ export function BulkEditChildForm({ onSuccess, selectedIds, parents }: BulkEditC
         
         <Separator />
 
-        <FormField
-            control={form.control}
-            name="parentId"
-            render={({ field }) => (
-            <FormItem>
-                <FormLabel>New Linked Parent</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                    <SelectTrigger>
-                    <SelectValue placeholder="Leave unchanged" />
-                    </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                    <SelectItem value="__none__">Unlink Parent</SelectItem>
-                    {parents.map((parent) => (
-                    <SelectItem key={parent.id} value={parent.id}>
-                        {parent.name} ({parent.email})
-                    </SelectItem>
-                    ))}
-                </SelectContent>
-                </Select>
-                <FormMessage />
-            </FormItem>
-            )}
-        />
+        <div className="space-y-2">
+            <Label>Linked Parent</Label>
+            <p className="text-sm text-muted-foreground p-3 bg-muted rounded-md">
+                Bulk editing parent links is disabled. Please edit children individually to change their linked parents.
+            </p>
+        </div>
+
 
         <div className="flex justify-end">
           <Button type="submit" disabled={isLoading}>
@@ -165,5 +150,3 @@ export function BulkEditChildForm({ onSuccess, selectedIds, parents }: BulkEditC
     </Form>
   );
 }
-
-    

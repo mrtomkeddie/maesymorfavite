@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, ChevronsUp, Edit, UploadCloud } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, ChevronsUp, Edit, UploadCloud, Eye } from 'lucide-react';
 import { getChildren, deleteChild, getParents, promoteAllChildren } from '@/lib/firebase/firestore';
 import type { ChildWithId, ParentWithId } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +29,7 @@ import { Child } from '@/lib/types';
 import { getPaginatedChildren } from '@/lib/firebase/firestore';
 import { QueryDocumentSnapshot } from 'firebase/firestore';
 import { Label } from '@/components/ui/label';
+import { generateMockData } from '@/lib/mockData';
 
 export default function ChildrenAdminPage() {
   const [children, setChildren] = useState<ChildWithId[]>([]);
@@ -46,36 +47,11 @@ export default function ChildrenAdminPage() {
   const [selectedChild, setSelectedChild] = useState<ChildWithId | null>(null);
   const [childToDelete, setChildToDelete] = useState<ChildWithId | null>(null);
   const [selectedChildrenIds, setSelectedChildrenIds] = useState<string[]>([]);
-  const [viewChildDialog, setViewChildDialog] = useState(false);
+  const [isViewChildDialogOpen, setIsViewChildDialogOpen] = useState(false);
   const [childToView, setChildToView] = useState<ChildWithId | null>(null);
 
 
   const { toast } = useToast();
-
-  const generateMockData = () => {
-    const yearGroups = ['Nursery', 'Reception', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'];
-    const mockParents: ParentWithId[] = [];
-    const mockChildren: ChildWithId[] = [];
-    
-    for (let i = 1; i <= 20; i++) {
-      mockParents.push({
-        id: `mock_parent_${i}`,
-        name: `Parent ${i}`,
-        email: `parent${i}@example.com`,
-      });
-    }
-    
-    for (let i = 1; i <= 60; i++) {
-      mockChildren.push({
-        id: `mock_child_${i}`,
-        name: `Child ${i}`,
-        yearGroup: yearGroups[i % yearGroups.length],
-        parentId: mockParents[Math.floor(Math.random() * mockParents.length)].id,
-      });
-    }
-    
-    return { mockParents, mockChildren };
-  };
 
   const fetchChildrenAndParents = async (initial = false) => {
     if (initial) {
@@ -109,8 +85,11 @@ export default function ChildrenAdminPage() {
         if (initial) {
             setChildren(mockChildren);
             setParents(mockParents);
+        } else {
+            // If it's not the initial load, we don't add more mock data
+            // as the full set is already loaded.
+            setHasMore(false);
         }
-        setHasMore(false); // No more mock data
     } finally {
         setIsLoading(false);
         setIsLoadingMore(false);
@@ -140,18 +119,14 @@ export default function ChildrenAdminPage() {
   }
 
   const handleEdit = (child: ChildWithId) => {
+    setIsViewChildDialogOpen(false); // Close view dialog if open
     setSelectedChild(child);
     setIsDialogOpen(true);
   };
 
   const handleViewChild = (child: ChildWithId) => {
     setChildToView(child);
-    setViewChildDialog(true);
-  };
-
-  const closeViewChildDialog = () => {
-    setViewChildDialog(false);
-    setChildToView(null);
+    setIsViewChildDialogOpen(true);
   };
   
   const openDeleteAlert = (child: ChildWithId) => {
@@ -204,13 +179,15 @@ export default function ChildrenAdminPage() {
     }
   }
 
-  const getParentName = (parentId?: string) => {
-      if (!parentId) return 'Not Linked';
-      const parent = parents.find(p => p.id === parentId);
-      return parent ? parent.name : 'Unknown Parent';
+  const getParentNames = (parentIds?: string[]) => {
+      if (!parentIds || parentIds.length === 0) return 'Not Linked';
+      return parentIds.map(id => {
+          const parent = parents.find(p => p.id === id);
+          return parent ? parent.name : 'Unknown';
+      }).join(', ');
   }
 
-  const activeChildren = children.filter(c => !c.yearGroup.startsWith('Archived'));
+  const activeChildren = children.filter(c => c.yearGroup && !c.yearGroup.startsWith('Archived'));
   const leaversYear = new Date().getFullYear() + 1;
 
   const handleSelectAll = (checked: boolean) => {
@@ -343,7 +320,7 @@ export default function ChildrenAdminPage() {
                     </TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Year Group</TableHead>
-                    <TableHead>Linked Parent</TableHead>
+                    <TableHead>Linked Parent(s)</TableHead>
                     <TableHead className="text-right w-[80px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -360,7 +337,7 @@ export default function ChildrenAdminPage() {
                          </TableCell>
                         <TableCell className="font-medium">{child.name}</TableCell>
                         <TableCell>{child.yearGroup}</TableCell>
-                        <TableCell>{getParentName(child.parentId)}</TableCell>
+                        <TableCell>{getParentNames(child.parentIds)}</TableCell>
                         <TableCell className="text-right">
                            <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -371,13 +348,13 @@ export default function ChildrenAdminPage() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuItem onClick={() => handleViewChild(child)}>
+                                      <Eye className="mr-2 h-4 w-4" />
+                                      View
+                                  </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => handleEdit(child)}>
                                       <Pencil className="mr-2 h-4 w-4" />
                                       Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleViewChild(child)}>
-                                      <MoreHorizontal className="mr-2 h-4 w-4" />
-                                      View
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem onClick={() => openDeleteAlert(child)} className="text-destructive focus:text-destructive">
@@ -445,52 +422,54 @@ export default function ChildrenAdminPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={viewChildDialog} onOpenChange={closeViewChildDialog}>
-        <DialogContent className="sm:max-w-[625px]">
+      <Dialog open={isViewChildDialogOpen} onOpenChange={setIsViewChildDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Child Details</DialogTitle>
+            <DialogTitle>{childToView?.name}</DialogTitle>
             <DialogDescription>
-              View detailed information about this child.
+              Child Details
             </DialogDescription>
           </DialogHeader>
           {childToView && (
-            <div className="space-y-4">
+            <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-sm font-medium">Name</Label>
-                  <p className="text-sm text-muted-foreground">{childToView.name}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Year Group</Label>
-                  <p className="text-sm text-muted-foreground">{childToView.yearGroup}</p>
+                  <Label className="font-semibold">Year Group</Label>
+                  <p className="text-muted-foreground">{childToView.yearGroup}</p>
                 </div>
               </div>
               
               <div>
-                <Label className="text-sm font-medium">Linked Parent</Label>
-                <p className="text-sm text-muted-foreground">
-                  {getParentName(childToView.parentId)}
-                </p>
+                <Label className="font-semibold">Linked Parent(s)</Label>
+                <div className="text-muted-foreground mt-1">
+                    {getParentNames(childToView.parentIds) || 'None'}
+                </div>
               </div>
 
-              {childToView.parentId && (() => {
-                const parent = parents.find(p => p.id === childToView.parentId);
-                return parent ? (
-                  <div className="border-t pt-4">
-                    <Label className="text-sm font-medium">Parent Contact Details</Label>
-                    <div className="mt-2 space-y-2">
-                      <p className="text-sm text-muted-foreground">
-                        <span className="font-medium">Name:</span> {parent.name}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        <span className="font-medium">Email:</span> {parent.email}
-                      </p>
+               {childToView.parentIds && childToView.parentIds.length > 0 && (
+                <div className="border-t pt-4">
+                    <Label className="font-semibold">Parent Contact Details</Label>
+                    <div className="mt-2 space-y-3">
+                    {childToView.parentIds.map(id => {
+                        const parent = parents.find(p => p.id === id);
+                        return parent ? (
+                        <div key={id} className='text-sm'>
+                            <p className="text-muted-foreground">
+                                <span className="font-medium text-foreground">{parent.name}:</span> {parent.email}
+                            </p>
+                        </div>
+                        ) : null;
+                    })}
                     </div>
-                  </div>
-                ) : null;
-              })()}
+                </div>
+                )}
             </div>
           )}
+           <div className="flex justify-end pt-4">
+                <Button onClick={() => handleEdit(childToView!)}>
+                    <Pencil className="mr-2 h-4 w-4" /> Edit Child
+                </Button>
+            </div>
         </DialogContent>
       </Dialog>
     </div>

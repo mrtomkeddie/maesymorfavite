@@ -27,6 +27,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '../ui/checkbox';
+import { ScrollArea } from '../ui/scroll-area';
 
 export const yearGroups = [
     "Nursery",
@@ -42,7 +44,7 @@ export const yearGroups = [
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   yearGroup: z.string({ required_error: 'Please select a year group.' }),
-  parentId: z.string().optional(),
+  parentIds: z.array(z.string()).default([]),
 });
 
 type ChildFormValues = z.infer<typeof formSchema>;
@@ -62,7 +64,7 @@ export function ChildForm({ onSuccess, existingChild, parents }: ChildFormProps)
     defaultValues: {
       name: existingChild?.name || '',
       yearGroup: existingChild?.yearGroup || '',
-      parentId: existingChild?.parentId || '',
+      parentIds: existingChild?.parentIds || [],
     },
   });
 
@@ -73,7 +75,7 @@ export function ChildForm({ onSuccess, existingChild, parents }: ChildFormProps)
       const childData = {
         name: values.name,
         yearGroup: values.yearGroup,
-        parentId: values.parentId || '',
+        parentIds: values.parentIds || [],
       };
 
       if (existingChild) {
@@ -149,35 +151,53 @@ export function ChildForm({ onSuccess, existingChild, parents }: ChildFormProps)
 
         <FormField
             control={form.control}
-            name="parentId"
-            render={({ field }) => (
-            <FormItem>
-                <FormLabel>Link to Parent (Optional)</FormLabel>
-                <Select 
-                  onValueChange={(value) => field.onChange(value === '__none__' ? '' : value)} 
-                  defaultValue={field.value || '__none__'}
-                >
-                <FormControl>
-                    <SelectTrigger>
-                    <SelectValue placeholder="Select a parent" />
-                    </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                    <SelectItem value="__none__">None</SelectItem>
-                    {parents.map((parent) => (
-                    <SelectItem key={parent.id} value={parent.id}>
-                        {parent.name} ({parent.email})
-                    </SelectItem>
-                    ))}
-                </SelectContent>
-                </Select>
-                 <FormDescription>
-                    Linking a child to a parent allows the parent to report absences.
-                </FormDescription>
-                <FormMessage />
-            </FormItem>
+            name="parentIds"
+            render={() => (
+                <FormItem>
+                    <div className="mb-2">
+                        <FormLabel>Link to Parent(s)</FormLabel>
+                        <FormDescription>
+                            Select one or more parents to link to this child.
+                        </FormDescription>
+                    </div>
+                    <ScrollArea className="h-40 w-full rounded-md border p-4">
+                        <div className="space-y-2">
+                        {parents.map((parent) => (
+                            <FormField
+                            key={parent.id}
+                            control={form.control}
+                            name="parentIds"
+                            render={({ field }) => (
+                                <FormItem
+                                    key={parent.id}
+                                    className="flex flex-row items-center space-x-3 space-y-0"
+                                >
+                                    <FormControl>
+                                    <Checkbox
+                                        checked={field.value?.includes(parent.id)}
+                                        onCheckedChange={(checked) => {
+                                        return checked
+                                            ? field.onChange([...(field.value || []), parent.id])
+                                            : field.onChange(field.value?.filter(
+                                                (value) => value !== parent.id
+                                            ));
+                                        }}
+                                    />
+                                    </FormControl>
+                                    <FormLabel className="font-normal text-sm">
+                                    {parent.name} ({parent.email})
+                                    </FormLabel>
+                                </FormItem>
+                            )}
+                            />
+                        ))}
+                        </div>
+                    </ScrollArea>
+                    <FormMessage />
+                </FormItem>
             )}
         />
+
 
         <div className="flex justify-end">
           <Button type="submit" disabled={isLoading}>
