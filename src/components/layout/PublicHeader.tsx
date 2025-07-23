@@ -1,10 +1,9 @@
-
 'use client';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
-import { Menu, Search, Home, Info, Newspaper, School, Briefcase, Mail, X } from 'lucide-react';
+import { Menu, Home, Info, Newspaper, School, Briefcase, Mail, X } from 'lucide-react';
 import { useLanguage } from '@/app/(public)/LanguageProvider';
 import Image from 'next/image';
 
@@ -62,15 +61,15 @@ export function PublicHeader() {
                <div className="w-px h-4 bg-border"></div>
                <Button variant={language === 'en' ? 'secondary' : 'ghost'} size="sm" className={`rounded-full px-3 py-1 h-auto text-xs`} onClick={() => setLanguage('en')}>{t.lang2}</Button>
            </div>
-           <Button variant="ghost" size="icon">
-                <Search className="h-5 w-5" />
-           </Button>
 
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" className="px-2 lg:px-4">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only lg:not-sr-only lg:ml-2">{t.menu}</span>
+                <Menu className="h-5 w-5 lg:hidden" />
+                <span className="hidden lg:flex items-center">
+                    <Menu className="h-5 w-5 mr-2" />
+                    {t.menu}
+                </span>
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[18rem] bg-background p-0 text-foreground" closeIcon={false}>
