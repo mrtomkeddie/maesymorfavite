@@ -280,11 +280,11 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                             onChange={(e) => setParentSearch(e.target.value)}
                             className="mb-2"
                         />
-                        <ScrollArea className="h-32 w-full pr-4">
+                        <ScrollArea className="h-32 w-full">
                         {filteredParents
                             .filter(p => !linkedParentIds.has(p.id))
                             .map((parent) => (
-                            <div key={parent.id} className="flex items-center justify-between p-2">
+                            <div key={parent.id} className="flex items-center justify-between p-2 pr-4">
                                 <span className="text-sm">{parent.name} ({parent.email})</span>
                                 <Button
                                     type="button"
