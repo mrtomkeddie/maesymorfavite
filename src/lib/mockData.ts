@@ -17,6 +17,12 @@ const childNames = [
     "Jonathan", "Madison", "Caleb", "Luna", "Joshua", "Grace", "Isaac", "Chloe", "Ryan", "Penelope"
 ];
 
+function generateMockPhoneNumber(index: number) {
+    const base = 7700900000;
+    return `0${base + index}`;
+}
+
+
 export const generateMockData = () => {
     const mockParents: ParentWithId[] = [];
     for (let i = 0; i < parentNames.length; i++) {
@@ -24,6 +30,7 @@ export const generateMockData = () => {
             id: `mock_parent_${i+1}`,
             name: parentNames[i],
             email: `${parentNames[i].toLowerCase().replace(' ', '.')}@example.com`,
+            phone: generateMockPhoneNumber(i),
         });
     }
 

@@ -21,6 +21,7 @@ export type DocumentWithId = Document & { id: string };
 export type Parent = {
     name: string;
     email: string;
+    phone?: string;
 }
 
 export type ParentWithId = Parent & { id: string };

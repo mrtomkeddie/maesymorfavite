@@ -75,9 +75,8 @@ export default function ParentsAdminPage() {
         if (initial) {
             setParents(mockParents);
             setChildren(mockChildren);
-        } else {
-            setHasMore(false);
         }
+        setHasMore(false);
     } finally {
         setIsLoading(false);
         setIsLoadingMore(false);
@@ -298,9 +297,15 @@ export default function ParentsAdminPage() {
           </DialogHeader>
           {parentToView && (
             <div className="space-y-4 py-4">
-              <div>
-                  <Label className="font-semibold">Email Address</Label>
-                  <p className="text-muted-foreground">{parentToView.email}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <Label className="font-semibold">Email Address</Label>
+                    <p className="text-muted-foreground">{parentToView.email}</p>
+                </div>
+                 <div>
+                    <Label className="font-semibold">Mobile Number</Label>
+                    <p className="text-muted-foreground">{parentToView.phone || 'Not provided'}</p>
+                </div>
               </div>
               
               <div className="border-t pt-4">

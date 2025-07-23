@@ -18,7 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addParent, updateParent, bulkUpdateChildren } from '@/lib/firebase/firestore';
+import { addParent, updateParent, bulkUpdateChildren, updateChild } from '@/lib/firebase/firestore';
 import { ParentWithId, ChildWithId, Child } from '@/lib/types';
 import { Checkbox } from '../ui/checkbox';
 import { Separator } from '../ui/separator';
@@ -27,6 +27,7 @@ import { ScrollArea } from '../ui/scroll-area';
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   email: z.string().email({ message: 'A valid email is required.' }),
+  phone: z.string().optional(),
   linkedChildrenIds: z.array(z.string()).default([]),
 });
 
@@ -47,6 +48,7 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
     defaultValues: {
       name: '',
       email: '',
+      phone: '',
       linkedChildrenIds: [],
     },
   });
@@ -55,6 +57,7 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
     form.reset({
         name: existingParent?.name || '',
         email: existingParent?.email || '',
+        phone: existingParent?.phone || '',
         linkedChildrenIds: existingParent
             ? allChildren.filter(c => c.parentIds?.includes(existingParent.id)).map(c => c.id)
             : [],
@@ -68,6 +71,7 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
       const parentData = {
         name: values.name,
         email: values.email,
+        phone: values.phone,
       };
 
       let parentId: string;
@@ -149,6 +153,23 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
               </FormControl>
                <FormDescription>
                     This will be their username for the Parent Portal.
+                </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Mobile Number (Optional)</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., 07123456789" type="tel" {...field} />
+              </FormControl>
+               <FormDescription>
+                    Used for SMS alerts in the future.
                 </FormDescription>
               <FormMessage />
             </FormItem>
