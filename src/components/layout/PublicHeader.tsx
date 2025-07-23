@@ -3,19 +3,20 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Search } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { Menu, Search, Home, Info, Newspaper, School, Briefcase, Mail, X } from 'lucide-react';
 import { useLanguage } from '@/app/(public)/LanguageProvider';
 import Image from 'next/image';
 
 const content = {
     en: {
         nav: [
-            { href: '/about', label: 'About' },
-            { href: '/news', label: 'News' },
-            { href: '/admissions', label: 'Admissions' },
-            { href: '/curriculum', label: 'Curriculum' },
-            { href: '/contact', label: 'Contact' },
+            { href: '/', label: 'Home', icon: Home },
+            { href: '/about', label: 'About', icon: Info },
+            { href: '/news', label: 'News', icon: Newspaper },
+            { href: '/admissions', label: 'Admissions', icon: School },
+            { href: '/curriculum', label: 'Curriculum', icon: Briefcase },
+            { href: '/contact', label: 'Contact', icon: Mail },
         ],
         portal: 'Parent Portal',
         adminLogin: 'Admin Login',
@@ -24,11 +25,12 @@ const content = {
     },
     cy: {
         nav: [
-            { href: '/about', label: 'Amdanom Ni' },
-            { href: '/news', label: 'Newyddion' },
-            { href: '/admissions', label: 'Derbyniadau' },
-            { href: '/curriculum', label: 'Cwricwlwm' },
-            { href: '/contact', label: 'Cysylltu' },
+            { href: '/', label: 'Hafan', icon: Home },
+            { href: '/about', label: 'Amdanom Ni', icon: Info },
+            { href: '/news', label: 'Newyddion', icon: Newspaper },
+            { href: '/admissions', label: 'Derbyniadau', icon: School },
+            { href: '/curriculum', label: 'Cwricwlwm', icon: Briefcase },
+            { href: '/contact', label: 'Cysylltu', icon: Mail },
         ],
         portal: 'Porth Rieni',
         adminLogin: 'Mewngofnodi Gweinyddwr',
@@ -51,7 +53,7 @@ export function PublicHeader() {
               <span className="text-xl font-extrabold tracking-tight">Maes Y Morfa</span>
             </Link>
             <nav className="hidden xl:flex xl:items-center xl:gap-8 text-base font-medium">
-              {navLinks.map((link) => (
+              {navLinks.filter(l => l.label !== 'Home').map((link) => ( // Hide home from main nav
                 <Link key={link.href} href={link.href} className="text-foreground/80 transition-colors hover:text-foreground shrink-0">
                   {link.label}
                 </Link>
@@ -79,28 +81,44 @@ export function PublicHeader() {
                 <span className="sr-only">Toggle Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[18rem] bg-sidebar p-0 text-sidebar-foreground">
+            <SheetContent side="right" className="w-[18rem] bg-background p-0 text-foreground" closeIcon={false}>
               <div className="flex h-full flex-col">
-                <div className="flex items-center gap-2 p-4 border-b border-sidebar-border">
-                  <Image src="/logo.png" alt="Maes Y Morfa logo" width={28} height={28} className="h-7 w-7" />
-                   <span className="text-lg font-semibold text-foreground">
-                     MorfaConnect
-                  </span>
+                <div className="flex h-20 items-center justify-between border-b border-border/40 px-6">
+                    <Link href="/" className="flex items-center gap-3">
+                        <Image src="/logo.png" alt="Maes Y Morfa logo" width={32} height={32} className="h-8 w-8" />
+                        <span className="text-lg font-bold">Maes Y Morfa</span>
+                    </Link>
+                    <SheetClose asChild>
+                        <Button variant="ghost" size="icon" className='h-9 w-9'>
+                            <X className="h-5 w-5 text-muted-foreground" />
+                            <span className="sr-only">Close</span>
+                        </Button>
+                    </SheetClose>
                 </div>
-                 <div className="flex flex-1 flex-col gap-4 p-4">
-                    {navLinks.map((link) => (
-                      <Link key={link.href} href={link.href} className="text-lg font-medium text-foreground/80 transition-colors hover:text-foreground">
-                        {link.label}
-                      </Link>
-                    ))}
+                 <div className="flex flex-1 flex-col gap-2 p-6">
+                    {navLinks.map((link) => {
+                        const Icon = link.icon;
+                        return (
+                            <SheetClose asChild key={link.href}>
+                                <Link href={link.href} className="flex items-center gap-4 rounded-lg p-3 text-lg font-medium text-foreground/80 transition-colors hover:bg-secondary">
+                                    <Icon className="h-6 w-6 text-primary" />
+                                    <span>{link.label}</span>
+                                </Link>
+                            </SheetClose>
+                        )
+                    })}
                  </div>
-                 <div className="space-y-2 p-4 border-t border-sidebar-border">
-                     <Button asChild className="w-full">
-                        <Link href="/login">{t.portal}</Link>
-                    </Button>
-                    <Button asChild variant="outline" className="w-full">
-                        <Link href="/admin/login">{t.adminLogin}</Link>
-                    </Button>
+                 <div className="space-y-2 border-t border-border/40 p-6">
+                     <SheetClose asChild>
+                         <Button asChild className="w-full">
+                            <Link href="/login">{t.portal}</Link>
+                        </Button>
+                     </SheetClose>
+                    <SheetClose asChild>
+                        <Button asChild variant="outline" className="w-full">
+                            <Link href="/admin/login">{t.adminLogin}</Link>
+                        </Button>
+                    </SheetClose>
                  </div>
               </div>
             </SheetContent>
