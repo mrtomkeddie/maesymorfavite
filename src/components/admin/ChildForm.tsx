@@ -175,7 +175,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
   const linkedParentIds = new Set(form.watch('linkedParents').map(p => p.parentId));
 
   return (
-    <ScrollArea className="max-h-[80vh] pr-6">
+    <div className="max-h-[70vh] overflow-y-auto pr-6">
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <h3 className="text-lg font-medium">Child's Details</h3>
@@ -420,6 +420,6 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
         </div>
       </form>
     </Form>
-    </ScrollArea>
+    </div>
   );
 }
