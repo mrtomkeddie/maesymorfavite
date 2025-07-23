@@ -52,7 +52,9 @@ export function DatePicker({ date, onDateChange, fromYear, toYear, className }: 
     } else {
         onDateChange(undefined);
     }
-  }, [day, month, year, onDateChange]);
+  // This dependency array was incorrect. We need to only react to day, month, year changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [day, month, year]);
 
 
   return (
