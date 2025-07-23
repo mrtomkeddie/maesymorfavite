@@ -54,13 +54,6 @@ export function PublicHeader() {
               <Image src="/logo.png" alt="Maes Y Morfa logo" width={28} height={28} className="h-7 w-7" />
               <span className="text-xl font-extrabold tracking-tight">Maes Y Morfa</span>
             </Link>
-            <nav className="hidden xl:flex xl:items-center xl:gap-8 text-base font-medium">
-              {navLinks.filter(l => l.label !== 'Home').map((link) => ( // Hide home from main nav
-                <Link key={link.href} href={link.href} className="text-foreground/80 transition-colors hover:text-foreground shrink-0">
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
         </div>
 
         <div className="flex items-center gap-2">
@@ -72,15 +65,12 @@ export function PublicHeader() {
            <Button variant="ghost" size="icon">
                 <Search className="h-5 w-5" />
            </Button>
-          <Button asChild className="hidden xl:inline-flex">
-            <Link href="/login">{t.portal}</Link>
-          </Button>
 
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" className="xl:hidden">
-                <Menu className="h-5 w-5 mr-2" />
-                {t.menu}
+              <Button variant="outline" className="px-2 lg:px-4">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only lg:not-sr-only lg:ml-2">{t.menu}</span>
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[18rem] bg-background p-0 text-foreground" closeIcon={false}>
