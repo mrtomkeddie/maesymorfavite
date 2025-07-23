@@ -252,7 +252,7 @@ export default function ChildrenAdminPage() {
                 <PlusCircle className="mr-2 h-4 w-4" /> Enrol Child
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl p-0">
+            <DialogContent className="sm:max-w-3xl p-0">
                 <DialogHeader className="p-6 pb-0">
                     <DialogTitle>{selectedChild ? 'Edit' : 'Enrol'} Child</DialogTitle>
                     <DialogDescription>

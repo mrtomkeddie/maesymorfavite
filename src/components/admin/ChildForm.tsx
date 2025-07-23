@@ -175,7 +175,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
   const linkedParentIds = new Set(form.watch('linkedParents').map(p => p.parentId));
 
   return (
-    <ScrollArea className="max-h-[80vh]">
+    <ScrollArea className="max-h-[80vh] pr-2">
         <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-6">
             <div>
@@ -279,7 +279,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                             onChange={(e) => setParentSearch(e.target.value)}
                             className="mb-2"
                         />
-                        <ScrollArea className="h-32 w-full">
+                        <ScrollArea className="h-32 w-full pr-4">
                         {filteredParents
                             .filter(p => !linkedParentIds.has(p.id))
                             .map((parent) => (
@@ -419,7 +419,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
             </div>
 
 
-            <div className="flex justify-end pt-4 border-t sticky bottom-0 bg-background z-10 p-6">
+            <div className="flex justify-end pt-4 border-t sticky bottom-0 bg-background z-10 p-6 -mr-2">
             <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {existingChild ? 'Update Child' : 'Enrol Child'}
