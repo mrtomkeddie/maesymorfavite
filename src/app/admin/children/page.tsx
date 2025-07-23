@@ -57,7 +57,6 @@ export default function ChildrenAdminPage() {
     const mockParents: ParentWithId[] = [];
     const mockChildren: ChildWithId[] = [];
     
-    // Generate 20 parents
     for (let i = 1; i <= 20; i++) {
       mockParents.push({
         id: `mock_parent_${i}`,
@@ -66,7 +65,6 @@ export default function ChildrenAdminPage() {
       });
     }
     
-    // Generate 60 children, randomly assign to parents
     for (let i = 1; i <= 60; i++) {
       mockChildren.push({
         id: `mock_child_${i}`,
@@ -79,109 +77,66 @@ export default function ChildrenAdminPage() {
     return { mockParents, mockChildren };
   };
 
-  const fetchParents = async () => {
-    try {
-      // Check if Firebase is properly configured
-      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-        throw new Error('Firebase not configured');
-      }
-      
-      const parentsData = await getParents();
-      setParents(parentsData);
-    } catch (error) {
-      console.log('Firebase not configured, using mock parents');
-      const { mockParents } = generateMockData();
-      setParents(mockParents);
-    }
-  };
-
-  const fetchChildren = async (initial = false) => {
+  const fetchChildrenAndParents = async (initial = false) => {
     if (initial) {
-      setIsLoading(true);
-      setLastDoc(undefined);
-      setHasMore(true);
+        setIsLoading(true);
+        setLastDoc(undefined);
+        setHasMore(true);
     } else {
-      setIsLoadingMore(true);
+        setIsLoadingMore(true);
     }
-    
-    try {
-      // Check if Firebase is properly configured
-      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-        throw new Error('Firebase not configured');
-      }
-      
-      const { data, lastDoc: newLastDoc } = await getPaginatedChildren(20, initial ? undefined : lastDoc);
-      if (initial) {
-        setChildren(data);
-      } else {
-        setChildren(prev => [...prev, ...data]);
-      }
-      setLastDoc(newLastDoc);
-      setHasMore(!!newLastDoc && data.length === 20);
-    } catch (error) {
-      console.log('Firebase not configured, using mock children');
-      // Use mock data if Firebase fails
-      const { mockParents, mockChildren } = generateMockData();
-      console.log('Generated mock children data:', mockChildren.length, 'items');
-      console.log('Generated mock parents data:', mockParents.length, 'items');
-      
-      if (initial) {
-        setChildren(mockChildren);
-        setParents(mockParents); // Also set parents when using mock data
-        console.log('Set initial mock children and parents data');
-      } else {
-        setChildren(prev => [...prev, ...mockChildren]);
-      }
-      setHasMore(false); // No more mock data to load
-    }
-    
-    setIsLoading(false);
-    setIsLoadingMore(false);
-  };
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        // Check if Firebase is properly configured
+    try {
         if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-          throw new Error('Firebase not configured');
+            throw new Error('Firebase not configured');
         }
         
-        // Load both children and parents from Firebase
-        const [childrenData, parentsData] = await Promise.all([
-          getChildren(),
-          getParents()
-        ]);
-        setChildren(childrenData);
-        setParents(parentsData);
-      } catch (error) {
-        console.log('Firebase not configured, using mock data');
-        // Load both children and parents from mock data
+        const childrenResult = await getPaginatedChildren(20, initial ? undefined : lastDoc);
+        const parentsData = await getParents(); // Fetch all parents for linking
+
+        if (initial) {
+            setChildren(childrenResult.data);
+            setParents(parentsData);
+        } else {
+            setChildren(prev => [...prev, ...childrenResult.data]);
+        }
+        setLastDoc(childrenResult.lastDoc);
+        setHasMore(!!childrenResult.lastDoc && childrenResult.data.length === 20);
+
+    } catch (error) {
+        console.log('Firebase not configured, using mock data for children and parents');
         const { mockParents, mockChildren } = generateMockData();
-        setChildren(mockChildren);
-        setParents(mockParents);
-        console.log('Set mock children and parents data');
-      }
-    };
-    
-    loadData();
+        if (initial) {
+            setChildren(mockChildren);
+            setParents(mockParents);
+        }
+        setHasMore(false); // No more mock data
+    } finally {
+        setIsLoading(false);
+        setIsLoadingMore(false);
+    }
+  };
+
+
+  useEffect(() => {
+    fetchChildrenAndParents(true);
   }, []);
 
   const handleFormSuccess = () => {
     setIsDialogOpen(false);
     setSelectedChild(null);
-    fetchChildren(true);
+    fetchChildrenAndParents(true);
   };
   
   const handleBulkFormSuccess = () => {
     setIsBulkEditOpen(false);
-    fetchChildren(true);
+    fetchChildrenAndParents(true);
     setSelectedChildrenIds([]);
   }
 
   const handleImportSuccess = () => {
       setIsImportOpen(false);
-      fetchChildren(true);
+      fetchChildrenAndParents(true);
   }
 
   const handleEdit = (child: ChildWithId) => {
@@ -213,7 +168,7 @@ export default function ChildrenAdminPage() {
             title: "Success",
             description: "Child record deleted successfully.",
         });
-        fetchChildren(true);
+        fetchChildrenAndParents(true);
       } catch (error) {
         console.error("Error deleting child:", error);
         toast({
@@ -235,7 +190,7 @@ export default function ChildrenAdminPage() {
             title: "Success!",
             description: "All children have been promoted, and Year 6 leavers have been archived."
         });
-        fetchChildren(true); // Refresh data to show new year groups
+        fetchChildrenAndParents(true); // Refresh data to show new year groups
     } catch(error) {
         console.error("Error promoting year groups: ", error);
         toast({
@@ -252,7 +207,6 @@ export default function ChildrenAdminPage() {
   const getParentName = (parentId?: string) => {
       if (!parentId) return 'Not Linked';
       const parent = parents.find(p => p.id === parentId);
-      console.log(`Child with parentId ${parentId} found parent:`, parent ? parent.name : 'Not found');
       return parent ? parent.name : 'Unknown Parent';
   }
 
@@ -377,7 +331,6 @@ export default function ChildrenAdminPage() {
             </div>
           ) : (
             <>
-              {console.log('Rendering children page, children length:', children.length, 'activeChildren length:', activeChildren.length)}
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -447,7 +400,7 @@ export default function ChildrenAdminPage() {
               </Table>
               {hasMore && (
                 <div className="flex justify-center mt-4">
-                  <Button onClick={() => fetchChildren(false)} disabled={isLoadingMore}>
+                  <Button onClick={() => fetchChildrenAndParents(false)} disabled={isLoadingMore}>
                     {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
                     Load More
                   </Button>
@@ -543,5 +496,3 @@ export default function ChildrenAdminPage() {
     </div>
   );
 }
-
-    

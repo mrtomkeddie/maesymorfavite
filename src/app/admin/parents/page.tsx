@@ -46,7 +46,6 @@ export default function ParentsAdminPage() {
     const mockParents: ParentWithId[] = [];
     const mockChildren: ChildWithId[] = [];
     
-    // Generate 20 parents
     for (let i = 1; i <= 20; i++) {
       mockParents.push({
         id: `mock_parent_${i}`,
@@ -55,7 +54,6 @@ export default function ParentsAdminPage() {
       });
     }
     
-    // Generate 60 children, randomly assign to parents
     for (let i = 1; i <= 60; i++) {
       mockChildren.push({
         id: `mock_child_${i}`,
@@ -68,93 +66,55 @@ export default function ParentsAdminPage() {
     return { mockParents, mockChildren };
   };
 
-  const fetchChildren = async () => {
+  const fetchParentsAndChildren = async (initial = false) => {
+    if (initial) {
+        setIsLoading(true);
+        setLastDoc(undefined);
+        setHasMore(true);
+    } else {
+        setIsLoadingMore(true);
+    }
+
     try {
-      const childrenData = await getChildren();
-      setChildren(childrenData);
+        if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+            throw new Error('Firebase not configured');
+        }
+
+        const parentsResult = await getPaginatedParents(20, initial ? undefined : lastDoc);
+        const childrenData = await getChildren(); // Fetch all children for linking
+
+        if (initial) {
+            setParents(parentsResult.data);
+            setChildren(childrenData);
+        } else {
+            setParents(prev => [...prev, ...parentsResult.data]);
+        }
+        setLastDoc(parentsResult.lastDoc);
+        setHasMore(!!parentsResult.lastDoc && parentsResult.data.length === 20);
+
     } catch (error) {
-      console.log('Firebase not configured, using mock children');
-      const { mockChildren } = generateMockData();
-      setChildren(mockChildren);
+        console.log('Firebase not configured, using mock data for parents and children');
+        const { mockParents, mockChildren } = generateMockData();
+        if (initial) {
+            setParents(mockParents);
+            setChildren(mockChildren);
+        }
+        setHasMore(false); // No more mock data
+    } finally {
+        setIsLoading(false);
+        setIsLoadingMore(false);
     }
   };
 
-  const fetchParents = async (initial = false) => {
-    if (initial) {
-      setIsLoading(true);
-      setLastDoc(undefined);
-      setHasMore(true);
-    } else {
-      setIsLoadingMore(true);
-    }
-    
-    try {
-      // Check if Firebase is properly configured
-      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-        throw new Error('Firebase not configured');
-      }
-      
-      const { data, lastDoc: newLastDoc } = await getPaginatedParents(20, initial ? undefined : lastDoc);
-      if (initial) {
-        setParents(data);
-      } else {
-        setParents(prev => [...prev, ...data]);
-      }
-      setLastDoc(newLastDoc);
-      setHasMore(!!newLastDoc && data.length === 20);
-    } catch (error) {
-      console.log('Firebase not configured, using mock parents');
-      // Use mock data if Firebase fails
-      const { mockParents, mockChildren } = generateMockData();
-      console.log('Generated mock parents data:', mockParents.length, 'items');
-      console.log('Generated mock children data:', mockChildren.length, 'items');
-      
-      if (initial) {
-        setParents(mockParents);
-        setChildren(mockChildren); // Also set children when using mock data
-        console.log('Set initial mock parents and children data');
-      } else {
-        setParents(prev => [...prev, ...mockParents]);
-      }
-      setHasMore(false); // No more mock data to load
-    }
-    
-    setIsLoading(false);
-    setIsLoadingMore(false);
-  };
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        // Check if Firebase is properly configured
-        if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-          throw new Error('Firebase not configured');
-        }
-        
-        // Load both children and parents from Firebase
-        const [childrenData, parentsData] = await Promise.all([
-          getChildren(),
-          getParents()
-        ]);
-        setChildren(childrenData);
-        setParents(parentsData);
-      } catch (error) {
-        console.log('Firebase not configured, using mock data');
-        // Load both children and parents from mock data
-        const { mockParents, mockChildren } = generateMockData();
-        setChildren(mockChildren);
-        setParents(mockParents);
-        console.log('Set mock children and parents data');
-      }
-    };
-    
-    loadData();
+    fetchParentsAndChildren(true);
   }, []);
 
   const handleFormSuccess = () => {
     setIsDialogOpen(false);
     setSelectedParent(null);
-    fetchParents(true);
+    fetchParentsAndChildren(true);
   };
 
   const handleEdit = (parent: ParentWithId) => {
@@ -186,7 +146,7 @@ export default function ParentsAdminPage() {
             title: "Success",
             description: "Parent account deleted successfully.",
         });
-        fetchParents(true);
+        fetchParentsAndChildren(true);
       } catch (error) {
         console.error("Error deleting parent:", error);
         toast({
@@ -202,7 +162,6 @@ export default function ParentsAdminPage() {
   
   const getLinkedChildrenNames = (parentId: string) => {
       const linkedChildren = children.filter(c => c.parentId === parentId);
-      console.log(`Parent ${parentId} has ${linkedChildren.length} linked children:`, linkedChildren.map(c => c.name));
       return linkedChildren.map(c => c.name).join(', ');
   }
 
@@ -250,7 +209,6 @@ export default function ParentsAdminPage() {
             </div>
           ) : (
             <>
-              {console.log('Rendering parents page, parents length:', parents.length)}
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -283,7 +241,6 @@ export default function ParentsAdminPage() {
                                       <Pencil className="mr-2 h-4 w-4" />
                                       Edit
                                   </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
                                   <DropdownMenuItem onClick={() => handleViewParent(parent)}>
                                       <UserPlus className="mr-2 h-4 w-4" />
                                       View
@@ -309,7 +266,7 @@ export default function ParentsAdminPage() {
               </Table>
               {hasMore && (
                 <div className="flex justify-center mt-4">
-                  <Button onClick={() => fetchParents(false)} disabled={isLoadingMore}>
+                  <Button onClick={() => fetchParentsAndChildren(false)} disabled={isLoadingMore}>
                     {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
                     Load More
                   </Button>
@@ -384,5 +341,3 @@ export default function ParentsAdminPage() {
     </div>
   );
 }
-
-    
