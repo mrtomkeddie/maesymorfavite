@@ -22,6 +22,7 @@ const content = {
         adminLogin: 'Admin Login',
         lang1: 'Cymraeg',
         lang2: 'English',
+        menu: 'Menu',
     },
     cy: {
         nav: [
@@ -36,6 +37,7 @@ const content = {
         adminLogin: 'Mewngofnodi Gweinyddwr',
         lang1: 'Cymraeg',
         lang2: 'English',
+        menu: 'Bwydlen',
     }
 }
 
@@ -76,9 +78,8 @@ export function PublicHeader() {
 
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="xl:hidden">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle Menu</span>
+              <Button variant="outline" className="xl:hidden">
+                {t.menu}
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[18rem] bg-background p-0 text-foreground" closeIcon={false}>
