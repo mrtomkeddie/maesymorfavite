@@ -37,23 +37,23 @@ export function DatePicker({ date, onDateChange, fromYear, toYear, className }: 
   };
 
   useEffect(() => {
-    if (day && month && year) {
-      const newDate = new Date(Number(year), Number(month), Number(day));
-      if (!isNaN(newDate.getTime())) {
-          onDateChange(newDate);
-      }
+    const maxDays = daysInMonth(year, month);
+    if (Number(day) > maxDays) {
+        // If the current day is invalid for the selected month/year,
+        // we call onDateChange with undefined to clear the invalid date
+        // but we don't reset the day here to avoid a loop.
+        // The user must select a new valid day.
+        onDateChange(undefined);
+    } else if (day && month && year) {
+        const newDate = new Date(Number(year), Number(month), Number(day));
+        if (!isNaN(newDate.getTime())) {
+            onDateChange(newDate);
+        }
     } else {
-      onDateChange(undefined);
+        onDateChange(undefined);
     }
   }, [day, month, year, onDateChange]);
-  
-  useEffect(() => {
-      // If the selected day is invalid for the new month/year, reset it.
-      const maxDays = daysInMonth(year, month);
-      if (Number(day) > maxDays) {
-          setDay('');
-      }
-  }, [month, year, day]);
+
 
   return (
     <div className={cn("grid grid-cols-3 gap-2", className)}>
