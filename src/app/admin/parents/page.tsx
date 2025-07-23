@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -25,6 +26,7 @@ import { ParentForm } from '@/components/admin/ParentForm';
 import { Label } from '@/components/ui/label';
 import { generateMockData } from '@/lib/mockData';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function ParentsAdminPage() {
   const [parents, setParents] = useState<ParentWithId[]>([]);
@@ -295,42 +297,44 @@ export default function ParentsAdminPage() {
               Parent Details
             </DialogDescription>
           </DialogHeader>
-          {parentToView && (
-            <div className="space-y-4 py-4">
-              <div className="space-y-4">
-                <div>
-                    <Label className="font-semibold">Email Address</Label>
-                    <p className="text-muted-foreground">{parentToView.email}</p>
+          <ScrollArea className="max-h-[70vh] pr-6">
+            {parentToView && (
+              <div className="space-y-4 py-4">
+                <div className="space-y-4">
+                  <div>
+                      <Label className="font-semibold">Email Address</Label>
+                      <p className="text-muted-foreground">{parentToView.email}</p>
+                  </div>
+                  <div>
+                      <Label className="font-semibold">Mobile Number</Label>
+                      <p className="text-muted-foreground">{parentToView.phone || 'Not provided'}</p>
+                  </div>
                 </div>
-                 <div>
-                    <Label className="font-semibold">Mobile Number</Label>
-                    <p className="text-muted-foreground">{parentToView.phone || 'Not provided'}</p>
-                </div>
-              </div>
-              
-              <div className="border-t pt-4">
-                <Label className="font-semibold">Linked Children</Label>
-                {(() => {
-                  const linkedChildren = children.filter(c => c.parentIds?.includes(parentToView.id));
-                  return linkedChildren.length > 0 ? (
-                    <div className="mt-2 space-y-3">
-                      {linkedChildren.map((child) => (
-                        <div key={child.id} className="flex items-center justify-between rounded-lg p-3 bg-secondary">
-                          <div>
-                            <p className="font-medium text-secondary-foreground">{child.name}</p>
-                            <p className="text-sm text-secondary-foreground/80">{child.yearGroup}</p>
+                
+                <div className="border-t pt-4">
+                  <Label className="font-semibold">Linked Children</Label>
+                  {(() => {
+                    const linkedChildren = children.filter(c => c.parentIds?.includes(parentToView.id));
+                    return linkedChildren.length > 0 ? (
+                      <div className="mt-2 space-y-3">
+                        {linkedChildren.map((child) => (
+                          <div key={child.id} className="flex items-center justify-between rounded-lg p-3 bg-secondary">
+                            <div>
+                              <p className="font-medium text-secondary-foreground">{child.name}</p>
+                              <p className="text-sm text-secondary-foreground/80">{child.yearGroup}</p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground mt-2">No children linked to this parent.</p>
-                  );
-                })()}
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground mt-2">No children linked to this parent.</p>
+                    );
+                  })()}
+                </div>
               </div>
-            </div>
-          )}
-          <div className="flex justify-end pt-4">
+            )}
+          </ScrollArea>
+          <div className="flex justify-end pt-4 border-t">
             <Button onClick={() => handleEdit(parentToView!)}>
                 <Pencil className="mr-2 h-4 w-4" /> Edit Parent
             </Button>

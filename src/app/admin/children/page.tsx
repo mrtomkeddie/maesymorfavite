@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -32,6 +33,7 @@ import { Label } from '@/components/ui/label';
 import { generateMockData } from '@/lib/mockData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function ChildrenAdminPage() {
   const [children, setChildren] = useState<ChildWithId[]>([]);
@@ -478,48 +480,50 @@ export default function ChildrenAdminPage() {
 
       <Dialog open={isViewChildDialogOpen} onOpenChange={setIsViewChildDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{childToView?.name}</DialogTitle>
-            <DialogDescription>
-              Child Details
-            </DialogDescription>
-          </DialogHeader>
-          {childToView && (
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="font-semibold">Year Group</Label>
-                  <p className="text-muted-foreground">{childToView.yearGroup}</p>
-                </div>
-              </div>
-              
-              <div>
-                <Label className="font-semibold">Linked Parent(s)</Label>
-                <div className="text-muted-foreground mt-1">
-                    {getParentNames(childToView.parentIds) || 'None'}
-                </div>
-              </div>
-
-               {childToView.parentIds && childToView.parentIds.length > 0 && (
-                <div className="border-t pt-4">
-                    <Label className="font-semibold">Parent Contact Details</Label>
-                    <div className="mt-2 space-y-3">
-                    {childToView.parentIds.map(id => {
-                        const parent = parents.find(p => p.id === id);
-                        return parent ? (
-                        <div key={id} className='text-sm'>
-                            <p className="text-muted-foreground">
-                                <span className="font-medium text-foreground">{parent.name}:</span> {parent.email}
-                            </p>
-                        </div>
-                        ) : null;
-                    })}
+            <DialogHeader>
+                <DialogTitle>{childToView?.name}</DialogTitle>
+                <DialogDescription>
+                Child Details
+                </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[70vh] pr-6">
+            {childToView && (
+                <div className="space-y-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                    <Label className="font-semibold">Year Group</Label>
+                    <p className="text-muted-foreground">{childToView.yearGroup}</p>
                     </div>
                 </div>
-                )}
-            </div>
-          )}
-           <div className="flex justify-end pt-4">
+                
+                <div>
+                    <Label className="font-semibold">Linked Parent(s)</Label>
+                    <div className="text-muted-foreground mt-1">
+                        {getParentNames(childToView.parentIds) || 'None'}
+                    </div>
+                </div>
+
+                {childToView.parentIds && childToView.parentIds.length > 0 && (
+                    <div className="border-t pt-4">
+                        <Label className="font-semibold">Parent Contact Details</Label>
+                        <div className="mt-2 space-y-3">
+                        {childToView.parentIds.map(id => {
+                            const parent = parents.find(p => p.id === id);
+                            return parent ? (
+                            <div key={id} className='text-sm'>
+                                <p className="text-muted-foreground">
+                                    <span className="font-medium text-foreground">{parent.name}:</span> {parent.email}
+                                </p>
+                            </div>
+                            ) : null;
+                        })}
+                        </div>
+                    </div>
+                    )}
+                </div>
+            )}
+            </ScrollArea>
+           <div className="flex justify-end pt-4 border-t">
                 <Button onClick={() => handleEdit(childToView!)}>
                     <Pencil className="mr-2 h-4 w-4" /> Edit Child
                 </Button>
