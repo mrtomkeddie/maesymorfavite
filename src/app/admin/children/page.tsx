@@ -31,6 +31,7 @@ import { generateMockData } from '@/lib/mockData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { format } from 'date-fns';
 
 export default function ChildrenAdminPage() {
   const [children, setChildren] = useState<ChildWithId[]>([]);
@@ -227,7 +228,7 @@ export default function ChildrenAdminPage() {
                         Import from CSV
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[725px]">
+                <DialogContent className="sm:max-w-3xl">
                     <DialogHeader>
                         <DialogTitle>Import Children from CSV</DialogTitle>
                         <DialogDescription>
@@ -251,7 +252,7 @@ export default function ChildrenAdminPage() {
                 <PlusCircle className="mr-2 h-4 w-4" /> Enrol Child
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[625px]">
+            <DialogContent className="sm:max-w-2xl max-h-[90vh]">
                 <DialogHeader>
                 <DialogTitle>{selectedChild ? 'Edit' : 'Enrol'} Child</DialogTitle>
                 <DialogDescription>
@@ -409,7 +410,7 @@ export default function ChildrenAdminPage() {
       </AlertDialog>
 
       <Dialog open={isViewChildDialogOpen} onOpenChange={setIsViewChildDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-lg">
             <DialogHeader>
                 <DialogTitle>{childToView?.name}</DialogTitle>
                 <DialogDescription>
@@ -421,8 +422,14 @@ export default function ChildrenAdminPage() {
                 <div className="space-y-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                    <Label className="font-semibold">Year Group</Label>
-                    <p className="text-muted-foreground">{childToView.yearGroup}</p>
+                        <Label className="font-semibold">Year Group</Label>
+                        <p className="text-muted-foreground">{childToView.yearGroup}</p>
+                    </div>
+                    <div>
+                        <Label className="font-semibold">Date of Birth</Label>
+                        <p className="text-muted-foreground">
+                            {childToView.dob ? format(new Date(childToView.dob), 'dd MMMM yyyy') : 'Not set'}
+                        </p>
                     </div>
                 </div>
                 

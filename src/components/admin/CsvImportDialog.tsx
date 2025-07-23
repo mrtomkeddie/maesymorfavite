@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useCallback } from 'react';
@@ -86,12 +87,6 @@ export function CsvImportDialog<T extends object>({ onSuccess, requiredFields, t
             const childRow = row as unknown as Child;
             if (childRow.yearGroup && !yearGroups.includes(childRow.yearGroup)) {
                 rowErrors.push(`Invalid Year Group: '${childRow.yearGroup}'.`);
-            }
-            if (childRow.parentId) {
-                const parentExists = parents.some(p => p.id === childRow.parentId);
-                if (!parentExists) {
-                    rowErrors.push(`Parent ID not found: '${childRow.parentId}'.`);
-                }
             }
             
             return {

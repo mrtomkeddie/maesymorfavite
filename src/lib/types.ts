@@ -35,6 +35,7 @@ export type LinkedParent = {
 export type Child = {
     name: string;
     yearGroup: string;
+    dob?: string; // ISO 8601 string
     linkedParents?: LinkedParent[];
 }
 

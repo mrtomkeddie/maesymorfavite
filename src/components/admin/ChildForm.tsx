@@ -17,7 +17,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Loader2, PlusCircle, Trash2, XCircle } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, XCircle, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addParent, updateChild, addChild, ParentWithId } from '@/lib/firebase/firestore';
 import { ChildWithId, Child, Parent, LinkedParent } from '@/lib/types';
@@ -30,6 +30,10 @@ import {
 } from '@/components/ui/select';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Calendar } from '../ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export const yearGroups = [
     "Nursery",
@@ -58,6 +62,7 @@ const existingParentLinkSchema = z.object({
 const formSchema = z.object({
   name: z.string().min(2, { message: "Child's name must be at least 2 characters." }),
   yearGroup: z.string({ required_error: 'Please select a year group.' }),
+  dob: z.date().optional(),
   linkedParents: z.array(existingParentLinkSchema).default([]),
   newParents: z.array(newParentSchema).default([]),
 });
@@ -100,6 +105,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
         form.reset({
             name: existingChild.name,
             yearGroup: existingChild.yearGroup,
+            dob: existingChild.dob ? new Date(existingChild.dob) : undefined,
             linkedParents: existingChild.linkedParents || [],
             newParents: [],
         });
@@ -107,6 +113,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
         form.reset({
             name: '',
             yearGroup: '',
+            dob: undefined,
             linkedParents: [],
             newParents: [],
         });
@@ -130,6 +137,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
         const childData: Child = {
             name: values.name,
             yearGroup: values.yearGroup,
+            dob: values.dob?.toISOString(),
             linkedParents: finalLinkedParents,
         };
         
@@ -184,30 +192,74 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
           )}
         />
         
-        <FormField
-            control={form.control}
-            name="yearGroup"
-            render={({ field }) => (
-            <FormItem>
-                <FormLabel>Year Group</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                    <SelectTrigger>
-                    <SelectValue placeholder="Select a year group" />
-                    </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                    {yearGroups.map((group) => (
-                    <SelectItem key={group} value={group}>
-                        {group}
-                    </SelectItem>
-                    ))}
-                </SelectContent>
-                </Select>
-                <FormMessage />
-            </FormItem>
-            )}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+                control={form.control}
+                name="yearGroup"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Year Group</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                        <SelectTrigger>
+                        <SelectValue placeholder="Select a year group" />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        {yearGroups.map((group) => (
+                        <SelectItem key={group} value={group}>
+                            {group}
+                        </SelectItem>
+                        ))}
+                    </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+             <FormField
+              control={form.control}
+              name="dob"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Date of Birth</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={'outline'}
+                          className={cn(
+                            'w-full pl-3 text-left font-normal',
+                            !field.value && 'text-muted-foreground'
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, 'PPP')
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        captionLayout="dropdown-buttons"
+                        fromYear={new Date().getFullYear() - 12}
+                        toYear={new Date().getFullYear()}
+                        disabled={(date) => date > new Date()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+        </div>
         
         <Separator />
 

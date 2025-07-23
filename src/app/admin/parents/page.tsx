@@ -164,7 +164,7 @@ export default function ParentsAdminPage() {
               <UserPlus className="mr-2 h-4 w-4" /> Add Parent
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[625px]">
+          <DialogContent className="sm:max-w-2xl max-h-[90vh]">
             <DialogHeader>
               <DialogTitle>{selectedParent ? 'Edit' : 'Add'} Parent</DialogTitle>
               <DialogDescription>
@@ -291,7 +291,7 @@ export default function ParentsAdminPage() {
       </AlertDialog>
 
       <Dialog open={isViewParentDialogOpen} onOpenChange={setIsViewParentDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{parentToView?.name}</DialogTitle>
             <DialogDescription>
