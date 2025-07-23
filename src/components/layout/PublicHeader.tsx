@@ -79,6 +79,7 @@ export function PublicHeader() {
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" className="xl:hidden">
+                <Menu className="h-5 w-5 mr-2" />
                 {t.menu}
               </Button>
             </SheetTrigger>
