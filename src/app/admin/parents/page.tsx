@@ -19,8 +19,9 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, UserPlus, Eye, Search } from 'lucide-react';
-import { getParents, deleteParent, ParentWithId, getChildren, ChildWithId, getPaginatedParents } from '@/lib/firebase/firestore';
+import { getParents, deleteParent, getPaginatedParents, getChildren, ChildWithId } from '@/lib/firebase/firestore';
 import { QueryDocumentSnapshot } from 'firebase/firestore';
+import type { ParentWithId } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { ParentForm } from '@/components/admin/ParentForm';
 import { Label } from '@/components/ui/label';
@@ -136,7 +137,7 @@ export default function ParentsAdminPage() {
   };
   
   const getLinkedChildrenNames = (parentId: string) => {
-      const linkedChildren = children.filter(c => c.parentIds?.includes(parentId));
+      const linkedChildren = children.filter(c => c.linkedParents?.some(lp => lp.parentId === parentId));
       if (linkedChildren.length === 0) return <span className="text-muted-foreground">None</span>;
       return linkedChildren.map(c => c.name).join(', ');
   }
@@ -163,7 +164,7 @@ export default function ParentsAdminPage() {
               <UserPlus className="mr-2 h-4 w-4" /> Add Parent
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-[625px]">
             <DialogHeader>
               <DialogTitle>{selectedParent ? 'Edit' : 'Add'} Parent</DialogTitle>
               <DialogDescription>
@@ -314,17 +315,20 @@ export default function ParentsAdminPage() {
                 <div className="border-t pt-4">
                   <Label className="font-semibold">Linked Children</Label>
                   {(() => {
-                    const linkedChildren = children.filter(c => c.parentIds?.includes(parentToView.id));
+                    const linkedChildren = children.filter(c => c.linkedParents?.some(lp => lp.parentId === parentToView.id));
                     return linkedChildren.length > 0 ? (
                       <div className="mt-2 space-y-3">
-                        {linkedChildren.map((child) => (
-                          <div key={child.id} className="flex items-center justify-between rounded-lg p-3 bg-secondary">
-                            <div>
-                              <p className="font-medium text-secondary-foreground">{child.name}</p>
-                              <p className="text-sm text-secondary-foreground/80">{child.yearGroup}</p>
+                        {linkedChildren.map((child) => {
+                          const relationship = child.linkedParents?.find(lp => lp.parentId === parentToView.id)?.relationship;
+                          return (
+                            <div key={child.id} className="flex items-center justify-between rounded-lg p-3 bg-secondary">
+                              <div>
+                                <p className="font-medium text-secondary-foreground">{child.name}</p>
+                                <p className="text-sm text-secondary-foreground/80">{child.yearGroup} ({relationship})</p>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground mt-2">No children linked to this parent.</p>

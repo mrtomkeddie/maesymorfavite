@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,8 +19,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Loader2, PlusCircle, Trash2, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addParent, updateParent, addChild, updateChild, getParents, ParentWithId } from '@/lib/firebase/firestore';
-import { ChildWithId, Child, Parent } from '@/lib/types';
+import { addParent, updateChild, addChild, ParentWithId } from '@/lib/firebase/firestore';
+import { ChildWithId, Child, Parent, LinkedParent } from '@/lib/types';
 import {
   Select,
   SelectContent,
@@ -29,7 +30,6 @@ import {
 } from '@/components/ui/select';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
-import { Checkbox } from '../ui/checkbox';
 
 export const yearGroups = [
     "Nursery",
@@ -46,12 +46,19 @@ const newParentSchema = z.object({
     name: z.string().min(2, { message: 'Name is required.' }),
     email: z.string().email({ message: 'A valid email is required.' }),
     phone: z.string().optional(),
+    relationship: z.string().min(2, { message: "Relationship is required." }),
 });
+
+const existingParentLinkSchema = z.object({
+    parentId: z.string(),
+    relationship: z.string().min(2, { message: "Relationship is required." })
+});
+
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Child's name must be at least 2 characters." }),
   yearGroup: z.string({ required_error: 'Please select a year group.' }),
-  linkedParentIds: z.array(z.string()).default([]),
+  linkedParents: z.array(existingParentLinkSchema).default([]),
   newParents: z.array(newParentSchema).default([]),
 });
 
@@ -61,10 +68,9 @@ interface ChildFormProps {
   onSuccess: () => void;
   existingChild?: ChildWithId | null;
   allParents: ParentWithId[];
-  allChildren: ChildWithId[];
 }
 
-export function ChildForm({ onSuccess, existingChild, allParents, allChildren }: ChildFormProps) {
+export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [parentSearch, setParentSearch] = useState('');
@@ -74,7 +80,7 @@ export function ChildForm({ onSuccess, existingChild, allParents, allChildren }:
     defaultValues: {
       name: '',
       yearGroup: '',
-      linkedParentIds: [],
+      linkedParents: [],
       newParents: [],
     },
   });
@@ -83,20 +89,25 @@ export function ChildForm({ onSuccess, existingChild, allParents, allChildren }:
       control: form.control,
       name: "newParents",
   });
+  
+  const { fields: linkedParentFields, replace: replaceLinkedParents } = useFieldArray({
+      control: form.control,
+      name: "linkedParents",
+  });
 
   useEffect(() => {
     if (existingChild) {
         form.reset({
             name: existingChild.name,
             yearGroup: existingChild.yearGroup,
-            linkedParentIds: existingChild.parentIds || [],
+            linkedParents: existingChild.linkedParents || [],
             newParents: [],
         });
     } else {
         form.reset({
             name: '',
             yearGroup: '',
-            linkedParentIds: [],
+            linkedParents: [],
             newParents: [],
         });
     }
@@ -107,46 +118,25 @@ export function ChildForm({ onSuccess, existingChild, allParents, allChildren }:
     setIsLoading(true);
 
     try {
-        let finalParentIds = [...values.linkedParentIds];
+        const finalLinkedParents: LinkedParent[] = [...values.linkedParents];
 
         // 1. Create any new parents
         for (const newParent of values.newParents) {
-            const parentId = await addParent(newParent);
-            finalParentIds.push(parentId);
+            const { relationship, ...parentData } = newParent;
+            const parentId = await addParent(parentData);
+            finalLinkedParents.push({ parentId, relationship });
         }
         
         const childData: Child = {
             name: values.name,
             yearGroup: values.yearGroup,
-            parentIds: finalParentIds,
+            linkedParents: finalLinkedParents,
         };
-
-        let childId: string;
         
-        // 2. Create or Update the child
         if (existingChild) {
-            childId = existingChild.id;
-            await updateChild(childId, childData);
+            await updateChild(existingChild.id, childData);
         } else {
-            childId = await addChild(childData);
-        }
-
-        // 3. Update parent records for any unlinked parents (only in edit mode)
-        if (existingChild) {
-            const originalParentIds = new Set(existingChild.parentIds || []);
-            const finalParentIdsSet = new Set(finalParentIds);
-            
-            const unlinkedParentIds = [...originalParentIds].filter(id => !finalParentIdsSet.has(id));
-            
-            for (const parentId of unlinkedParentIds) {
-                const parent = allParents.find(p => p.id === parentId);
-                if (parent) {
-                    const linkedChildren = allChildren.filter(c => c.parentIds?.includes(parentId) && c.id !== childId);
-                    // This logic is flawed because we don't have the full child list for a parent.
-                    // This should be handled by a cloud function for consistency or a more complex client-side update.
-                    // For now, we accept this limitation. The parent will remain linked on their end.
-                }
-            }
+            await addChild(childData);
         }
         
         toast({
@@ -173,8 +163,10 @@ export function ChildForm({ onSuccess, existingChild, allParents, allChildren }:
     parent.email.toLowerCase().includes(parentSearch.toLowerCase())
   );
 
+  const linkedParentIds = new Set(form.watch('linkedParents').map(p => p.parentId));
 
   return (
+    <ScrollArea className="max-h-[80vh] pr-6">
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <h3 className="text-lg font-medium">Child's Details</h3>
@@ -221,51 +213,74 @@ export function ChildForm({ onSuccess, existingChild, allParents, allChildren }:
 
         <h3 className="text-lg font-medium">Parents/Guardians</h3>
         
-        <FormField
-            control={form.control}
-            name="linkedParentIds"
-            render={() => (
-                <FormItem>
-                    <FormLabel>Link Existing Parents</FormLabel>
-                     <Input 
-                        placeholder="Search for existing parents by name or email..."
-                        value={parentSearch}
-                        onChange={(e) => setParentSearch(e.target.value)}
-                        className="mb-2"
-                    />
-                    <ScrollArea className="h-32 w-full rounded-md border p-4">
-                       {filteredParents.map((parent) => (
+        <div className="space-y-4 rounded-md border p-4">
+            <FormLabel>Link Existing Parents</FormLabel>
+             <Input 
+                placeholder="Search for existing parents..."
+                value={parentSearch}
+                onChange={(e) => setParentSearch(e.target.value)}
+                className="mb-2"
+            />
+            <ScrollArea className="h-32 w-full">
+               {filteredParents
+                .filter(p => !linkedParentIds.has(p.id))
+                .map((parent) => (
+                <div key={parent.id} className="flex items-center justify-between p-2">
+                    <span className="text-sm">{parent.name} ({parent.email})</span>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                            const current = form.getValues('linkedParents');
+                            replaceLinkedParents([...current, { parentId: parent.id, relationship: '' }]);
+                        }}
+                    >
+                        Link
+                    </Button>
+                </div>
+               ))}
+            </ScrollArea>
+        </div>
+        
+        {linkedParentFields.length > 0 && (
+            <div className="space-y-2">
+                <FormLabel>Linked Parents</FormLabel>
+                {linkedParentFields.map((field, index) => {
+                    const parent = allParents.find(p => p.id === field.parentId);
+                    return (
+                        <div key={field.id} className="flex items-center gap-2 p-2 border rounded-md">
+                            <span className="flex-grow text-sm font-medium">{parent?.name}</span>
                             <FormField
-                                key={parent.id}
                                 control={form.control}
-                                name="linkedParentIds"
+                                name={`linkedParents.${index}.relationship`}
                                 render={({ field }) => (
-                                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-2">
+                                    <FormItem>
                                         <FormControl>
-                                            <Checkbox
-                                                checked={field.value?.includes(parent.id)}
-                                                onCheckedChange={(checked) => {
-                                                    return checked
-                                                    ? field.onChange([...(field.value || []), parent.id])
-                                                    : field.onChange(
-                                                        field.value?.filter(
-                                                        (value) => value !== parent.id
-                                                        )
-                                                    )
-                                                }}
-                                            />
+                                            <Input {...field} placeholder="Relationship, e.g., Mother" />
                                         </FormControl>
-                                        <FormLabel className="font-normal text-sm">
-                                            {parent.name} ({parent.email})
-                                        </FormLabel>
                                     </FormItem>
                                 )}
                             />
-                       ))}
-                    </ScrollArea>
-                </FormItem>
-            )}
-        />
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 shrink-0"
+                                onClick={() => {
+                                    const current = form.getValues('linkedParents');
+                                    replaceLinkedParents(current.filter((_, i) => i !== index));
+                                }}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                             <FormMessage>{form.formState.errors.linkedParents?.[index]?.relationship?.message}</FormMessage>
+                        </div>
+                    );
+                })}
+            </div>
+        )}
+
         
         <Separator />
 
@@ -317,6 +332,17 @@ export function ChildForm({ onSuccess, existingChild, allParents, allChildren }:
                                 </FormItem>
                             )}
                         />
+                        <FormField
+                            control={form.control}
+                            name={`newParents.${index}.relationship`}
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Relationship to Child</FormLabel>
+                                <FormControl><Input {...field} placeholder="e.g., Mother, Guardian" /></FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                     </div>
                 ))}
             </div>
@@ -325,7 +351,7 @@ export function ChildForm({ onSuccess, existingChild, allParents, allChildren }:
                 variant="outline"
                 size="sm"
                 className="mt-2"
-                onClick={() => append({ name: '', email: '', phone: '' })}
+                onClick={() => append({ name: '', email: '', phone: '', relationship: '' })}
             >
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add a New Parent
@@ -341,5 +367,6 @@ export function ChildForm({ onSuccess, existingChild, allParents, allChildren }:
         </div>
       </form>
     </Form>
+    </ScrollArea>
   );
 }

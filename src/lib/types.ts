@@ -1,4 +1,5 @@
 
+
 export type StaffMember = {
     name: string;
     role: string;
@@ -26,10 +27,15 @@ export type Parent = {
 
 export type ParentWithId = Parent & { id: string };
 
+export type LinkedParent = {
+    parentId: string;
+    relationship: string;
+}
+
 export type Child = {
     name: string;
     yearGroup: string;
-    parentIds?: string[];
+    linkedParents?: LinkedParent[];
 }
 
 export type ChildWithId = Child & { id: string };

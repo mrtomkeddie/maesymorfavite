@@ -1,3 +1,4 @@
+
 import { addNews, addCalendarEvent, addStaffMember, addDocument, addParent, addChild } from './firestore';
 import { news } from '../mockNews';
 import { calendarEvents } from '../mockCalendar';
@@ -73,7 +74,7 @@ async function seedParentsAndChildren() {
     const child: Child = {
       name: `Child ${i}`,
       yearGroup: yearGroups[i % yearGroups.length],
-      parentId: parentIds[randomInt(0, parentIds.length - 1)],
+      linkedParents: [{ parentId: parentIds[randomInt(0, parentIds.length - 1)], relationship: 'Parent' }],
     };
     await addChild(child);
   }
@@ -92,4 +93,4 @@ async function main() {
 main().catch(e => {
   console.error(e);
   process.exit(1);
-}); 
+});

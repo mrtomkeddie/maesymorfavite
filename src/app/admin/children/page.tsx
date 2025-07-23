@@ -18,14 +18,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, ChevronsUp, Edit, UploadCloud, Eye, ArrowUpAZ, ArrowDownZA, Search } from 'lucide-react';
-import { getChildren, deleteChild, getParents, promoteAllChildren } from '@/lib/firebase/firestore';
-import type { ChildWithId, ParentWithId } from '@/lib/types';
+import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, ChevronsUp, UploadCloud, Eye, ArrowUpAZ, ArrowDownZA, Search } from 'lucide-react';
+import { getChildren, deleteChild, getParents, promoteAllChildren, getPaginatedChildren } from '@/lib/firebase/firestore';
+import type { ChildWithId, ParentWithId, LinkedParent } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { ChildForm, yearGroups } from '@/components/admin/ChildForm';
 import { CsvImportDialog } from '@/components/admin/CsvImportDialog';
 import { Child } from '@/lib/types';
-import { getPaginatedChildren } from '@/lib/firebase/firestore';
 import { QueryDocumentSnapshot } from 'firebase/firestore';
 import { Label } from '@/components/ui/label';
 import { generateMockData } from '@/lib/mockData';
@@ -173,11 +172,11 @@ export default function ChildrenAdminPage() {
     }
   }
 
-  const getParentNames = (parentIds?: string[]) => {
-      if (!parentIds || parentIds.length === 0) return 'Not Linked';
-      return parentIds.map(id => {
-          const parent = parents.find(p => p.id === id);
-          return parent ? parent.name : 'Unknown';
+  const getParentInfo = (linkedParents?: LinkedParent[]) => {
+      if (!linkedParents || linkedParents.length === 0) return 'Not Linked';
+      return linkedParents.map(link => {
+          const parent = parents.find(p => p.id === link.parentId);
+          return parent ? `${parent.name} (${link.relationship})` : 'Unknown';
       }).join(', ');
   }
 
@@ -252,7 +251,7 @@ export default function ChildrenAdminPage() {
                 <PlusCircle className="mr-2 h-4 w-4" /> Enrol Child
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[625px]">
                 <DialogHeader>
                 <DialogTitle>{selectedChild ? 'Edit' : 'Enrol'} Child</DialogTitle>
                 <DialogDescription>
@@ -260,10 +259,9 @@ export default function ChildrenAdminPage() {
                 </DialogDescription>
                 </DialogHeader>
                 <ChildForm
-                onSuccess={handleFormSuccess}
-                existingChild={selectedChild}
-                allParents={parents}
-                allChildren={children}
+                    onSuccess={handleFormSuccess}
+                    existingChild={selectedChild}
+                    allParents={parents}
                 />
             </DialogContent>
             </Dialog>
@@ -325,7 +323,7 @@ export default function ChildrenAdminPage() {
                       <TableRow key={child.id}>
                         <TableCell className="font-medium">{child.name}</TableCell>
                         <TableCell>{child.yearGroup}</TableCell>
-                        <TableCell>{getParentNames(child.parentIds)}</TableCell>
+                        <TableCell>{getParentInfo(child.linkedParents)}</TableCell>
                         <TableCell className="text-right">
                            <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -428,30 +426,24 @@ export default function ChildrenAdminPage() {
                     </div>
                 </div>
                 
-                <div>
+                <div className="border-t pt-4">
                     <Label className="font-semibold">Linked Parent(s)</Label>
-                    <div className="text-muted-foreground mt-1">
-                        {getParentNames(childToView.parentIds) || 'None'}
-                    </div>
-                </div>
-
-                {childToView.parentIds && childToView.parentIds.length > 0 && (
-                    <div className="border-t pt-4">
-                        <Label className="font-semibold">Parent Contact Details</Label>
+                    {childToView.linkedParents && childToView.linkedParents.length > 0 ? (
                         <div className="mt-2 space-y-3">
-                        {childToView.parentIds.map(id => {
-                            const parent = parents.find(p => p.id === id);
+                        {childToView.linkedParents.map(link => {
+                            const parent = parents.find(p => p.id === link.parentId);
                             return parent ? (
-                            <div key={id} className='text-sm'>
-                                <p className="text-muted-foreground">
-                                    <span className="font-medium text-foreground">{parent.name}:</span> {parent.email}
-                                </p>
+                            <div key={link.parentId} className='text-sm p-2 bg-secondary rounded-md'>
+                                <p className="font-semibold">{parent.name} <span className="font-normal text-muted-foreground">({link.relationship})</span></p>
+                                <p className="text-muted-foreground">{parent.email}</p>
                             </div>
                             ) : null;
                         })}
                         </div>
-                    </div>
+                    ) : (
+                         <p className="text-sm text-muted-foreground mt-2">No parents linked.</p>
                     )}
+                </div>
                 </div>
             )}
             </ScrollArea>

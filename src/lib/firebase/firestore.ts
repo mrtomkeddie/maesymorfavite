@@ -3,7 +3,7 @@ import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy,
 import { db } from "./config";
 import type { NewsPost } from "@/lib/mockNews";
 import type { CalendarEvent } from "@/lib/mockCalendar";
-import type { StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings } from "@/lib/types";
+import type { StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, LinkedParent } from "@/lib/types";
 import { yearGroups } from "@/components/admin/ChildForm";
 import { QueryDocumentSnapshot } from "firebase/firestore";
 
@@ -210,15 +210,17 @@ export const updateParent = async (id: string, parentData: Partial<Parent>) => {
 export const deleteParent = async (id: string) => {
     const parentDocRef = doc(db, "parents", id);
     
-    // Unlink this parent from all their children
-    const childrenQuery = query(collection(db, 'children'), where('parentIds', 'array-contains', id));
-    const childrenSnapshot = await getDocs(childrenQuery);
+    // Find all children linked to this parent
+    const allChildren = await getChildren();
+    const childrenToUpdate = allChildren.filter(c => c.linkedParents?.some(lp => lp.parentId === id));
 
     const batch = writeBatch(db);
-    childrenSnapshot.forEach(childDoc => {
-        const childData = childDoc.data() as Child;
-        const updatedParentIds = childData.parentIds?.filter(pid => pid !== id);
-        batch.update(childDoc.ref, { parentIds: updatedParentIds });
+    
+    // For each child, remove the parent from their linkedParents array
+    childrenToUpdate.forEach(child => {
+        const childRef = doc(db, "children", child.id);
+        const updatedLinkedParents = child.linkedParents?.filter(lp => lp.parentId !== id);
+        batch.update(childRef, { linkedParents: updatedLinkedParents });
     });
 
     await batch.commit();
@@ -367,6 +369,3 @@ export const getPaginatedParents = async (limitNum = 20, lastDoc?: QueryDocument
     const data = querySnapshot.docs.map(doc => ({ ...doc.data() as Parent, id: doc.id }));
     return { data, lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] };
 };
-
-export type ChildWithId = Child & { id: string };
-export type ParentWithId = Parent & { id: string };
