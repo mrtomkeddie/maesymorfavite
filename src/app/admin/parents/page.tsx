@@ -297,7 +297,7 @@ export default function ParentsAdminPage() {
           </DialogHeader>
           {parentToView && (
             <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div>
                     <Label className="font-semibold">Email Address</Label>
                     <p className="text-muted-foreground">{parentToView.email}</p>
