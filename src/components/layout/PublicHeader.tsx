@@ -18,6 +18,7 @@ const content = {
             { href: '/contact', label: 'Contact' },
         ],
         portal: 'Parent Portal',
+        adminLogin: 'Admin Login',
         lang1: 'Cymraeg',
         lang2: 'English',
     },
@@ -30,6 +31,7 @@ const content = {
             { href: '/contact', label: 'Cysylltu' },
         ],
         portal: 'Porth Rieni',
+        adminLogin: 'Mewngofnodi Gweinyddwr',
         lang1: 'Cymraeg',
         lang2: 'English',
     }
@@ -92,9 +94,12 @@ export function PublicHeader() {
                       </Link>
                     ))}
                  </div>
-                 <div className="p-4 border-t border-sidebar-border">
+                 <div className="space-y-2 p-4 border-t border-sidebar-border">
                      <Button asChild className="w-full">
                         <Link href="/login">{t.portal}</Link>
+                    </Button>
+                    <Button asChild variant="outline" className="w-full">
+                        <Link href="/admin/login">{t.adminLogin}</Link>
                     </Button>
                  </div>
               </div>
