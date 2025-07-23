@@ -176,9 +176,9 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
   const linkedParentIds = new Set(form.watch('linkedParents').map(p => p.parentId));
 
   return (
-    <ScrollArea className="max-h-[80vh] px-6">
+    <ScrollArea className="max-h-[80vh]">
         <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-2 pb-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-2 pb-6 px-6">
             <div>
                 <h3 className="text-lg font-medium">Child's Details</h3>
                 <div className="space-y-4 mt-2">
@@ -252,7 +252,6 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                                     selected={field.value}
                                     onSelect={field.onChange}
                                     disabled={(date) => date > new Date()}
-                                    initialFocus
                                     captionLayout="dropdown-buttons"
                                     fromYear={currentYear - 12}
                                     toYear={currentYear - 3}
@@ -281,24 +280,26 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                             className="mb-2"
                         />
                         <ScrollArea className="h-32 w-full">
-                        {filteredParents
-                            .filter(p => !linkedParentIds.has(p.id))
-                            .map((parent) => (
-                            <div key={parent.id} className="flex items-center justify-between p-2 pr-4">
-                                <span className="text-sm">{parent.name} ({parent.email})</span>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                        const current = form.getValues('linkedParents');
-                                        replaceLinkedParents([...current, { parentId: parent.id, relationship: '' }]);
-                                    }}
-                                >
-                                    Link
-                                </Button>
+                            <div className="pr-4">
+                                {filteredParents
+                                    .filter(p => !linkedParentIds.has(p.id))
+                                    .map((parent) => (
+                                    <div key={parent.id} className="flex items-center justify-between p-2">
+                                        <span className="text-sm">{parent.name} ({parent.email})</span>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                                const current = form.getValues('linkedParents');
+                                                replaceLinkedParents([...current, { parentId: parent.id, relationship: '' }]);
+                                            }}
+                                        >
+                                            Link
+                                        </Button>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
                         </ScrollArea>
                     </div>
                     
