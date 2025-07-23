@@ -224,7 +224,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                         control={form.control}
                         name="dob"
                         render={({ field }) => (
-                            <FormItem className="flex flex-col">
+                            <FormItem>
                             <FormLabel>Date of Birth</FormLabel>
                             <Popover>
                                 <PopoverTrigger asChild>
@@ -419,7 +419,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
             </div>
 
 
-            <div className="flex justify-end pt-4 border-t sticky bottom-0 bg-background z-10 p-6 -mr-2">
+            <div className="flex justify-end pt-4 border-t sticky bottom-0 bg-background z-10 p-6 -mr-6 -mb-6 -ml-6 rounded-b-lg">
             <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {existingChild ? 'Update Child' : 'Enrol Child'}
