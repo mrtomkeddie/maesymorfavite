@@ -175,7 +175,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
   const linkedParentIds = new Set(form.watch('linkedParents').map(p => p.parentId));
 
   return (
-    <ScrollArea className="max-h-[80vh] pr-2">
+    <ScrollArea className="max-h-[80vh]">
         <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-6">
             <div>
@@ -250,9 +250,6 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                                     mode="single"
                                     selected={field.value}
                                     onSelect={field.onChange}
-                                    captionLayout="dropdown-buttons"
-                                    fromYear={new Date().getFullYear() - 12}
-                                    toYear={new Date().getFullYear()}
                                     disabled={(date) => date > new Date()}
                                     initialFocus
                                 />
