@@ -38,13 +38,19 @@ export const generateMockData = () => {
     const mockChildren: ChildWithId[] = [];
     for (let i = 0; i < childNames.length; i++) {
         const numParents = Math.random() > 0.3 ? 1 : 2; // 70% have 1 parent, 30% have 2
-        const parentIds: string[] = [];
+        const linkedParents: { parentId: string, relationship: string }[] = [];
         const availableParentIds = [...mockParents.map(p => p.id)];
+        
+        const relationships = ['Mother', 'Father', 'Guardian', 'Grandmother', 'Grandfather'];
 
         for (let j = 0; j < numParents; j++) {
             if (availableParentIds.length > 0) {
                 const randomIndex = Math.floor(Math.random() * availableParentIds.length);
-                parentIds.push(availableParentIds.splice(randomIndex, 1)[0]);
+                const parentId = availableParentIds.splice(randomIndex, 1)[0];
+                linkedParents.push({
+                    parentId: parentId,
+                    relationship: relationships[j % relationships.length]
+                });
             }
         }
 
@@ -52,7 +58,7 @@ export const generateMockData = () => {
             id: `mock_child_${i+1}`,
             name: `${childNames[i]} ${parentNames[i % parentNames.length].split(' ')[1]}`,
             yearGroup: yearGroups[i % yearGroups.length],
-            parentIds: parentIds,
+            linkedParents: linkedParents,
         });
     }
     
