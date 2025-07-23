@@ -42,6 +42,8 @@ interface ParentFormProps {
 export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFormProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [childSearch, setChildSearch] = useState('');
+
 
   const form = useForm<ParentFormValues>({
     resolver: zodResolver(formSchema),
@@ -125,6 +127,11 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
   // A child is available to be linked if they are not already linked to this parent.
   // We don't restrict based on other parents, as a child can have multiple.
   const availableChildren = allChildren;
+  
+  const filteredChildren = availableChildren.filter(child => 
+    child.name.toLowerCase().includes(childSearch.toLowerCase())
+  );
+
 
   return (
     <Form {...form}>
@@ -192,43 +199,51 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
                     {availableChildren.length === 0 ? (
                         <p className="text-sm text-muted-foreground">No children available. Add a new child first.</p>
                     ) : (
-                        <ScrollArea className="h-40 w-full rounded-md border p-4">
-                            <div className="space-y-2">
-                            {availableChildren.map((child) => (
-                                <FormField
-                                    key={child.id}
-                                    control={form.control}
-                                    name="linkedChildrenIds"
-                                    render={({ field }) => {
-                                    return (
-                                        <FormItem
+                        <>
+                            <Input 
+                                placeholder="Search for a child..."
+                                value={childSearch}
+                                onChange={(e) => setChildSearch(e.target.value)}
+                                className="mb-2"
+                            />
+                            <ScrollArea className="h-40 w-full rounded-md border p-4">
+                                <div className="space-y-2">
+                                {filteredChildren.map((child) => (
+                                    <FormField
                                         key={child.id}
-                                        className="flex flex-row items-start space-x-3 space-y-0"
-                                        >
-                                        <FormControl>
-                                            <Checkbox
-                                            checked={field.value?.includes(child.id)}
-                                            onCheckedChange={(checked) => {
-                                                return checked
-                                                ? field.onChange([...(field.value || []), child.id])
-                                                : field.onChange(
-                                                    field.value?.filter(
-                                                    (value) => value !== child.id
+                                        control={form.control}
+                                        name="linkedChildrenIds"
+                                        render={({ field }) => {
+                                        return (
+                                            <FormItem
+                                            key={child.id}
+                                            className="flex flex-row items-start space-x-3 space-y-0"
+                                            >
+                                            <FormControl>
+                                                <Checkbox
+                                                checked={field.value?.includes(child.id)}
+                                                onCheckedChange={(checked) => {
+                                                    return checked
+                                                    ? field.onChange([...(field.value || []), child.id])
+                                                    : field.onChange(
+                                                        field.value?.filter(
+                                                        (value) => value !== child.id
+                                                        )
                                                     )
-                                                )
-                                            }}
-                                            />
-                                        </FormControl>
-                                        <FormLabel className="font-normal text-sm">
-                                            {child.name} ({child.yearGroup})
-                                        </FormLabel>
-                                        </FormItem>
-                                    )
-                                    }}
-                                />
-                                ))}
-                            </div>
-                        </ScrollArea>
+                                                }}
+                                                />
+                                            </FormControl>
+                                            <FormLabel className="font-normal text-sm">
+                                                {child.name} ({child.yearGroup})
+                                            </FormLabel>
+                                            </FormItem>
+                                        )
+                                        }}
+                                    />
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        </>
                     )}
                      <FormMessage />
                 </FormItem>
