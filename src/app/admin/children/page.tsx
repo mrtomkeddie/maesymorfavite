@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, ChevronsUp, Edit, UploadCloud, Eye, ArrowUpAZ, ArrowDownZA } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, ChevronsUp, Edit, UploadCloud, Eye, ArrowUpAZ, ArrowDownZA, Search } from 'lucide-react';
 import { getChildren, deleteChild, getParents, promoteAllChildren } from '@/lib/firebase/firestore';
 import type { ChildWithId, ParentWithId } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -31,6 +31,7 @@ import { QueryDocumentSnapshot } from 'firebase/firestore';
 import { Label } from '@/components/ui/label';
 import { generateMockData } from '@/lib/mockData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 export default function ChildrenAdminPage() {
   const [children, setChildren] = useState<ChildWithId[]>([]);
@@ -52,6 +53,7 @@ export default function ChildrenAdminPage() {
   const [childToView, setChildToView] = useState<ChildWithId | null>(null);
   const [yearFilter, setYearFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [searchQuery, setSearchQuery] = useState('');
 
 
   const { toast } = useToast();
@@ -193,6 +195,12 @@ export default function ChildrenAdminPage() {
   const filteredAndSortedChildren = useMemo(() => {
     let result = [...activeChildren];
 
+    if (searchQuery) {
+      result = result.filter(child => 
+        child.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
     if (yearFilter !== 'all') {
       result = result.filter(child => child.yearGroup === yearFilter);
     }
@@ -206,7 +214,7 @@ export default function ChildrenAdminPage() {
     });
 
     return result;
-  }, [activeChildren, yearFilter, sortOrder]);
+  }, [activeChildren, yearFilter, sortOrder, searchQuery]);
 
 
   const handleSelectAll = (checked: boolean) => {
@@ -292,9 +300,19 @@ export default function ChildrenAdminPage() {
                     <CardTitle>All Children</CardTitle>
                     <CardDescription>A list of all currently enrolled children.</CardDescription>
                 </div>
-                <div className='flex items-center gap-2'>
+                <div className='flex flex-wrap items-center gap-2'>
+                    <div className="relative w-full md:w-auto">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Search by name..."
+                            className="w-full pl-8 md:w-[250px]"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
                     <Select value={yearFilter} onValueChange={setYearFilter}>
-                        <SelectTrigger className='w-[180px]'>
+                        <SelectTrigger className='w-full md:w-[180px]'>
                             <SelectValue placeholder="Filter by year..."/>
                         </SelectTrigger>
                         <SelectContent>

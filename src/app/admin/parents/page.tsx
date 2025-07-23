@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -17,13 +17,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, UserPlus, Eye } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, UserPlus, Eye, Search } from 'lucide-react';
 import { getParents, deleteParent, ParentWithId, getChildren, ChildWithId, getPaginatedParents } from '@/lib/firebase/firestore';
 import { QueryDocumentSnapshot } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { ParentForm } from '@/components/admin/ParentForm';
 import { Label } from '@/components/ui/label';
 import { generateMockData } from '@/lib/mockData';
+import { Input } from '@/components/ui/input';
 
 export default function ParentsAdminPage() {
   const [parents, setParents] = useState<ParentWithId[]>([]);
@@ -38,6 +39,7 @@ export default function ParentsAdminPage() {
   const [parentToDelete, setParentToDelete] = useState<ParentWithId | null>(null);
   const [isViewParentDialogOpen, setIsViewParentDialogOpen] = useState(false);
   const [parentToView, setParentToView] = useState<ParentWithId | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { toast } = useToast();
 
@@ -138,6 +140,12 @@ export default function ParentsAdminPage() {
       return linkedChildren.map(c => c.name).join(', ');
   }
 
+  const filteredParents = useMemo(() => {
+    return parents.filter(parent => 
+      parent.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [parents, searchQuery]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -172,8 +180,22 @@ export default function ParentsAdminPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>All Parent Accounts</CardTitle>
-          <CardDescription>A list of all registered parents.</CardDescription>
+            <div className='flex flex-col gap-4 md:flex-row md:justify-between'>
+                <div>
+                    <CardTitle>All Parent Accounts</CardTitle>
+                    <CardDescription>A list of all registered parents.</CardDescription>
+                </div>
+                <div className="relative w-full md:w-auto">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        type="search"
+                        placeholder="Search by name..."
+                        className="w-full pl-8 md:w-[250px]"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+            </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -192,8 +214,8 @@ export default function ParentsAdminPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {parents.length > 0 ? (
-                    parents.map((parent) => (
+                  {filteredParents.length > 0 ? (
+                    filteredParents.map((parent) => (
                       <TableRow key={parent.id}>
                         <TableCell className="font-medium">{parent.name}</TableCell>
                         <TableCell>{parent.email}</TableCell>
@@ -237,7 +259,7 @@ export default function ParentsAdminPage() {
                   )}
                 </TableBody>
               </Table>
-              {hasMore && (
+              {hasMore && filteredParents.length === parents.length && (
                 <div className="flex justify-center mt-4">
                   <Button onClick={() => fetchParentsAndChildren(false)} disabled={isLoadingMore}>
                     {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
