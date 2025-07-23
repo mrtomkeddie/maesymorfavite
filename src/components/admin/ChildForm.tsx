@@ -35,6 +35,7 @@ import { Calendar } from '../ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '../ui/checkbox';
+import { DatePicker } from '../ui/date-picker';
 
 export const yearGroups = [
     "Nursery",
@@ -196,7 +197,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                     )}
                     />
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                         <FormField
                             control={form.control}
                             name="yearGroup"
@@ -221,46 +222,23 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                             </FormItem>
                             )}
                         />
-                        <FormField
-                        control={form.control}
-                        name="dob"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Date of Birth</FormLabel>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                <FormControl>
-                                    <Button
-                                    variant={'outline'}
-                                    className={cn(
-                                        'w-full pl-3 text-left font-normal',
-                                        !field.value && 'text-muted-foreground'
-                                    )}
-                                    >
-                                    {field.value ? (
-                                        format(field.value, 'PPP')
-                                    ) : (
-                                        <span>Pick a date</span>
-                                    )}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                    </Button>
-                                </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                    mode="single"
-                                    selected={field.value}
-                                    onSelect={field.onChange}
-                                    disabled={(date) => date > new Date()}
-                                    captionLayout="dropdown-buttons"
-                                    fromYear={currentYear - 12}
-                                    toYear={currentYear - 3}
-                                />
-                                </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                            </FormItem>
-                        )}
+                         <FormField
+                            control={form.control}
+                            name="dob"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Date of Birth</FormLabel>
+                                    <FormControl>
+                                       <DatePicker
+                                            date={field.value}
+                                            onDateChange={field.onChange}
+                                            fromYear={currentYear - 12}
+                                            toYear={currentYear - 3}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
                         />
                     </div>
                 </div>
