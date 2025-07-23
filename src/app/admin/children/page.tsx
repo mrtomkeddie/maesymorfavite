@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -18,11 +18,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, ChevronsUp, Edit, UploadCloud, Eye } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, ChevronsUp, Edit, UploadCloud, Eye, ArrowUpAZ, ArrowDownZA } from 'lucide-react';
 import { getChildren, deleteChild, getParents, promoteAllChildren } from '@/lib/firebase/firestore';
 import type { ChildWithId, ParentWithId } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { ChildForm } from '@/components/admin/ChildForm';
+import { ChildForm, yearGroups } from '@/components/admin/ChildForm';
 import { BulkEditChildForm } from '@/components/admin/BulkEditChildForm';
 import { CsvImportDialog } from '@/components/admin/CsvImportDialog';
 import { Child } from '@/lib/types';
@@ -30,6 +30,7 @@ import { getPaginatedChildren } from '@/lib/firebase/firestore';
 import { QueryDocumentSnapshot } from 'firebase/firestore';
 import { Label } from '@/components/ui/label';
 import { generateMockData } from '@/lib/mockData';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function ChildrenAdminPage() {
   const [children, setChildren] = useState<ChildWithId[]>([]);
@@ -49,6 +50,8 @@ export default function ChildrenAdminPage() {
   const [selectedChildrenIds, setSelectedChildrenIds] = useState<string[]>([]);
   const [isViewChildDialogOpen, setIsViewChildDialogOpen] = useState(false);
   const [childToView, setChildToView] = useState<ChildWithId | null>(null);
+  const [yearFilter, setYearFilter] = useState('all');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
 
   const { toast } = useToast();
@@ -67,8 +70,8 @@ export default function ChildrenAdminPage() {
             throw new Error('Firebase not configured');
         }
         
-        const childrenResult = await getPaginatedChildren(20, initial ? undefined : lastDoc);
-        const parentsData = await getParents(); // Fetch all parents for linking
+        const childrenResult = await getPaginatedChildren(100, initial ? undefined : lastDoc); // Fetch more to allow for client-side filtering
+        const parentsData = await getParents();
 
         if (initial) {
             setChildren(childrenResult.data);
@@ -77,7 +80,7 @@ export default function ChildrenAdminPage() {
             setChildren(prev => [...prev, ...childrenResult.data]);
         }
         setLastDoc(childrenResult.lastDoc);
-        setHasMore(!!childrenResult.lastDoc && childrenResult.data.length === 20);
+        setHasMore(!!childrenResult.lastDoc && childrenResult.data.length === 100);
 
     } catch (error) {
         console.log('Firebase not configured, using mock data for children and parents');
@@ -85,11 +88,8 @@ export default function ChildrenAdminPage() {
         if (initial) {
             setChildren(mockChildren);
             setParents(mockParents);
-        } else {
-            // If it's not the initial load, we don't add more mock data
-            // as the full set is already loaded.
-            setHasMore(false);
         }
+        setHasMore(false);
     } finally {
         setIsLoading(false);
         setIsLoadingMore(false);
@@ -119,7 +119,7 @@ export default function ChildrenAdminPage() {
   }
 
   const handleEdit = (child: ChildWithId) => {
-    setIsViewChildDialogOpen(false); // Close view dialog if open
+    setIsViewChildDialogOpen(false); 
     setSelectedChild(child);
     setIsDialogOpen(true);
   };
@@ -165,7 +165,7 @@ export default function ChildrenAdminPage() {
             title: "Success!",
             description: "All children have been promoted, and Year 6 leavers have been archived."
         });
-        fetchChildrenAndParents(true); // Refresh data to show new year groups
+        fetchChildrenAndParents(true);
     } catch(error) {
         console.error("Error promoting year groups: ", error);
         toast({
@@ -187,12 +187,31 @@ export default function ChildrenAdminPage() {
       }).join(', ');
   }
 
-  const activeChildren = children.filter(c => c.yearGroup && !c.yearGroup.startsWith('Archived'));
+  const activeChildren = useMemo(() => children.filter(c => c.yearGroup && !c.yearGroup.startsWith('Archived')), [children]);
   const leaversYear = new Date().getFullYear() + 1;
+
+  const filteredAndSortedChildren = useMemo(() => {
+    let result = [...activeChildren];
+
+    if (yearFilter !== 'all') {
+      result = result.filter(child => child.yearGroup === yearFilter);
+    }
+
+    result.sort((a, b) => {
+      if (sortOrder === 'asc') {
+        return a.name.localeCompare(b.name);
+      } else {
+        return b.name.localeCompare(a.name);
+      }
+    });
+
+    return result;
+  }, [activeChildren, yearFilter, sortOrder]);
+
 
   const handleSelectAll = (checked: boolean) => {
       if (checked) {
-          setSelectedChildrenIds(activeChildren.map(c => c.id));
+          setSelectedChildrenIds(filteredAndSortedChildren.map(c => c.id));
       } else {
           setSelectedChildrenIds([]);
       }
@@ -266,40 +285,28 @@ export default function ChildrenAdminPage() {
         </div>
       </div>
       
-       <div className="flex items-center gap-4">
-        <Dialog open={isBulkEditOpen} onOpenChange={setIsBulkEditOpen}>
-            <DialogTrigger asChild>
-                <Button disabled={selectedChildrenIds.length === 0}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Bulk Edit ({selectedChildrenIds.length})
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[625px]">
-                <DialogHeader>
-                    <DialogTitle>Bulk Edit Children</DialogTitle>
-                    <DialogDescription>
-                        Update the selected fields for all {selectedChildrenIds.length} selected children. Fields left blank will not be changed.
-                    </DialogDescription>
-                </DialogHeader>
-                <BulkEditChildForm 
-                    selectedIds={selectedChildrenIds}
-                    parents={parents}
-                    onSuccess={handleBulkFormSuccess}
-                />
-            </DialogContent>
-        </Dialog>
-
-        {selectedChildrenIds.length > 0 && (
-            <span className="text-sm text-muted-foreground">
-                {selectedChildrenIds.length} of {activeChildren.length} selected.
-            </span>
-        )}
-      </div>
-
-      <Card>
+       <Card>
         <CardHeader>
-          <CardTitle>All Children</CardTitle>
-          <CardDescription>A list of all currently enrolled children.</CardDescription>
+            <div className='flex flex-col gap-4 md:flex-row md:justify-between'>
+                <div>
+                    <CardTitle>All Children</CardTitle>
+                    <CardDescription>A list of all currently enrolled children.</CardDescription>
+                </div>
+                <div className='flex items-center gap-2'>
+                    <Select value={yearFilter} onValueChange={setYearFilter}>
+                        <SelectTrigger className='w-[180px]'>
+                            <SelectValue placeholder="Filter by year..."/>
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Year Groups</SelectItem>
+                            {yearGroups.map(yg => <SelectItem key={yg} value={yg}>{yg}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                    <Button variant="outline" size="icon" onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}>
+                        {sortOrder === 'asc' ? <ArrowUpAZ className="h-4 w-4" /> : <ArrowDownZA className="h-4 w-4" />}
+                    </Button>
+                </div>
+            </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -308,12 +315,41 @@ export default function ChildrenAdminPage() {
             </div>
           ) : (
             <>
+            <div className="flex items-center gap-4 mb-4">
+                <Dialog open={isBulkEditOpen} onOpenChange={setIsBulkEditOpen}>
+                    <DialogTrigger asChild>
+                        <Button disabled={selectedChildrenIds.length === 0}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Bulk Edit ({selectedChildrenIds.length})
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[625px]">
+                        <DialogHeader>
+                            <DialogTitle>Bulk Edit Children</DialogTitle>
+                            <DialogDescription>
+                                Update the selected fields for all {selectedChildrenIds.length} selected children. Fields left blank will not be changed.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <BulkEditChildForm 
+                            selectedIds={selectedChildrenIds}
+                            parents={parents}
+                            onSuccess={handleBulkFormSuccess}
+                        />
+                    </DialogContent>
+                </Dialog>
+
+                {selectedChildrenIds.length > 0 && (
+                    <span className="text-sm text-muted-foreground">
+                        {selectedChildrenIds.length} of {filteredAndSortedChildren.length} selected.
+                    </span>
+                )}
+              </div>
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[40px]">
                       <Checkbox
-                          checked={selectedChildrenIds.length === activeChildren.length && activeChildren.length > 0}
+                          checked={selectedChildrenIds.length === filteredAndSortedChildren.length && filteredAndSortedChildren.length > 0}
                           onCheckedChange={(checked) => handleSelectAll(!!checked)}
                           aria-label="Select all"
                       />
@@ -325,8 +361,8 @@ export default function ChildrenAdminPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {activeChildren.length > 0 ? (
-                    activeChildren.map((child) => (
+                  {filteredAndSortedChildren.length > 0 ? (
+                    filteredAndSortedChildren.map((child) => (
                       <TableRow key={child.id}>
                          <TableCell>
                            <Checkbox
@@ -369,7 +405,7 @@ export default function ChildrenAdminPage() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={5} className="h-24 text-center">
-                        No children found.
+                        No children found matching the current filter.
                       </TableCell>
                     </TableRow>
                   )}
