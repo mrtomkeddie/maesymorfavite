@@ -132,7 +132,7 @@ export default function CalendarPage() {
                 ))}
             </div>
             
-            <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+            <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 {event.attachments.length > 0 && (
                     <div className="mt-3">
                     <h4 className="text-sm font-semibold mb-1 flex items-center gap-1"><Paperclip className="h-4 w-4" /> {t.attachments}</h4>
