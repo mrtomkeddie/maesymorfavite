@@ -19,7 +19,7 @@ export default function DashboardPage() {
 
   const stats = [
       { label: "Charlie's Attendance", value: "98%", icon: Percent, href: "#" },
-      { label: "Unread Notifications", value: "3", icon: Bell, href: "/news" },
+      { label: "Charlie's Teacher", value: "Mr. Evans", icon: UserCheck, href: "/about" },
       { label: "Next Upcoming Event", value: nextEvent ? new Date(nextEvent.start).toLocaleDateString('en-GB', { day: 'numeric', month: 'short'}) : 'None', icon: Calendar, href: '/calendar' },
   ]
 
