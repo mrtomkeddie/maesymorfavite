@@ -1,6 +1,42 @@
 
 import type { ParentWithId, ChildWithId } from '@/lib/types';
 
+// Standardized mock data for a logged-in parent with two children.
+// This ensures consistency across the dashboard, calendar, gallery, and absence pages.
+export const parentChildren = [
+    { 
+        id: 'child_1', 
+        name: 'Charlie K.', 
+        yearGroup: 'Year 2', 
+        attendance: '98%', 
+        teacher: 'Mr. Evans',
+        avatar: {
+            src: 'https://placehold.co/100x100.png',
+            fallback: 'CK',
+            aiHint: 'child portrait'
+        }
+    },
+    { 
+        id: 'child_2', 
+        name: 'Sophie K.', 
+        yearGroup: 'Year 5', 
+        attendance: '99%', 
+        teacher: 'Ms. Hughes',
+        avatar: {
+            src: 'https://placehold.co/100x100.png',
+            fallback: 'SK',
+            aiHint: 'child portrait smiling'
+        }
+    },
+];
+
+// A simple array of the year groups for the logged-in parent's children.
+// Used for filtering content like the calendar and gallery.
+export const parentChildrenYearGroups = parentChildren.map(c => c.yearGroup);
+
+
+// --- Full Mock Data for Admin Panel ---
+
 const parentNames = [
     "Rhys Williams", "Ffion Davies", "Owain Evans", "Carys Jones", "Tomos Roberts", "Seren Thomas", 
     "Gethin Morgan", "Lowri Phillips", "Ieuan Hughes", "Nia Jenkins",
@@ -14,7 +50,7 @@ const childNames = [
     "James", "Amelia", "Benjamin", "Mia", "Lucas", "Harper", "Henry", "Evelyn", "Alexander", "Abigail",
     "Michael", "Emily", "Ethan", "Elizabeth", "Daniel", "Mila", "Matthew", "Ella", "Aiden", "Avery",
     "David", "Sofia", "Joseph", "Camila", "Samuel", "Aria", "Jackson", "Scarlett", "John", "Victoria",
-    "Jonathan", "Madison", "Caleb", "Luna", "Joshua", "Grace", "Isaac", "Chloe", "Ryan", "Penelope"
+    "Jonathan", "Madison", "Caleb", "Luna", "Joshua", "Grace", "Chloe", "Ryan", "Penelope"
 ];
 
 function generateMockPhoneNumber(index: number) {

@@ -117,27 +117,28 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
           .map(c => [c.id, c.linkedParents?.find(lp => lp.parentId === parentId)?.relationship || ''])
       );
      
-      // Process all children to update links
       for (const child of allChildren) {
           const wasLinked = originalLinks.has(child.id);
-          const isLinked = newLinks.has(child.id);
-          const currentLinkedParents = child.linkedParents || [];
+          const shouldBeLinked = newLinks.has(child.id);
 
-          if (wasLinked && !isLinked) {
-              // Unlink
-              const updatedLinks = currentLinkedParents.filter(lp => lp.parentId !== parentId);
+          // Case 1: Child was linked, but now shouldn't be.
+          if (wasLinked && !shouldBeLinked) {
+              const updatedLinks = child.linkedParents?.filter(lp => lp.parentId !== parentId);
               await updateChild(child.id, { linkedParents: updatedLinks });
-          } else if (!wasLinked && isLinked) {
-              // Link
-              const updatedLinks = [...currentLinkedParents, { parentId, relationship: newLinks.get(child.id)! }];
+          }
+          // Case 2: Child was not linked, but now should be.
+          else if (!wasLinked && shouldBeLinked) {
+              const newLink: LinkedParent = { parentId, relationship: newLinks.get(child.id)! };
+              const updatedLinks = [...(child.linkedParents || []), newLink];
               await updateChild(child.id, { linkedParents: updatedLinks });
-          } else if (wasLinked && isLinked) {
-              // Relationship might have changed
-              const newRelationship = newLinks.get(child.id)!;
-              const originalRelationship = originalLinks.get(child.id)!;
-              if (newRelationship !== originalRelationship) {
-                  const updatedLinks = currentLinkedParents.map(lp => 
-                    lp.parentId === parentId ? { ...lp, relationship: newRelationship } : lp
+          }
+          // Case 3: Child was and still is linked, check if relationship changed.
+          else if (wasLinked && shouldBeLinked) {
+              const newRelationship = newLinks.get(child.id);
+              const oldRelationship = originalLinks.get(child.id);
+              if (newRelationship !== oldRelationship) {
+                  const updatedLinks = child.linkedParents?.map(lp => 
+                    lp.parentId === parentId ? { ...lp, relationship: newRelationship! } : lp
                   );
                   await updateChild(child.id, { linkedParents: updatedLinks });
               }

@@ -11,35 +11,7 @@ import { ClipboardCheck, Utensils, ArrowRight, UserCheck, Percent, Pizza, Salad 
 import Image from 'next/image';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
-
-// In a real app, this would be fetched for the logged-in parent
-const parentChildren = [
-    { 
-        id: 'child_1', 
-        name: 'Charlie K.', 
-        yearGroup: 'Year 2', 
-        attendance: '98%', 
-        teacher: 'Mr. Evans',
-        avatar: {
-            src: 'https://placehold.co/100x100.png',
-            fallback: 'CK',
-            aiHint: 'child portrait'
-        }
-    },
-    { 
-        id: 'child_2', 
-        name: 'Sophie K.', 
-        yearGroup: 'Year 5', 
-        attendance: '99%', 
-        teacher: 'Ms. Hughes',
-        avatar: {
-            src: 'https://placehold.co/100x100.png',
-            fallback: 'SK',
-            aiHint: 'child portrait smiling'
-        }
-    },
-];
+import { parentChildren } from '@/lib/mockData';
 
 const todaysMenu = {
     main: "Shepherd's Pie",

@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import Link from 'next/link';
-
+import { parentChildrenYearGroups } from '@/lib/mockData';
 
 const content = {
   en: {
@@ -74,9 +74,6 @@ const tagColors: Record<(typeof calendarEvents[0]['tags'][0]), string> = {
     'Parents Evening': 'bg-pink-100 text-pink-800 border-pink-200'
 };
 
-// Mock data for the parent's children's year groups
-// In a real app, this would be fetched from the database based on the logged-in parent
-const parentChildrenYearGroups = ['Year 2', 'Year 5'];
 
 export default function CalendarPage() {
   const { language } = useLanguage();
@@ -101,19 +98,10 @@ export default function CalendarPage() {
         return calendarEvents;
     }
     return calendarEvents.filter(event => {
-        // Always include events marked for "All"
-        if (event.relevantTo?.includes('All')) {
+        if (!event.relevantTo || event.relevantTo.length === 0 || event.relevantTo.includes('All')) {
             return true;
         }
-        // Include events if there's an overlap between the event's relevant years and the parent's children's years
-        if (event.relevantTo && parentChildrenYearGroups.some(year => event.relevantTo?.includes(year as any))) {
-            return true;
-        }
-        // Fallback for events without the new 'relevantTo' property: show them by default
-        if (!event.relevantTo) {
-            return true;
-        }
-        return false;
+        return parentChildrenYearGroups.some(year => event.relevantTo?.includes(year as any));
     });
   }, [isFiltered]);
 

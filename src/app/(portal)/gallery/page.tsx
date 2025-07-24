@@ -8,9 +8,7 @@ import { PhotoWithId, getPhotosForYearGroups } from '@/lib/firebase/firestore';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button";
-
-// In a real app, this would come from the parent's authenticated session
-const parentChildrenYearGroups = ['Year 2', 'Year 5'];
+import { parentChildrenYearGroups } from '@/lib/mockData';
 
 export default function GalleryPage() {
   const [photos, setPhotos] = useState<PhotoWithId[]>([]);
@@ -47,8 +45,12 @@ export default function GalleryPage() {
     return photos.filter(photo => photo.yearGroups.includes(activeFilter));
   }, [photos, activeFilter]);
   
-  const filterOptions = ['All', ...parentChildrenYearGroups];
-
+  const allParentYearGroups = useMemo(() => {
+      const uniqueYears = new Set(parentChildrenYearGroups);
+      return Array.from(uniqueYears);
+  }, []);
+  
+  const filterOptions = ['All', ...allParentYearGroups];
 
   return (
     <div className="space-y-6">
@@ -57,7 +59,7 @@ export default function GalleryPage() {
         <p className="text-muted-foreground">Recent photos from your children's classes and school events.</p>
       </div>
       
-      {parentChildrenYearGroups.length > 1 && (
+      {allParentYearGroups.length > 1 && (
          <div className="flex items-center gap-2 rounded-lg border bg-muted/50 p-3 flex-wrap">
           <p className="text-sm font-medium mr-2">Filter by class:</p>
           {filterOptions.map((filter) => (

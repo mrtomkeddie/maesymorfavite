@@ -32,11 +32,7 @@ import { CalendarIcon, Loader2, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { addInboxMessage } from '@/lib/firebase/firestore';
-
-const mockChildren = [
-  { id: 'child_1', name: 'Charlie K.' },
-  { id: 'child_2', name: 'Sophie K.' },
-];
+import { parentChildren as mockChildren } from '@/lib/mockData';
 
 const absenceFormSchema = z.object({
   childId: z.string({
