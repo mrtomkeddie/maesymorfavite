@@ -89,9 +89,8 @@ export function PublicFooter() {
       <div className="container mx-auto max-w-7xl px-8 py-16">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4 lg:grid-cols-5">
             <div className="col-span-1 md:col-span-2 mb-8 md:mb-0">
-                 <Link href="/" className="flex items-center gap-2">
-                    <Image src="/logo.png" alt="Maes Y Morfa logo" width={28} height={28} className="h-7 w-7" />
-                    <span className="font-extrabold text-xl">Maes Y Morfa</span>
+                 <Link href="/">
+                    <Image src="/logo-white-footer.png" alt="Maes Y Morfa logo" width={1640} height={403} className="h-12 w-auto" />
                 </Link>
                 <div className="text-sm text-background/70 mt-4 space-y-1">
                     {settings ? (
