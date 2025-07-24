@@ -31,10 +31,6 @@ const content = {
         sendButton: "Send to Admin",
         toastSuccess: "Your message has been sent.",
         toastError: "Could not send your message. Please try again.",
-        publicQuestion: "Parents can log in to send a message directly from this page.",
-        publicQuestionCta: "Alternatively, please use our main contact form.",
-        loginButton: "Parent Login",
-        contactButton: "Contact Us"
     },
     cy: {
         back: 'Yn ôl i\'r holl newyddion',
@@ -47,10 +43,6 @@ const content = {
         sendButton: "Anfon at y Gweinyddwr",
         toastSuccess: "Mae eich neges wedi'i hanfon.",
         toastError: "Methu anfon eich neges. Rhowch gynnig arall arni.",
-        publicQuestion: "Gall rhieni fewngofnodi i anfon neges yn uniongyrchol o'r dudalen hon.",
-        publicQuestionCta: "Fel arall, defnyddiwch ein prif ffurflen gyswllt.",
-        loginButton: "Mewngofnodi Rhiant",
-        contactButton: "Cysylltu â Ni"
     }
 }
 
@@ -96,56 +88,37 @@ const ContactAdminSection = ({ articleTitle, t }: { articleTitle: string, t: typ
         }
     }
 
-    if (isParent) {
-        return (
-            <Card className="mt-12">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-3"><MessageSquare className="h-6 w-6 text-primary"/> {t.questionTitle}</CardTitle>
-                    <CardDescription>{t.questionDesc}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                            <FormField control={form.control} name="message" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>{t.messageLabel}</FormLabel>
-                                    <FormControl>
-                                        <Textarea {...field} rows={4} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-                            <Button type="submit" disabled={isLoading}>
-                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                <Send className="mr-2 h-4 w-4" /> {t.sendButton}
-                            </Button>
-                        </form>
-                    </Form>
-                </CardContent>
-            </Card>
-        );
+    if (!isParent) {
+        return null; // Don't render anything for non-parents
     }
-    
-    // Fallback for non-logged in users
+
     return (
-         <Card className="mt-12 text-center bg-secondary/30">
+        <Card className="mt-12">
             <CardHeader>
-                <CardTitle className="flex items-center justify-center gap-3"><HelpCircle className="h-6 w-6 text-primary"/> {t.questionTitle}</CardTitle>
+                <CardTitle className="flex items-center gap-3"><MessageSquare className="h-6 w-6 text-primary"/> {t.questionTitle}</CardTitle>
+                <CardDescription>{t.questionDesc}</CardDescription>
             </CardHeader>
             <CardContent>
-                <p className="text-muted-foreground">{t.publicQuestion}</p>
-                 <p className="text-muted-foreground text-sm mt-1">{t.publicQuestionCta}</p>
-                <div className="flex flex-col sm:flex-row gap-2 mt-4 justify-center">
-                    <Button asChild>
-                        <Link href="/login">{t.loginButton}</Link>
-                    </Button>
-                    <Button asChild variant="outline">
-                        <Link href="/contact">{t.contactButton}</Link>
-                    </Button>
-                </div>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField control={form.control} name="message" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>{t.messageLabel}</FormLabel>
+                                <FormControl>
+                                    <Textarea {...field} rows={4} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                        <Button type="submit" disabled={isLoading}>
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            <Send className="mr-2 h-4 w-4" /> {t.sendButton}
+                        </Button>
+                    </form>
+                </Form>
             </CardContent>
         </Card>
-    )
+    );
 };
 
 
