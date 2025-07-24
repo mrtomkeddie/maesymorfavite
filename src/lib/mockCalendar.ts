@@ -17,6 +17,7 @@ export type CalendarEvent = {
     end?: string; // ISO 8601 format
     allDay: boolean;
     tags: CalendarTag[];
+    relevantTo?: ('All' | 'Nursery' | 'Reception' | 'Year 1' | 'Year 2' | 'Year 3' | 'Year 4' | 'Year 5' | 'Year 6')[];
     attachments: CalendarAttachment[]; // Can be deprecated for attachmentUrl
     attachmentUrl?: string;
     attachmentName?: string;
@@ -101,6 +102,7 @@ const otherEvents: Omit<CalendarEvent, 'id' | 'published' | 'allDay'>[] = [
         start: "2024-10-15T09:00:00",
         end: "2024-10-15T15:30:00",
         tags: ['Trip'],
+        relevantTo: ['Year 6'],
         attachments: [
             { name: "Big Pit Letter.pdf", url: "#", type: 'pdf'}
         ]
@@ -113,6 +115,7 @@ const otherEvents: Omit<CalendarEvent, 'id' | 'published' | 'allDay'>[] = [
         start: "2024-11-12T16:00:00",
         end: "2024-11-12T19:00:00",
         tags: ['Parents Evening'],
+        relevantTo: ['All'],
         attachments: []
     },
     {
@@ -123,6 +126,7 @@ const otherEvents: Omit<CalendarEvent, 'id' | 'published' | 'allDay'>[] = [
         start: "2024-12-18T18:00:00",
         end: "2024-12-18T19:30:00",
         tags: ['Event'],
+        relevantTo: ['All'],
         attachments: []
     }
 ]
@@ -135,6 +139,7 @@ const generatedEvents: CalendarEvent[] = [
         end: e.end,
         allDay: true,
         tags: [e.tag] as CalendarTag[],
+        relevantTo: ['All'],
         attachments: [],
         published: true
     })),
@@ -144,6 +149,7 @@ const generatedEvents: CalendarEvent[] = [
         start: e.start,
         allDay: true,
         tags: [e.tag] as CalendarTag[],
+        relevantTo: ['All'],
         attachments: [],
         published: true
     })),

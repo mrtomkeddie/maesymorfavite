@@ -28,11 +28,18 @@ import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '../ui/calendar';
 import { Progress } from '../ui/progress';
+import { Checkbox } from '../ui/checkbox';
+import { yearGroups as allYearGroups } from './ChildForm';
+
+const yearGroupOptions = ['All', ...allYearGroups];
 
 const formSchema = z.object({
   title_en: z.string().min(5, { message: 'Title must be at least 5 characters.' }),
   start: z.date({ required_error: 'An event date is required.' }),
   description_en: z.string().optional(),
+  relevantTo: z.array(z.string()).refine(value => value.some(item => item), {
+      message: "You have to select at least one year group.",
+  }),
   isUrgent: z.boolean().default(false),
   showOnHomepage: z.boolean().default(false),
   attachment: z.any().optional(),
@@ -57,6 +64,7 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
       title_en: existingEvent?.title_en || '',
       start: existingEvent ? new Date(existingEvent.start) : new Date(),
       description_en: existingEvent?.description_en || '',
+      relevantTo: existingEvent?.relevantTo || ['All'],
       isUrgent: existingEvent?.isUrgent || false,
       showOnHomepage: existingEvent?.showOnHomepage || false,
       attachment: undefined,
@@ -81,16 +89,6 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
         setUploadProgress(100);
       }
 
-      const eventData = {
-        title_en: values.title_en,
-        start: values.start.toISOString(),
-        description_en: values.description_en,
-        isUrgent: values.isUrgent,
-        showOnHomepage: values.showOnHomepage,
-        attachmentUrl: attachmentUrl,
-        attachmentName: attachmentName,
-      };
-
       const eventPayload = {
         title_en: values.title_en,
         title_cy: values.title_en, // For now, Welsh is same as English
@@ -100,6 +98,7 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
         allDay: true, // Simplified for now
         isUrgent: values.isUrgent,
         showOnHomepage: values.showOnHomepage,
+        relevantTo: values.relevantTo,
         attachmentUrl: attachmentUrl,
         attachmentName: attachmentName,
         tags: [], // Simplified for now
@@ -211,6 +210,71 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
             </FormItem>
           )}
         />
+
+         <FormField
+          control={form.control}
+          name="relevantTo"
+          render={({ field }) => (
+            <FormItem>
+              <div className="mb-4">
+                <FormLabel className="text-base">Relevant To</FormLabel>
+                <FormDescription>
+                  Select which year groups this event applies to.
+                </FormDescription>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {yearGroupOptions.map((item) => (
+                <FormField
+                  key={item}
+                  control={form.control}
+                  name="relevantTo"
+                  render={({ field }) => {
+                    return (
+                      <FormItem
+                        key={item}
+                        className="flex flex-row items-start space-x-3 space-y-0"
+                      >
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value?.includes(item)}
+                            onCheckedChange={(checked) => {
+                              const newValues = field.value ? [...field.value] : [];
+                              if (checked) {
+                                  if (item === 'All') {
+                                    return field.onChange(['All']);
+                                  }
+                                  // Add item, and remove 'All' if it exists
+                                  newValues.push(item);
+                                  const allIndex = newValues.indexOf('All');
+                                  if (allIndex > -1) {
+                                      newValues.splice(allIndex, 1);
+                                  }
+                                  return field.onChange(newValues);
+                              } else {
+                                  // Remove item
+                                  return field.onChange(
+                                    newValues?.filter(
+                                      (value) => value !== item
+                                    )
+                                  )
+                              }
+                            }}
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          {item}
+                        </FormLabel>
+                      </FormItem>
+                    )
+                  }}
+                />
+              ))}
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
 
         <div className="space-y-4">
             <div className="flex items-center justify-between rounded-lg border p-4">

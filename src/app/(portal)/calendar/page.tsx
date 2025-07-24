@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLanguage } from '@/app/(public)/LanguageProvider';
 import {
   Card,
@@ -14,12 +14,15 @@ import { Button } from '@/components/ui/button';
 import {
   CalendarPlus,
   Paperclip,
+  Filter,
 } from 'lucide-react';
 import { calendarEvents, CalendarEvent } from '@/lib/mockCalendar';
 import { format } from 'date-fns';
 import { createICalFeed } from '@/lib/ical';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 
 
 const content = {
@@ -31,6 +34,7 @@ const content = {
     subscribeButton: 'Subscribe to the School Calendar',
     subscribeDescription: '(Events auto-update in your calendar app)',
     attachments: 'Attachments',
+    filterLabel: "Only show events for my children",
     tags: {
       Holiday: 'Holiday',
       INSET: 'INSET Day',
@@ -47,6 +51,7 @@ const content = {
     subscribeButton: 'Tanysgrifiwch i Galendr yr Ysgol',
     subscribeDescription: '(Mae digwyddiadau\'n diweddaru\'n awtomatig yn eich ap calendr)',
     attachments: 'Atodiadau',
+    filterLabel: "Dangos digwyddiadau ar gyfer fy mhlant yn unig",
     tags: {
       Holiday: 'Gwyliau',
       INSET: 'Diwrnod HMS',
@@ -65,9 +70,14 @@ const tagColors: Record<(typeof calendarEvents[0]['tags'][0]), string> = {
     'Parents Evening': 'bg-pink-100 text-pink-800 border-pink-200'
 };
 
+// Mock data for the parent's children's year groups
+// In a real app, this would be fetched from the database based on the logged-in parent
+const parentChildrenYearGroups = ['Year 2', 'Year 5'];
+
 export default function CalendarPage() {
   const { language } = useLanguage();
   const t = content[language];
+  const [isFiltered, setIsFiltered] = useState(false);
 
   const handleDownloadICalFeed = () => {
     const icalData = createICalFeed(calendarEvents);
@@ -81,6 +91,28 @@ export default function CalendarPage() {
       document.body.removeChild(link);
     }
   };
+  
+  const filteredEvents = useMemo(() => {
+    if (!isFiltered) {
+        return calendarEvents;
+    }
+    return calendarEvents.filter(event => {
+        // Always include events marked for "All"
+        if (event.relevantTo?.includes('All')) {
+            return true;
+        }
+        // Include events if there's an overlap between the event's relevant years and the parent's children's years
+        if (event.relevantTo && parentChildrenYearGroups.some(year => event.relevantTo?.includes(year as any))) {
+            return true;
+        }
+        // Fallback for events without the new 'relevantTo' property: show them by default
+        if (!event.relevantTo) {
+            return true;
+        }
+        return false;
+    });
+  }, [isFiltered]);
+
 
   const EventItem = ({ event }: { event: CalendarEvent }) => (
     <div className="relative rounded-lg border p-4 transition-all hover:shadow-md bg-card">
@@ -124,8 +156,8 @@ export default function CalendarPage() {
 
   const ListView = () => (
     <div className="space-y-4">
-        {calendarEvents.length > 0 ? (
-            calendarEvents.map(event => <EventItem key={event.id} event={event} />)
+        {filteredEvents.length > 0 ? (
+            filteredEvents.map(event => <EventItem key={event.id} event={event} />)
         ) : (
             <Card className="text-center p-8">
                 <p className="text-muted-foreground">{t.noEventsList}</p>
@@ -149,6 +181,14 @@ export default function CalendarPage() {
             <p className="text-xs text-muted-foreground mt-1">{t.subscribeDescription}</p>
         </div>
       </div>
+      
+       <div className="flex items-center justify-end space-x-2 rounded-md border p-3 bg-muted/50">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Label htmlFor="filter-switch" className="text-sm">
+            {t.filterLabel}
+          </Label>
+          <Switch id="filter-switch" checked={isFiltered} onCheckedChange={setIsFiltered} />
+        </div>
 
       <ListView />
     </div>
