@@ -51,6 +51,24 @@ import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { db } from '@/lib/firebase/config';
 
+// Re-using the structure from the public about page for consistency
+const mockStaffFromAboutPage = [
+    { team: "Leadership Team", name: "Jane Morgan", role: "Headteacher" },
+    { team: "Leadership Team", name: "Alex Evans", role: "Deputy Head" },
+    { team: "Leadership Team", name: "Ceri Lloyd", role: "SENCo" },
+    { team: "Nursery & Reception", name: "David Williams", role: "Teacher" },
+    { team: "Year 1", name: "Sarah Davies", role: "Teacher" },
+    { team: "Year 2", name: "Tomos Jones", role: "Teacher" },
+    { team: "Year 3", name: "Emily Roberts", role: "Teacher" },
+    { team: "Year 4", name: "Megan Phillips", role: "Teacher" },
+    { team: "Year 5", name: "Owain Thomas", role: "Teacher" },
+    { team: "Year 6", name: "Ffion Hughes", role: "Teacher" },
+    { team: "Support Staff", name: "Mark Phillips", role: "Office Manager" },
+    { team: "Support Staff", name: "Rhiannon Price", role: "Teaching Assistant" },
+    { team: "Support Staff", name: "Gareth Bale", role: "Teaching Assistant" },
+    { team: "Support Staff", name: "Sian Williams", role: "Librarian" },
+];
+
 
 export default function StaffAdminPage() {
   const [staff, setStaff] = useState<StaffMemberWithId[]>([]);
@@ -67,7 +85,6 @@ export default function StaffAdminPage() {
   const { toast } = useToast();
 
   const groupStaff = (staffList: StaffMemberWithId[]) => {
-    console.log('Grouping staff list:', staffList.length, 'items');
     const grouped = staffList.reduce((acc, member) => {
       const team = member.team || 'Other';
       if (!acc[team]) {
@@ -76,26 +93,36 @@ export default function StaffAdminPage() {
       acc[team].push(member);
       return acc;
     }, {} as Record<string, StaffMemberWithId[]>);
-    console.log('Grouped staff result:', Object.keys(grouped), 'teams');
-    return grouped;
+    
+    // Ensure the order is consistent
+    const orderedGrouped: Record<string, StaffMemberWithId[]> = {};
+    const teamOrder = [
+        "Leadership Team", "Nursery & Reception", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6", "Support Staff", "Other"
+    ];
+    
+    teamOrder.forEach(team => {
+        if(grouped[team]) {
+            orderedGrouped[team] = grouped[team];
+        }
+    });
+
+    // Add any other teams that might not be in the predefined order
+    Object.keys(grouped).forEach(team => {
+        if (!orderedGrouped[team]) {
+            orderedGrouped[team] = grouped[team];
+        }
+    });
+
+    return orderedGrouped;
   };
 
   const generateMockStaff = () => {
-    const teams = ['Teaching', 'Support', 'Admin'];
-    const roles = ['Teacher', 'Teaching Assistant', 'Head Teacher', 'Admin Assistant'];
-    const mockStaff: StaffMemberWithId[] = [];
-    
-    for (let i = 1; i <= 25; i++) {
-      mockStaff.push({
-        id: `mock_staff_${i}`,
-        name: `Staff Member ${i}`,
-        role: roles[i % roles.length],
-        team: teams[i % teams.length],
-        bio: `This is a short bio for staff member ${i}.`,
-        photoUrl: undefined,
-      });
-    }
-    return mockStaff;
+    return mockStaffFromAboutPage.map((member, i) => ({
+      ...member,
+      id: `mock_staff_${i}`,
+      bio: `This is a short bio for ${member.name}.`,
+      photoUrl: undefined,
+    }));
   };
 
   const fetchStaff = async (initial = false) => {
@@ -108,12 +135,11 @@ export default function StaffAdminPage() {
     }
     
     try {
-      // Check if Firebase is properly configured
       if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
         throw new Error('Firebase not configured');
       }
       
-      const { data, lastDoc: newLastDoc } = await getPaginatedStaff(20, initial ? undefined : lastDoc);
+      const { data, lastDoc: newLastDoc } = await getPaginatedStaff(50, initial ? undefined : lastDoc); // Fetch more to allow grouping
       let newStaff: StaffMemberWithId[] = [];
       if (initial) {
         setStaff(data);
@@ -127,23 +153,14 @@ export default function StaffAdminPage() {
       }
       setGroupedStaff(groupStaff(initial ? data : newStaff));
       setLastDoc(newLastDoc);
-      setHasMore(!!newLastDoc && data.length === 20);
+      setHasMore(!!newLastDoc && data.length === 50);
     } catch (error) {
       console.log('Firebase not configured, using mock data');
-      // Use mock data if Firebase fails
       const mockStaffData = generateMockStaff();
-      console.log('Generated mock staff data:', mockStaffData.length, 'items');
       
       if (initial) {
         setStaff(mockStaffData);
         setGroupedStaff(groupStaff(mockStaffData));
-        console.log('Set initial mock staff data');
-      } else {
-        setStaff(prev => {
-          const combined = [...prev, ...mockStaffData];
-          setGroupedStaff(groupStaff(combined));
-          return combined;
-        });
       }
       setHasMore(false); // No more mock data to load
     }
@@ -187,7 +204,7 @@ export default function StaffAdminPage() {
         description: 'Staff member deleted successfully.',
         variant: 'default',
       });
-      fetchStaff();
+      fetchStaff(true); // Refetch all data
     } catch (error) {
       console.error('Error deleting staff member:', error);
       toast({
@@ -236,13 +253,12 @@ export default function StaffAdminPage() {
               </div>
             ) : (
               <>
-                {console.log('Rendering staff page, groupedStaff keys:', Object.keys(groupedStaff), 'staff length:', staff.length)}
                 {Object.keys(groupedStaff).length > 0 ? (
                   <>
-                    <Accordion type="multiple" className="w-full">
+                    <Accordion type="multiple" defaultValue={Object.keys(groupedStaff)} className="w-full">
                       {Object.entries(groupedStaff).map(([team, members]) => (
                         <AccordionItem value={team} key={team}>
-                          <AccordionTrigger className="text-lg font-semibold">{team}</AccordionTrigger>
+                          <AccordionTrigger className="text-lg font-semibold">{team} ({members.length})</AccordionTrigger>
                           <AccordionContent>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
                               {members.map((member) => (
