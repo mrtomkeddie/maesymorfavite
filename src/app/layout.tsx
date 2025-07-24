@@ -1,14 +1,16 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
-import { Figtree } from 'next/font/google';
+import { PT_Sans } from 'next/font/google';
 import { LanguageProvider } from './(public)/LanguageProvider';
 
-const figtree = Figtree({
+const ptSans = PT_Sans({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-figtree',
+  variable: '--font-pt-sans',
+  weight: ['400', '700']
 });
 
 
@@ -24,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn("min-h-screen bg-background font-body antialiased", figtree.variable)}>
+      <body className={cn("min-h-screen bg-background font-body antialiased", ptSans.variable)}>
         <LanguageProvider>
           {children}
           <Toaster />
