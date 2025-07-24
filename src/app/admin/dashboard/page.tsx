@@ -11,66 +11,66 @@ import { AnimatePresence, motion } from 'framer-motion';
 const managementTopics = [
     { id: 'news', title: 'News & Alerts', icon: Newspaper, href: '/admin/news',
       instructions: [
-        "1. Go to the 'News & Alerts' page from the sidebar.",
-        "2. Click the 'Add News Post' button to open the form.",
-        "3. Fill in the title and body content for the announcement.",
-        "4. Mark it as 'Urgent' if it's a critical alert, like a school closure.",
-        "5. Click 'Create Post' to publish it to the website."
+        "Go to the 'News & Alerts' page from the sidebar.",
+        "Click the 'Add News Post' button to open the form.",
+        "Fill in the title and body content for the announcement.",
+        "Mark it as 'Urgent' if it's a critical alert, like a school closure.",
+        "Click 'Create Post' to publish it to the website."
       ]
     },
     { id: 'calendar', title: 'Calendar Events', icon: Calendar, href: '/admin/calendar',
        instructions: [
-        "1. Navigate to the 'Calendar' section.",
-        "2. Click 'Add Event' to create a new calendar entry.",
-        "3. Enter the event title, select a date, and add a description.",
-        "4. You can optionally attach a file, like a permission slip.",
-        "5. Check 'Cross-post to News' to also create a news item for the event.",
-        "6. Click 'Create Event' to save it."
+        "Navigate to the 'Calendar' section.",
+        "Click 'Add Event' to create a new calendar entry.",
+        "Enter the event title, select a date, and add a description.",
+        "You can optionally attach a file, like a permission slip.",
+        "Check 'Cross-post to News' to also create a news item for the event.",
+        "Click 'Create Event' to save it."
       ]
     },
     { id: 'staff', title: 'Staff Directory', icon: Users, href: '/admin/staff',
       instructions: [
-        "1. Go to the 'Staff' page.",
-        "2. Click 'Add Staff Member' to open the staff form.",
-        "3. Enter the staff member's name, role, and assign them to a team (e.g., Leadership, Year 1).",
-        "4. You can also add a short bio and upload a profile photo.",
-        "5. Click 'Add Staff' to add them to the public 'About Us' page."
+        "Go to the 'Staff' page.",
+        "Click 'Add Staff Member' to open the staff form.",
+        "Enter the staff member's name, role, and assign them to a team (e.g., Leadership, Year 1).",
+        "You can also add a short bio and upload a profile photo.",
+        "Click 'Add Staff' to add them to the public 'About Us' page."
       ]
     },
     { id: 'parents', title: 'Parent Accounts', icon: Users2, href: '/admin/parents',
       instructions: [
-        "1. Go to the 'Users' > 'Parents' page.",
-        "2. Click 'Add Parent' to create a new parent account.",
-        "3. Fill in the parent's name and email address.",
-        "4. In the 'Linked Children' section, search for and select the children associated with this parent.",
-        "5. Specify the relationship for each linked child (e.g., Mother, Guardian).",
-        "6. Click 'Add Parent' to save the account."
+        "Go to the 'Users' > 'Parents' page.",
+        "Click 'Add Parent' to create a new parent account.",
+        "Fill in the parent's name and email address.",
+        "In the 'Linked Children' section, search for and select the children associated with this parent.",
+        "Specify the relationship for each linked child (e.g., Mother, Guardian).",
+        "Click 'Add Parent' to save the account."
       ]
     },
     { id: 'children', title: 'Child Profiles', icon: BookUser, href: '/admin/children',
       instructions: [
-        "1. Navigate to 'Users' > 'Children'.",
-        "2. Click 'Enrol Child' to add a new student.",
-        "3. Enter the child's name and select their year group.",
-        "4. You can either link them to an existing parent or add a new parent directly from this form.",
-        "5. Click 'Enrol Child' to create the profile."
+        "Navigate to 'Users' > 'Children'.",
+        "Click 'Enrol Child' to add a new student.",
+        "Enter the child's name and select their year group.",
+        "You can either link them to an existing parent or add a new parent directly from this form.",
+        "Click 'Enrol Child' to create the profile."
       ]
     },
     { id: 'documents', title: 'Documents', icon: FileText, href: '/admin/documents',
       instructions: [
-        "1. Go to the 'Documents' page.",
-        "2. Click 'Upload Document'.",
-        "3. Give the document a clear title and select a category (e.g., Policy, Newsletter).",
-        "4. Upload the PDF file.",
-        "5. Click 'Upload Document'. It will now be available in the Parent Portal."
+        "Go to the 'Documents' page.",
+        "Click 'Upload Document'.",
+        "Give the document a clear title and select a category (e.g., Policy, Newsletter).",
+        "Upload the PDF file.",
+        "Click 'Upload Document'. It will now be available in the Parent Portal."
       ]
     },
     { id: 'settings', title: 'Site Settings', icon: Settings, href: '/admin/settings',
       instructions: [
-        "1. Go to the 'System' > 'Site Settings' page.",
-        "2. Update the school's address, phone number, and public email.",
-        "3. You can also add or update links to your social media pages.",
-        "4. Click 'Save Settings' to update this information across the public website."
+        "Go to the 'System' > 'Site Settings' page.",
+        "Update the school's address, phone number, and public email.",
+        "You can also add or update links to your social media pages.",
+        "Click 'Save Settings' to update this information across the public website."
       ]
     },
 ];
