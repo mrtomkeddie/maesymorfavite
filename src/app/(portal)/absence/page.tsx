@@ -183,7 +183,7 @@ Submitted by: ${parentInfo.name} (${parentInfo.email})
                           selected={field.value}
                           onSelect={field.onChange}
                           disabled={(date) =>
-                            date > new Date() || date < new Date('2023-09-01')
+                            date < new Date('2023-09-01')
                           }
                           initialFocus
                         />
