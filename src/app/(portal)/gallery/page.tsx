@@ -10,8 +10,30 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button";
 import { parentChildrenYearGroups } from '@/lib/mockData';
 import { LanguageToggle } from "../layout";
+import { useLanguage } from "@/app/(public)/LanguageProvider";
+
+const content = {
+  en: {
+    title: "Photo Gallery",
+    description: "Recent photos from your children's classes and school events.",
+    filterLabel: "Filter by class:",
+    noPhotosTitle: "No Photos Yet",
+    noPhotosDescription1: "There are no photos to display for your children's classes at the moment.",
+    noPhotosDescription2: "Please check back soon!",
+  },
+  cy: {
+    title: "Oriel Ffotograffau",
+    description: "Lluniau diweddar o ddosbarthiadau eich plant a digwyddiadau ysgol.",
+    filterLabel: "Hidlo yn ôl dosbarth:",
+    noPhotosTitle: "Dim Lluniau Eto",
+    noPhotosDescription1: "Nid oes unrhyw luniau i'w harddangos ar gyfer dosbarthiadau eich plant ar hyn o bryd.",
+    noPhotosDescription2: "Gwiriwch yn ôl yn fuan!",
+  }
+};
 
 export default function GalleryPage() {
+  const { language } = useLanguage();
+  const t = content[language];
   const [photos, setPhotos] = useState<PhotoWithId[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
@@ -57,15 +79,15 @@ export default function GalleryPage() {
     <div className="space-y-6">
        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold font-headline">Photo Gallery</h1>
-          <p className="text-muted-foreground">Recent photos from your children's classes and school events.</p>
+          <h1 className="text-3xl font-bold font-headline">{t.title}</h1>
+          <p className="text-muted-foreground">{t.description}</p>
         </div>
         <LanguageToggle />
       </div>
       
       {allParentYearGroups.length > 1 && (
          <div className="flex items-center gap-2 rounded-lg border bg-muted/50 p-3 flex-wrap">
-          <p className="text-sm font-medium mr-2">Filter by class:</p>
+          <p className="text-sm font-medium mr-2">{t.filterLabel}</p>
           {filterOptions.map((filter) => (
             <Button
               key={filter}
@@ -87,11 +109,11 @@ export default function GalleryPage() {
       ) : photos.length === 0 ? (
         <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed">
             <Camera className="h-12 w-12 text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold">No Photos Yet</h2>
+            <h2 className="text-xl font-semibold">{t.noPhotosTitle}</h2>
             <p className="mt-2 text-muted-foreground">
-                There are no photos to display for your children's classes at the moment.
+                {t.noPhotosDescription1}
                 <br />
-                Please check back soon!
+                {t.noPhotosDescription2}
             </p>
         </Card>
       ) : (
