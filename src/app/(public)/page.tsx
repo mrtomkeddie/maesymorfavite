@@ -17,26 +17,6 @@ const content = {
       subtitle: 'A caring, ambitious school where every child is valued and inspired.',
       button: 'Explore Our School'
     },
-    strengths: {
-      heading: 'What Makes Us Special',
-      cards: [
-        {
-          icon: HeartHandshake,
-          title: 'Caring, Experienced Staff',
-          description: 'Our dedicated team is committed to creating a supportive and nurturing environment for every child.'
-        },
-        {
-          icon: Sparkles,
-          title: 'Support for Every Child',
-          description: 'We tailor our approach to meet individual needs, ensuring every learner can achieve their full potential.'
-        },
-        {
-          icon: BookOpen,
-          title: 'Modern Curriculum',
-          description: 'Our vibrant curriculum inspires a love of learning and prepares pupils for the challenges of tomorrow.'
-        }
-      ]
-    },
     keyInfo: {
       heading: 'Key Information',
       note: 'Find key school documents and policies on our information page.',
@@ -65,26 +45,6 @@ const content = {
       title: 'Croeso i Ysgol Gynradd Maes Y Morfa',
       subtitle: 'Ysgol ofalgar, uchelgeisiol lle mae pob plentyn yn cael ei werthfawrogi a’i ysbrydoli.',
       button: 'Archwiliwch Ein Hysgol'
-    },
-    strengths: {
-      heading: 'Beth Sy\'n Ein Gwneud Ni\'n Arbennig',
-      cards: [
-        {
-          icon: HeartHandshake,
-          title: 'Staff Gofalgar, Profiadol',
-          description: 'Mae ein tîm ymroddedig wedi ymrwymo i greu amgylchedd cefnogol a meithringar i bob plentyn.'
-        },
-        {
-          icon: Sparkles,
-          title: 'Cefnogaeth i Bob Plentyn',
-          description: 'Rydym yn teilwra ein dull i ddiwallu anghenion unigol, gan sicrhau y gall pob dysgwr gyflawni ei lawn botensial.'
-        },
-        {
-          icon: BookOpen,
-          title: 'Cwricwlwm Modern',
-          description: 'Mae ein cwricwlwm bywiog yn ysbrydoli cariad at ddysgu ac yn paratoi disgyblion ar gyfer heriau yfory.'
-        }
-      ]
     },
     keyInfo: {
       heading: 'Gwybodaeth Allweddol',
@@ -115,7 +75,7 @@ const content = {
 export default function HomePage() {
   const { language } = useLanguage();
   const t = content[language];
-  const latestNews = mockNews.filter(n => n.published).slice(0, 3);
+  const latestNews = mockNews.filter(n => n.published).slice(0, 2);
   const urgentNews: UrgentNewsPost | undefined = mockNews.find(p => p.isUrgent && p.published) as UrgentNewsPost;
 
   return (
@@ -146,66 +106,70 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Latest News Section */}
-      <section className="w-full py-16 md:py-24 bg-secondary/30">
-        <div className="container mx-auto max-w-7xl px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground md:text-5xl">
-              {t.latestNews.heading}
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {latestNews.map((post) => {
-              const plainBody = post[`body_${language}`].replace(/<[^>]*>?/gm, '');
-              return (
-                <Card key={post.id} className="flex flex-col bg-background/70 shadow-lg border-0">
-                  <CardHeader>
-                    <span className="text-sm text-muted-foreground">{new Date(post.date).toLocaleDateString(language === 'cy' ? 'cy-GB' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                    <CardTitle className="text-xl font-bold">{post[`title_${language}`]}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <p className="text-muted-foreground line-clamp-3">{plainBody.substring(0, 150)}...</p>
-                  </CardContent>
-                  <div className="p-6 pt-0">
-                    <Button asChild variant="link" className="p-0">
-                      <Link href={`/news/${post.slug}`}>{t.latestNews.readMore} <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                    </Button>
-                  </div>
-                </Card>
-              )
-            })}
-          </div>
-          <div className="text-center mt-12">
-            <Button asChild size="lg" variant="outline">
-                <Link href="/news">{t.latestNews.viewAll}</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Key Info Section */}
+      {/* News & Key Info Section */}
        <section className="w-full py-16 md:py-24 bg-secondary/30">
-        <div className="container mx-auto max-w-5xl px-8">
-             <div className="text-center mb-12">
-                <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground md:text-5xl">
+        <div className="container mx-auto max-w-7xl px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+
+            {/* Latest News Column */}
+            <div className="lg:col-span-3">
+              <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground md:text-5xl mb-8">
+                {t.latestNews.heading}
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 {latestNews.map((post) => {
+                  const plainBody = post[`body_${language}`].replace(/<[^>]*>?/gm, '');
+                  return (
+                    <Card key={post.id} className="flex flex-col bg-background/70 shadow-lg border-0">
+                      <CardHeader>
+                        <span className="text-sm text-muted-foreground">{new Date(post.date).toLocaleDateString(language === 'cy' ? 'cy-GB' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                        <CardTitle className="text-xl font-bold">{post[`title_${language}`]}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex-grow">
+                        <p className="text-muted-foreground line-clamp-3">{plainBody.substring(0, 150)}...</p>
+                      </CardContent>
+                      <div className="p-6 pt-0">
+                        <Button asChild variant="link" className="p-0">
+                          <Link href={`/news/${post.slug}`}>{t.latestNews.readMore} <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                        </Button>
+                      </div>
+                    </Card>
+                  )
+                })}
+              </div>
+              <div className="mt-8">
+                <Button asChild size="lg" variant="outline">
+                    <Link href="/news">{t.latestNews.viewAll}</Link>
+                </Button>
+              </div>
+            </div>
+
+            {/* Key Information Column */}
+            <div className="lg:col-span-1">
+               <div className="p-6 rounded-lg bg-background/70 shadow-lg border-0 h-full">
+                 <h2 className="font-headline text-2xl font-extrabold tracking-tighter text-foreground mb-6">
                     {t.keyInfo.heading}
                 </h2>
+                <div className="space-y-3">
+                    {t.keyInfo.buttons.map((button) => {
+                        const Icon = button.icon;
+                        return (
+                            <Button key={button.label} variant="outline" className="w-full justify-start h-auto py-3" asChild>
+                               <Link href={button.href}>
+                                    <Icon className="mr-3 h-5 w-5 text-primary"/> <span>{button.label}</span>
+                               </Link>
+                            </Button>
+                        )
+                    })}
+                </div>
+                <p className="text-xs text-muted-foreground mt-4">{t.keyInfo.note}</p>
+              </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {t.keyInfo.buttons.map((button) => {
-                    const Icon = button.icon;
-                    return (
-                        <Button key={button.label} variant="outline" size="lg" className="h-auto py-6 text-lg bg-background" asChild>
-                           <Link href={button.href}>
-                                <Icon className="mr-4 h-6 w-6"/> {button.label}
-                           </Link>
-                        </Button>
-                    )
-                })}
-            </div>
-            <p className="text-center text-sm text-muted-foreground mt-6">{t.keyInfo.note}</p>
+
+          </div>
         </div>
       </section>
+      
 
       {/* Social Proof Section */}
        <section className="w-full py-16 md:py-24">
@@ -240,3 +204,4 @@ export default function HomePage() {
     </div>
   );
 }
+
