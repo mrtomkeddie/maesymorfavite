@@ -107,24 +107,6 @@ export function LoginForm({ userRole }: LoginFormProps) {
           </Button>
         </form>
       </Form>
-      
-      {userRole === 'parent' && (
-        <>
-            <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                    <Separator />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-                </div>
-            </div>
-            <div className="grid grid-cols-1 gap-2">
-                <Button variant="outline" onClick={() => socialLogin('google')} disabled={isLoading}>
-                Sign in with Google
-                </Button>
-            </div>
-        </>
-      )}
     </div>
   );
 }
