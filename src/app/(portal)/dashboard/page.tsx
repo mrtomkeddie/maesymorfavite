@@ -51,10 +51,19 @@ export default function DashboardPage() {
   const nextEvent = calendarEvents.find(e => new Date(e.start) > new Date());
   
   const relevantEvents = calendarEvents.filter(event => {
-      if (new Date(event.start) < new Date()) return false; // Event must be in the future
-      if (!event.relevantTo || event.relevantTo.includes('All')) return true; // Include 'All' events
-      return parentChildrenYearGroups.some(year => event.relevantTo?.includes(year as any)); // Include if relevant to child's year
-  }).slice(0, 3); // Get the next 3 events
+      if (new Date(event.start) < new Date()) return false;
+
+      if (event.relevantTo?.includes('All')) {
+          return true;
+      }
+      if (event.relevantTo && parentChildrenYearGroups.some(year => event.relevantTo?.includes(year as any))) {
+          return true;
+      }
+      if (!event.relevantTo) {
+          return true;
+      }
+      return false;
+  }).slice(0, 3);
 
   return (
     <div className="space-y-8">
