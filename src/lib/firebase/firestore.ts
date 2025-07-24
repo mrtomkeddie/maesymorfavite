@@ -340,16 +340,17 @@ const menuDocRef = doc(db, "settings", "weeklyMenu");
 
 export const getWeeklyMenu = async (): Promise<WeeklyMenu | null> => {
     const docSnap = await getDoc(menuDocRef);
-    if (docSnap.exists()) {
+    if (docSnap.exists() && Object.keys(docSnap.data()).length > 0) {
         return docSnap.data() as WeeklyMenu;
     } else {
-        // Return default empty values if document doesn't exist
-        const defaultMenu: WeeklyMenu = {};
-        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
-        days.forEach(day => {
-            defaultMenu[day] = { main: '', alt: '', dessert: '' };
-        });
-        return defaultMenu;
+        // Return default dummy values if document doesn't exist or is empty
+        return {
+            monday: { main: "Shepherd's Pie", alt: "Jacket Potato with Beans", dessert: "Apple Crumble" },
+            tuesday: { main: "Chicken Curry", alt: "Vegetable Lasagne", dessert: "Fruit Salad" },
+            wednesday: { main: "Roast Beef Dinner", alt: "Quorn Roast Dinner", dessert: "Chocolate Sponge" },
+            thursday: { main: "Spaghetti Bolognese", alt: "Vegetable Stir Fry", dessert: "Yoghurt" },
+            friday: { main: "Fish and Chips", alt: "Veggie Sausages", dessert: "Flapjack" },
+        };
     }
 }
 
