@@ -7,12 +7,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ClipboardCheck, Utensils, ArrowRight, UserCheck, Percent, Calendar as CalendarIcon } from 'lucide-react';
+import { ClipboardCheck, Utensils, ArrowRight, UserCheck, Percent, Pizza, Salad } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { calendarEvents } from '@/lib/mockCalendar';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 
@@ -44,31 +41,15 @@ const parentChildren = [
     },
 ];
 
-const parentChildrenYearGroups = parentChildren.map(c => c.yearGroup);
+const todaysMenu = {
+    main: "Shepherd's Pie",
+    alt: "Jacket Potato with Tuna",
+    dessert: "Apple Crumble & Custard"
+}
 
 
 export default function DashboardPage() {
-  const nextEvent = calendarEvents.find(e => new Date(e.start) > new Date());
-  
-  const relevantEvents = calendarEvents.filter(event => {
-      // Don't show past events
-      if (new Date(event.start) < new Date()) return false;
-
-      // Always include events marked for "All"
-      if (event.relevantTo?.includes('All')) {
-          return true;
-      }
-      // Include events if there's an overlap between the event's relevant years and the parent's children's years
-      if (event.relevantTo && parentChildrenYearGroups.some(year => event.relevantTo?.includes(year as any))) {
-          return true;
-      }
-      // Fallback for events without the new 'relevantTo' property: show them by default
-      if (!event.relevantTo) {
-          return true;
-      }
-      return false;
-  }).slice(0, 3);
-
+ 
   return (
     <div className="space-y-8">
       <div>
@@ -110,46 +91,6 @@ export default function DashboardPage() {
                     ))}
                 </CardContent>
             </Card>
-
-            <Card>
-                <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <CalendarIcon className="h-5 w-5 text-primary" />
-                    <span>Upcoming Events for Your Children</span>
-                </CardTitle>
-                <CardDescription>Key dates and events relevant to your children's year groups.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {relevantEvents.length > 0 ? (
-                        <div className="space-y-4">
-                            {relevantEvents.map((event) => (
-                            <Link href={`/calendar`} key={event.id} className="block p-4 rounded-lg border transition-colors hover:bg-secondary">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <p className="font-semibold">{event.title_en}</p>
-                                        <p className="text-sm text-muted-foreground mt-1">
-                                            {format(new Date(event.start), 'eeee, dd MMMM yyyy')}
-                                        </p>
-                                    </div>
-                                    <div className="text-right shrink-0 ml-4">
-                                        {event.tags.map(tag => (
-                                            <Badge key={tag} variant="outline" className="font-normal">{tag}</Badge>
-                                        ))}
-                                    </div>
-                                </div>
-                                {event.description_en && (
-                                    <p className="text-sm text-foreground/80 mt-2 line-clamp-2">
-                                        {event.description_en}
-                                    </p>
-                                )}
-                            </Link>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-muted-foreground p-4 text-center">No upcoming events specifically for your children.</p>
-                    )}
-                </CardContent>
-            </Card>
         </div>
 
         <div className="lg:col-span-1 space-y-6">
@@ -157,15 +98,44 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent>
               <Button asChild className="w-full justify-start">
                 <Link href="/absence"><ClipboardCheck className="mr-2 h-4 w-4" /> Report an Absence</Link>
               </Button>
-               <Button asChild variant="secondary" className="w-full justify-start">
-                <Link href="#"><Utensils className="mr-2 h-4 w-4" /> View Lunch Menu</Link>
-              </Button>
             </CardContent>
           </Card>
+          
+          <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Utensils className="h-5 w-5 text-primary" />
+                    <span>Today's Lunch</span>
+                </CardTitle>
+                <CardDescription>A sample of what's on the menu today.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+                <div className="flex items-start gap-3">
+                    <Pizza className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+                    <div>
+                        <h4 className="font-semibold text-sm">Main</h4>
+                        <p className="text-sm text-muted-foreground">{todaysMenu.main}</p>
+                    </div>
+                </div>
+                 <div className="flex items-start gap-3">
+                    <Salad className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+                    <div>
+                        <h4 className="font-semibold text-sm">Vegetarian / Alt</h4>
+                        <p className="text-sm text-muted-foreground">{todaysMenu.alt}</p>
+                    </div>
+                </div>
+                <div className="pt-2">
+                     <Button asChild variant="secondary" className="w-full justify-start">
+                        <Link href="#"><Utensils className="mr-2 h-4 w-4" /> View Full Menu</Link>
+                    </Button>
+                </div>
+            </CardContent>
+          </Card>
+
         </div>
 
       </div>
