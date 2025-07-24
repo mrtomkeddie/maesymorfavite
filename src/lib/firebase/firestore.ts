@@ -3,6 +3,7 @@
 
 
 
+
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, writeBatch, where, getDoc, limit, startAfter, count, getCountFromServer } from "firebase/firestore"; 
 import { db } from "./config";
 import type { NewsPost } from "@/lib/mockNews";
@@ -374,6 +375,13 @@ export const getPaginatedPhotos = async (limitNum = 20, lastDoc?: QueryDocumentS
     const querySnapshot = await getDocs(q);
     const data = querySnapshot.docs.map(doc => ({ ...doc.data() as Photo, id: doc.id }));
     return { data, lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] };
+};
+
+export const getPhotosForYearGroups = async (yearGroups: string[]): Promise<PhotoWithId[]> => {
+    const allGroups = ['All', ...yearGroups];
+    const q = query(photosCollection, where('yearGroups', 'array-contains-any', allGroups), orderBy('uploadedAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ ...doc.data() as Photo, id: doc.id }));
 };
 
 
