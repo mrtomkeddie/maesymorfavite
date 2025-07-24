@@ -13,7 +13,7 @@ export default function AdminLoginPage() {
       <Card className="w-full max-w-md shadow-2xl border-0">
         <CardHeader className="text-center">
           <Link href="/" className="mx-auto mb-4 flex items-center justify-center">
-             <Image src="/logo.png" alt="Maes Y Morfa logo" width={40} height={40} className="h-10 w-10" />
+             <Image src="/icon.png" alt="School logo" width={40} height={40} className="h-10 w-10" />
           </Link>
           <CardTitle className="font-headline text-2xl">Admin Dashboard</CardTitle>
           <CardDescription>Staff login for the Parent Portal</CardDescription>
