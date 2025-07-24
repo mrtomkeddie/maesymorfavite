@@ -149,7 +149,7 @@ const ContactAdminSection = ({ articleTitle, t }: { articleTitle: string, t: typ
 };
 
 
-export default function NewsArticlePage({ params }: { params: { slug: string } }) {
+export default async function NewsArticlePage({ params }: { params: { slug: string } }) {
     const { language } = useLanguage();
     const t = content[language];
     
