@@ -4,9 +4,10 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/components/ui/sheet';
-import { Menu, Home, Info, Newspaper, School, Briefcase, Mail, X } from 'lucide-react';
+import { Menu, Home, Info, Newspaper, School, Briefcase, Mail, X, LayoutDashboard } from 'lucide-react';
 import { useLanguage } from '@/app/(public)/LanguageProvider';
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
 
 const content = {
     en: {
@@ -20,6 +21,7 @@ const content = {
         ],
         portal: 'Parent Portal',
         adminLogin: 'Admin Login',
+        dashboard: 'Return to Dashboard',
         lang1: 'Cymraeg',
         lang2: 'English',
         menu: 'Menu',
@@ -35,6 +37,7 @@ const content = {
         ],
         portal: 'Porth Rieni',
         adminLogin: 'Mewngofnodi Gweinyddwr',
+        dashboard: 'Yn ôl i\'r Dangosfwrdd',
         lang1: 'Cymraeg',
         lang2: 'English',
         menu: 'Bwydlen',
@@ -45,6 +48,13 @@ export function PublicHeader() {
   const { language, setLanguage } = useLanguage();
   const t = content[language];
   const navLinks = t.nav;
+  const [isParent, setIsParent] = useState(false);
+
+  useEffect(() => {
+    const authStatus = localStorage.getItem('isAuthenticated') === 'true' && localStorage.getItem('userRole') === 'parent';
+    setIsParent(authStatus);
+  }, []);
+
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -101,9 +111,15 @@ export function PublicHeader() {
                  </div>
                  <div className="space-y-2 border-t border-border/40 p-6">
                      <SheetClose asChild>
-                         <Button asChild className="w-full">
-                            <Link href="/login">{t.portal}</Link>
-                        </Button>
+                         {isParent ? (
+                             <Button asChild className="w-full">
+                                <Link href="/dashboard"> <LayoutDashboard className="mr-2 h-4 w-4" /> {t.dashboard}</Link>
+                             </Button>
+                         ) : (
+                             <Button asChild className="w-full">
+                                <Link href="/login">{t.portal}</Link>
+                             </Button>
+                         )}
                      </SheetClose>
                     <SheetClose asChild>
                         <Button asChild variant="outline" className="w-full">
