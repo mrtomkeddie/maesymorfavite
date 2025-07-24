@@ -34,8 +34,26 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LanguageProvider } from '../(public)/LanguageProvider';
+import { LanguageProvider, useLanguage } from '../(public)/LanguageProvider';
 import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+
+const LanguageToggle = () => {
+    const { language, setLanguage } = useLanguage();
+    const content = {
+        en: { lang1: 'Cymraeg', lang2: 'English' },
+        cy: { lang1: 'Cymraeg', lang2: 'English' }
+    };
+    const t = content[language];
+    return (
+        <div className="flex items-center gap-1 border rounded-full p-1 text-sm">
+            <Button variant={language === 'cy' ? 'secondary' : 'ghost'} size="sm" className={`rounded-full px-3 py-1 h-auto text-xs`} onClick={() => setLanguage('cy')}>{t.lang1}</Button>
+            <div className="w-px h-4 bg-border"></div>
+            <Button variant={language === 'en' ? 'secondary' : 'ghost'} size="sm" className={`rounded-full px-3 py-1 h-auto text-xs`} onClick={() => setLanguage('en')}>{t.lang2}</Button>
+        </div>
+    )
+}
+
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -134,8 +152,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         </Sidebar>
         <SidebarInset>
            <main className="p-4 md:p-6 lg:p-8">
-            <div className="lg:hidden mb-4">
-                <SidebarTrigger />
+            <div className="flex items-center justify-between mb-4">
+                <div className="lg:hidden">
+                    <SidebarTrigger />
+                </div>
+                <div className="hidden lg:block"></div>
+                <LanguageToggle />
             </div>
             {children}
           </main>
