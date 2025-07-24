@@ -15,12 +15,11 @@ import {
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
-  Newspaper,
   Calendar,
   ClipboardCheck,
   LogOut,
   Loader2,
-  FileText,
+  Camera,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -52,6 +51,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const menuItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/calendar', label: 'Calendar', icon: Calendar },
+    { href: '/gallery', label: 'Photo Gallery', icon: Camera },
     { href: '/absence', label: 'Report Absence', icon: ClipboardCheck },
   ];
   
