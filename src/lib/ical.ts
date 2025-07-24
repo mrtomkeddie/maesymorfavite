@@ -13,7 +13,7 @@ export function createICalFeed(events: CalendarEvent[]) {
       start: dateToICal(event.start),
       description: event.description_en,
       calName: 'Maes Y Morfa School Calendar',
-      productId: 'MorfaConnect/ICS',
+      productId: 'ParentPortal/ICS',
     };
 
     if (event.end) {

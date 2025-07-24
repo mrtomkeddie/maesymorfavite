@@ -12,7 +12,7 @@ const figtree = Figtree({
 
 
 export const metadata: Metadata = {
-  title: 'MorfaConnect | Maes Y Morfa School',
+  title: 'Parent Portal | Maes Y Morfa School',
   description: 'Public website and parent portal for Maes Y Morfa school.',
 };
 

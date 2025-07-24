@@ -16,7 +16,7 @@ export default function AdminLoginPage() {
              <Image src="/logo.png" alt="Maes Y Morfa logo" width={40} height={40} className="h-10 w-10" />
           </Link>
           <CardTitle className="font-headline text-2xl">Admin Dashboard</CardTitle>
-          <CardDescription>Staff login for MorfaConnect</CardDescription>
+          <CardDescription>Staff login for the Parent Portal</CardDescription>
         </CardHeader>
         <CardContent>
           <LoginForm userRole="admin" />

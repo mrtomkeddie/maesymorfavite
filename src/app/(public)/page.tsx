@@ -19,11 +19,10 @@ const content = {
     },
     keyInfo: {
       heading: 'Key Information',
-      note: 'Find key school documents and policies on our information page.',
       buttons: [
-        { icon: Calendar, label: 'Term Dates', href: '/key-info' },
-        { icon: Shirt, label: 'Uniform Policy', href: '/key-info' },
-        { icon: Utensils, label: 'Lunch Menu', href: '/key-info' }
+        { icon: Calendar, label: 'Term Dates', href: '/key-info', docCategory: 'Term Dates' },
+        { icon: Shirt, label: 'Uniform Policy', href: '/key-info', docCategory: 'Uniform' },
+        { icon: Utensils, label: 'Lunch Menu', href: '/key-info', docCategory: 'Lunch Menu' }
       ]
     },
     latestNews: {
@@ -33,7 +32,7 @@ const content = {
     },
     cta: {
       heading: 'Are you a Maes Y Morfa parent?',
-      body: 'Log in to MorfaConnect to check your child’s progress, report absences, and get the latest updates—quickly and securely.',
+      body: 'Log in to the Parent Portal to check your child’s progress, report absences, and get the latest updates—quickly and securely.',
       button: 'Go to Parent Portal'
     }
   },
@@ -45,11 +44,10 @@ const content = {
     },
     keyInfo: {
       heading: 'Gwybodaeth Allweddol',
-      note: 'Dewch o hyd i ddogfennau a pholisïau allweddol yr ysgol ar ein tudalen wybodaeth.',
       buttons: [
-        { icon: Calendar, label: 'Dyddiadau Tymor', href: '/key-info' },
-        { icon: Shirt, label: 'Polisi Gwisg Ysgol', href: '/key-info' },
-        { icon: Utensils, label: 'Bwydlen Ginio', href: '/key-info' }
+        { icon: Calendar, label: 'Dyddiadau Tymor', href: '/key-info', docCategory: 'Term Dates' },
+        { icon: Shirt, label: 'Polisi Gwisg Ysgol', href: '/key-info', docCategory: 'Uniform' },
+        { icon: Utensils, label: 'Bwydlen Ginio', href: '/key-info', docCategory: 'Lunch Menu' }
       ]
     },
     latestNews: {
@@ -59,7 +57,7 @@ const content = {
     },
     cta: {
       heading: 'Ydych chi’n rhiant Maes Y Morfa?',
-      body: 'Mewngofnodwch i MorfaConnect i wirio cynnydd eich plentyn, riportio absenoldebau, a chael y diweddariadau diweddaraf—yn gyflym ac yn ddiogel.',
+      body: 'Mewngofnodwch i\'r Porth Rieni i wirio cynnydd eich plentyn, riportio absenoldebau, a chael y diweddariadau diweddaraf—yn gyflym ac yn ddiogel.',
       button: 'Ewch i Borth Rieni'
     }
   }
@@ -100,7 +98,7 @@ export default function HomePage() {
         </div>
       </section>
 
-       <section className="w-full py-16 md:py-24 bg-secondary/30">
+      <section className="w-full py-16 md:py-24 bg-secondary/30">
         <div className="container mx-auto max-w-7xl px-8">
            <div className="text-center mb-12">
               <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground md:text-5xl">
@@ -109,23 +107,23 @@ export default function HomePage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {latestNews.map((post) => {
-                const plainBody = post[`body_${language}`].replace(/<[^>]*>?/gm, '');
-                return (
-                    <Card key={post.id} className="flex flex-col bg-background/70 shadow-lg border-0">
-                    <CardHeader>
-                        <span className="text-sm text-muted-foreground">{new Date(post.date).toLocaleDateString(language === 'cy' ? 'cy-GB' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                        <CardTitle className="text-xl font-bold">{post[`title_${language}`]}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                        <p className="text-muted-foreground line-clamp-3">{plainBody.substring(0, 150)}...</p>
-                    </CardContent>
-                    <div className="p-6 pt-0">
-                        <Button asChild variant="link" className="p-0">
-                        <Link href={`/news/${post.slug}`}>{t.latestNews.readMore} <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                        </Button>
-                    </div>
-                    </Card>
-                )
+                  const plainBody = post[`body_${language}`].replace(/<[^>]*>?/gm, '');
+                  return (
+                      <Card key={post.id} className="flex flex-col bg-background/70 shadow-lg border-0">
+                      <CardHeader>
+                          <span className="text-sm text-muted-foreground">{new Date(post.date).toLocaleDateString(language === 'cy' ? 'cy-GB' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                          <CardTitle className="text-xl font-bold">{post[`title_${language}`]}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex-grow">
+                          <p className="text-muted-foreground line-clamp-3">{plainBody.substring(0, 150)}...</p>
+                      </CardContent>
+                      <div className="p-6 pt-0">
+                          <Button asChild variant="link" className="p-0">
+                          <Link href={`/news/${post.slug}`}>{t.latestNews.readMore} <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                          </Button>
+                      </div>
+                      </Card>
+                  )
                 })}
             </div>
             <div className="text-center mt-12">
@@ -133,21 +131,28 @@ export default function HomePage() {
                     <Link href="/news">{t.latestNews.viewAll}</Link>
                 </Button>
             </div>
-             <div className="text-center mt-24">
-              <h2 className="font-headline text-3xl font-bold tracking-tighter text-foreground md:text-4xl">
-                {t.keyInfo.heading}
-              </h2>
-              <p className="mt-2 text-muted-foreground">{t.keyInfo.note}</p>
-              <div className="mt-8 flex flex-wrap justify-center gap-4">
+            
+            <div className="mt-24">
+              <div className="text-center mb-8">
+                <h2 className="font-headline text-3xl font-bold tracking-tighter text-foreground md:text-4xl">
+                  {t.keyInfo.heading}
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   {t.keyInfo.buttons.map(button => {
                       const Icon = button.icon;
                       return (
-                          <Button asChild variant="secondary" key={button.label} size="lg">
-                              <Link href={button.href}>
-                                  <Icon className="mr-2 h-5 w-5" />
-                                  {button.label}
-                              </Link>
-                          </Button>
+                          <Card key={button.label} className="bg-background/70 shadow-lg border-0 text-center">
+                            <CardContent className="p-6">
+                              <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-primary text-primary-foreground mb-4">
+                                <Icon className="h-6 w-6" />
+                              </div>
+                              <h3 className="font-semibold">{button.label}</h3>
+                              <Button asChild variant="link" size="sm" className="mt-2">
+                                <Link href={button.href}>{t.latestNews.readMore}</Link>
+                              </Button>
+                            </CardContent>
+                          </Card>
                       )
                   })}
               </div>

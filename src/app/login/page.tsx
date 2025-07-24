@@ -16,7 +16,7 @@ export default function LoginPage() {
              <Image src="/logo.png" alt="Maes Y Morfa logo" width={40} height={40} className="h-10 w-10" />
           </Link>
           <CardTitle className="font-headline text-2xl">Parent Portal Login</CardTitle>
-          <CardDescription>Sign in to access MorfaConnect</CardDescription>
+          <CardDescription>Sign in to access the Parent Portal</CardDescription>
         </CardHeader>
         <CardContent>
           <LoginForm userRole="parent" />
