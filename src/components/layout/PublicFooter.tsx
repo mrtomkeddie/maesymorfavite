@@ -31,8 +31,11 @@ const content = {
             ]
         },
         legal: {
-            privacy: 'Privacy Policy',
-            cookies: 'Cookie Policy',
+            title: 'Legal',
+            links: [
+                {label: 'Privacy Policy', href: '#'},
+                {label: 'Cookie Policy', href: '#'},
+            ]
         }
     },
     cy: {
@@ -56,8 +59,11 @@ const content = {
             ]
         },
         legal: {
-            privacy: 'Polisi Preifatrwydd',
-            cookies: 'Polisi Cwcis',
+            title: 'Cyfreithiol',
+            links: [
+                {label: 'Polisi Preifatrwydd', href: '#'},
+                {label: 'Polisi Cwcis', href: '#'},
+            ]
         }
     }
 };
@@ -75,6 +81,7 @@ export function PublicFooter() {
   const footerLinkGroups = [
       t.quickLinks,
       t.forParents,
+      t.legal,
   ];
 
   const socialLinks = settings ? [
@@ -88,8 +95,8 @@ export function PublicFooter() {
   return (
     <footer className="bg-foreground text-background">
       <div className="container mx-auto max-w-7xl px-8 py-16">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-4 lg:grid-cols-5">
-            <div className="col-span-1 md:col-span-2 mb-8 md:mb-0">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5">
+            <div className="col-span-1 lg:col-span-2 mb-8 md:mb-0">
                  <Link href="/">
                     <Image src="/logo-white-footer.png" alt="Maes Y Morfa logo" width={1640} height={403} className="h-12 w-auto" />
                 </Link>
@@ -132,14 +139,10 @@ export function PublicFooter() {
                 </div>
             ))}
         </div>
-        <div className="mt-12 flex flex-col items-center justify-between gap-6 border-t border-background/20 pt-8 md:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-center gap-6 border-t border-background/20 pt-8 md:flex-row">
           <p className="text-center text-sm text-background/60">
             © {new Date().getFullYear()} {t.schoolInfo}. All Rights Reserved.
           </p>
-          <nav className="flex flex-wrap justify-center gap-4">
-            <Link href="#" className="text-sm text-background/60 hover:text-background hover:underline">{t.legal.privacy}</Link>
-            <Link href="#" className="text-sm text-background/60 hover:text-background hover:underline">{t.legal.cookies}</Link>
-          </nav>
         </div>
       </div>
     </footer>

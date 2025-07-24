@@ -311,7 +311,7 @@ export const getSiteSettings = async (): Promise<SiteSettings | null> => {
         // Return default values if document doesn't exist
         return {
             address: "Ysgol Maes Y Morfa,\nOlive St,\nLlanelli\nSA15 2AP",
-            phone: "01234 567890",
+            phone: "01554 772945",
             email: "admin@maesymorfa.cymru"
         };
     }
