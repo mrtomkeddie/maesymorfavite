@@ -32,6 +32,7 @@ import {
   HelpCircle,
   Settings,
   Mail,
+  Camera,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -76,6 +77,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/news', label: 'News & Alerts', icon: Newspaper },
     { href: '/admin/calendar', label: 'Calendar', icon: Calendar },
     { href: '/admin/staff', label: 'Staff', icon: Users },
+    { href: '/admin/gallery', label: 'Photo Gallery', icon: Camera },
     { href: '/admin/documents', label: 'Documents', icon: FileText },
   ];
 

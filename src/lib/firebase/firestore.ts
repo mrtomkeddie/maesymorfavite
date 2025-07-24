@@ -2,11 +2,12 @@
 
 
 
+
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, writeBatch, where, getDoc, limit, startAfter, count, getCountFromServer } from "firebase/firestore"; 
 import { db } from "./config";
 import type { NewsPost } from "@/lib/mockNews";
 import type { CalendarEvent } from "@/lib/mockCalendar";
-import type { StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, LinkedParent, InboxMessage, InboxMessageWithId } from "@/lib/types";
+import type { StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, LinkedParent, InboxMessage, InboxMessageWithId, Photo, PhotoWithId } from "@/lib/types";
 import { yearGroups } from "@/components/admin/ChildForm";
 import { QueryDocumentSnapshot } from "firebase/firestore";
 
@@ -351,6 +352,28 @@ export const getUnreadMessageCount = async (): Promise<number> => {
     const q = query(inboxCollection, where("isRead", "==", false));
     const querySnapshot = await getDocs(q);
     return querySnapshot.size;
+};
+
+
+// === GALLERY ===
+const photosCollection = collection(db, "photos");
+
+export const addPhoto = async (photoData: Photo): Promise<string> => {
+    const docRef = await addDoc(photosCollection, photoData);
+    return docRef.id;
+};
+
+export const deletePhoto = async (id: string) => {
+    const photoDoc = doc(db, "photos", id);
+    await deleteDoc(photoDoc);
+};
+
+export const getPaginatedPhotos = async (limitNum = 20, lastDoc?: QueryDocumentSnapshot): Promise<{ data: PhotoWithId[], lastDoc?: QueryDocumentSnapshot }> => {
+    let q = query(photosCollection, orderBy("uploadedAt", "desc"), limit(limitNum));
+    if (lastDoc) q = query(photosCollection, orderBy("uploadedAt", "desc"), startAfter(lastDoc), limit(limitNum));
+    const querySnapshot = await getDocs(q);
+    const data = querySnapshot.docs.map(doc => ({ ...doc.data() as Photo, id: doc.id }));
+    return { data, lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] };
 };
 
 

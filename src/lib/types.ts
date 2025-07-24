@@ -64,3 +64,13 @@ export type InboxMessage = {
 }
 
 export type InboxMessageWithId = InboxMessage & { id: string };
+
+export type Photo = {
+    caption: string;
+    imageUrl: string;
+    yearGroups: string[];
+    uploadedAt: string; // ISO String
+    uploadedBy: string; // For now, a string like an email
+};
+
+export type PhotoWithId = Photo & { id: string };
