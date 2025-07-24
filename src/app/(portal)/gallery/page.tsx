@@ -7,7 +7,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { PhotoWithId, getPhotosForYearGroups } from '@/lib/firebase/firestore';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
+import { Button } from "@/components/ui/button";
 
 // In a real app, this would come from the parent's authenticated session
 const parentChildrenYearGroups = ['Year 2', 'Year 5'];
@@ -15,6 +15,7 @@ const parentChildrenYearGroups = ['Year 2', 'Year 5'];
 export default function GalleryPage() {
   const [photos, setPhotos] = useState<PhotoWithId[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState('All');
 
   useEffect(() => {
     const fetchAndSetPhotos = async () => {
@@ -25,6 +26,7 @@ export default function GalleryPage() {
           setPhotos([]);
           return;
         }
+        // Fetch all photos relevant to any of the parent's children
         const relevantPhotos = await getPhotosForYearGroups(parentChildrenYearGroups);
         setPhotos(relevantPhotos);
       } catch (error) {
@@ -38,12 +40,39 @@ export default function GalleryPage() {
     fetchAndSetPhotos();
   }, []);
 
+  const filteredPhotos = useMemo(() => {
+    if (activeFilter === 'All') {
+      return photos;
+    }
+    return photos.filter(photo => photo.yearGroups.includes(activeFilter));
+  }, [photos, activeFilter]);
+  
+  const filterOptions = ['All', ...parentChildrenYearGroups];
+
+
   return (
     <div className="space-y-6">
        <div>
         <h1 className="text-3xl font-bold font-headline">Photo Gallery</h1>
         <p className="text-muted-foreground">Recent photos from your children's classes and school events.</p>
       </div>
+      
+      {parentChildrenYearGroups.length > 1 && photos.length > 0 && (
+         <div className="flex items-center gap-2 rounded-lg border bg-muted/50 p-3 flex-wrap">
+          <p className="text-sm font-medium mr-2">Filter by class:</p>
+          {filterOptions.map((filter) => (
+            <Button
+              key={filter}
+              variant={activeFilter === filter ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setActiveFilter(filter)}
+            >
+              {filter}
+            </Button>
+          ))}
+        </div>
+      )}
+
 
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
@@ -61,7 +90,7 @@ export default function GalleryPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {photos.map((photo) => (
+            {filteredPhotos.map((photo) => (
               <Card key={photo.id} className="overflow-hidden group relative transition-all hover:shadow-lg">
                 <Image
                   src={photo.imageUrl}
