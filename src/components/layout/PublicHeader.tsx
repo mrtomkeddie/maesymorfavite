@@ -72,7 +72,7 @@ export function PublicHeader() {
                 </span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[18rem] bg-background p-0 text-foreground" closeIcon={false}>
+            <SheetContent side="right" className="w-[22rem] bg-background p-0 text-foreground" closeIcon={false}>
               <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
               <div className="flex h-full flex-col">
                 <div className="flex h-20 items-center justify-between border-b border-border/40 px-6">
