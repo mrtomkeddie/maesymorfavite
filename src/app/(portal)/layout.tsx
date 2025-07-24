@@ -120,15 +120,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
-          <header className="flex h-16 items-center justify-between border-b bg-background px-6 lg:justify-end">
-            <div className="lg:hidden">
-              <SidebarTrigger />
+           <main className="p-4 md:p-6 lg:p-8">
+            <div className="lg:hidden mb-4">
+                <SidebarTrigger />
             </div>
-            <h1 className="text-lg font-semibold lg:hidden">
-              {menuItems.find(item => pathname.startsWith(item.href))?.label || 'MorfaConnect'}
-            </h1>
-          </header>
-          <main className="p-4 md:p-6 lg:p-8">
             {children}
           </main>
         </SidebarInset>
