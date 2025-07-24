@@ -45,6 +45,14 @@ export default function InboxAdminPage() {
   const fetchMessages = async () => {
     setIsLoading(true);
     try {
+      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+        console.log('Firebase not configured. Using mock data.');
+        setMessages([
+            { id: '1', type: 'absence', subject: 'Absence Report for Charlie K.', body: 'Charlie is unwell today.', sender: { name: 'Jane Doe', email: 'parent@example.com' }, isRead: false, createdAt: new Date().toISOString() },
+            { id: '2', type: 'contact', subject: 'Question about school trip', body: 'When is the payment due?', sender: { name: 'John Smith', email: 'john@example.com' }, isRead: true, createdAt: new Date(Date.now() - 86400000).toISOString() },
+        ]);
+        return;
+      }
       const allMessages = await getInboxMessages();
       setMessages(allMessages);
     } catch (error) {
