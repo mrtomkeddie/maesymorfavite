@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useLanguage } from "@/app/(public)/LanguageProvider";
@@ -33,8 +34,8 @@ export default function NewsArticlePage({ params: { slug } }: { params: { slug: 
     
     return (
         <div className="bg-background">
-            <article className="w-full py-16 md:py-24">
-                <div className="container mx-auto max-w-4xl px-8">
+            <article className="w-full">
+                <div className="container mx-auto max-w-4xl px-0">
                     <div className="mb-8">
                          <Link href="/news" className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors">
                             <ArrowLeft className="mr-2 h-4 w-4" /> {t.back}
