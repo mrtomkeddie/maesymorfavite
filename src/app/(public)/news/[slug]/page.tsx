@@ -29,8 +29,6 @@ export default function NewsArticlePage({ params }: { params: { slug: string } }
     const { language } = useLanguage();
     const t = content[language];
     
-    // The 'params' object is a Promise-like object. We don't need React.use() here.
-    // The slug can be accessed directly.
     const slug = params.slug;
     const post = mockNews.find(p => p.slug === slug);
 
