@@ -1,4 +1,5 @@
 
+
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, writeBatch, where, getDoc, limit, startAfter, count, getCountFromServer } from "firebase/firestore"; 
 import { db } from "./config";
 import type { NewsPost } from "@/lib/mockNews";
@@ -305,13 +306,27 @@ const settingsDocRef = doc(db, "settings", "site");
 export const getSiteSettings = async (): Promise<SiteSettings | null> => {
     const docSnap = await getDoc(settingsDocRef);
     if (docSnap.exists()) {
-        return docSnap.data() as SiteSettings;
+        const data = docSnap.data();
+        // Ensure all possible fields are initialized to prevent uncontrolled->controlled switch in React
+        return {
+            address: data.address || "Ysgol Maes Y Morfa,\nOlive St,\nLlanelli\nSA15 2AP",
+            phone: data.phone || "01554 772945",
+            email: data.email || "admin@maesymorfa.cymru",
+            facebookUrl: data.facebookUrl || '',
+            twitterUrl: data.twitterUrl || '',
+            instagramUrl: data.instagramUrl || '',
+            youtubeUrl: data.youtubeUrl || '',
+        };
     } else {
         // Return default values if document doesn't exist
         return {
             address: "Ysgol Maes Y Morfa,\nOlive St,\nLlanelli\nSA15 2AP",
             phone: "01554 772945",
-            email: "admin@maesymorfa.cymru"
+            email: "admin@maesymorfa.cymru",
+            facebookUrl: '',
+            twitterUrl: '',
+            instagramUrl: '',
+            youtubeUrl: '',
         };
     }
 };
