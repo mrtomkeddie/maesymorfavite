@@ -3,7 +3,7 @@
 
 import { useLanguage } from '@/app/(public)/LanguageProvider';
 import { news as mockNews } from '@/lib/mockNews';
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { ArrowLeft, Calendar, Paperclip, Send, Loader2, MessageSquare, HelpCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -149,11 +149,12 @@ const ContactAdminSection = ({ articleTitle, t }: { articleTitle: string, t: typ
 };
 
 
-export default function NewsArticlePage({ params }: { params: { slug: string } }) {
+export default function NewsArticlePage() {
     const { language } = useLanguage();
     const t = content[language];
     
-    const slug = params.slug;
+    const params = useParams();
+    const slug = params.slug as string;
     const post = mockNews.find(p => p.slug === slug);
 
     if (!post) {
