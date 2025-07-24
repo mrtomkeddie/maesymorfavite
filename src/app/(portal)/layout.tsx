@@ -51,7 +51,6 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   const menuItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/news', label: 'News & Alerts', icon: Newspaper },
     { href: '/calendar', label: 'Calendar', icon: Calendar },
     { href: '/absence', label: 'Report Absence', icon: ClipboardCheck },
   ];
