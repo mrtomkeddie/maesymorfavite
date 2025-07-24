@@ -4,7 +4,7 @@
 import { useLanguage } from '@/app/(public)/LanguageProvider';
 import { news as mockNews } from '@/lib/mockNews';
 import { notFound, useParams } from 'next/navigation';
-import { ArrowLeft, Calendar, Paperclip, Send, Loader2, MessageSquare, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, Paperclip, Send, Loader2, MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
