@@ -146,59 +146,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Why Choose Us Section */}
-      <section className="w-full py-16 md:py-24 bg-secondary/30">
-        <div className="container mx-auto max-w-7xl px-8">
-            <div className="text-center mb-12">
-                <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground md:text-5xl">
-                    {t.strengths.heading}
-                </h2>
-            </div>
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-             {t.strengths.cards.map((card, index) => {
-                const Icon = card.icon;
-                return (
-                    <Card key={index} className="bg-background/70 text-center shadow-lg border-0 rounded-2xl">
-                        <CardHeader className="items-center">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground mb-4">
-                                <Icon className="h-8 w-8" />
-                            </div>
-                            <CardTitle className="font-headline text-2xl">{card.title}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-muted-foreground">{card.description}</p>
-                        </CardContent>
-                    </Card>
-                )
-             })}
-          </div>
-        </div>
-      </section>
-
-      {/* Key Info Section */}
-       <section className="w-full py-16 md:py-24">
-        <div className="container mx-auto max-w-5xl px-8">
-             <div className="text-center mb-12">
-                <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground md:text-5xl">
-                    {t.keyInfo.heading}
-                </h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {t.keyInfo.buttons.map((button) => {
-                    const Icon = button.icon;
-                    return (
-                        <Button key={button.label} variant="outline" size="lg" className="h-auto py-6 text-lg" asChild>
-                           <Link href={button.href}>
-                                <Icon className="mr-4 h-6 w-6"/> {button.label}
-                           </Link>
-                        </Button>
-                    )
-                })}
-            </div>
-            <p className="text-center text-sm text-muted-foreground mt-6">{t.keyInfo.note}</p>
-        </div>
-      </section>
-
       {/* Latest News Section */}
       <section className="w-full py-16 md:py-24 bg-secondary/30">
         <div className="container mx-auto max-w-7xl px-8">
@@ -233,6 +180,59 @@ export default function HomePage() {
                 <Link href="/news">{t.latestNews.viewAll}</Link>
             </Button>
           </div>
+        </div>
+      </section>
+
+      {/* Why Choose Us Section */}
+      <section className="w-full py-16 md:py-24">
+        <div className="container mx-auto max-w-7xl px-8">
+            <div className="text-center mb-12">
+                <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground md:text-5xl">
+                    {t.strengths.heading}
+                </h2>
+            </div>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+             {t.strengths.cards.map((card, index) => {
+                const Icon = card.icon;
+                return (
+                    <Card key={index} className="bg-secondary/30 text-center shadow-lg border-0 rounded-2xl">
+                        <CardHeader className="items-center">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground mb-4">
+                                <Icon className="h-8 w-8" />
+                            </div>
+                            <CardTitle className="font-headline text-2xl">{card.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-muted-foreground">{card.description}</p>
+                        </CardContent>
+                    </Card>
+                )
+             })}
+          </div>
+        </div>
+      </section>
+
+      {/* Key Info Section */}
+       <section className="w-full py-16 md:py-24 bg-secondary/30">
+        <div className="container mx-auto max-w-5xl px-8">
+             <div className="text-center mb-12">
+                <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground md:text-5xl">
+                    {t.keyInfo.heading}
+                </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {t.keyInfo.buttons.map((button) => {
+                    const Icon = button.icon;
+                    return (
+                        <Button key={button.label} variant="outline" size="lg" className="h-auto py-6 text-lg bg-background" asChild>
+                           <Link href={button.href}>
+                                <Icon className="mr-4 h-6 w-6"/> {button.label}
+                           </Link>
+                        </Button>
+                    )
+                })}
+            </div>
+            <p className="text-center text-sm text-muted-foreground mt-6">{t.keyInfo.note}</p>
         </div>
       </section>
 
