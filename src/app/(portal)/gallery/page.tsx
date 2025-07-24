@@ -57,7 +57,7 @@ export default function GalleryPage() {
         <p className="text-muted-foreground">Recent photos from your children's classes and school events.</p>
       </div>
       
-      {parentChildrenYearGroups.length > 1 && photos.length > 0 && (
+      {parentChildrenYearGroups.length > 1 && (
          <div className="flex items-center gap-2 rounded-lg border bg-muted/50 p-3 flex-wrap">
           <p className="text-sm font-medium mr-2">Filter by class:</p>
           {filterOptions.map((filter) => (
