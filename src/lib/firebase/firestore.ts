@@ -1,15 +1,9 @@
 
-
-
-
-
-
-
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, writeBatch, where, getDoc, limit, startAfter, count, getCountFromServer } from "firebase/firestore"; 
 import { db } from "./config";
 import type { NewsPost } from "@/lib/mockNews";
 import type { CalendarEvent } from "@/lib/mockCalendar";
-import type { StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, LinkedParent, InboxMessage, InboxMessageWithId, Photo, PhotoWithId } from "@/lib/types";
+import type { StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, LinkedParent, InboxMessage, InboxMessageWithId, Photo, PhotoWithId, DailyMenu } from "@/lib/types";
 import { yearGroups } from "@/components/admin/ChildForm";
 import { QueryDocumentSnapshot } from "firebase/firestore";
 
@@ -324,6 +318,26 @@ export const getSiteSettings = async (): Promise<SiteSettings | null> => {
 
 export const updateSiteSettings = async (settings: SiteSettings) => {
     await setDoc(settingsDocRef, settings, { merge: true });
+};
+
+// === LUNCH MENU SETTINGS ===
+const menuDocRef = doc(db, "settings", "lunchMenu");
+
+export const getLunchMenu = async (): Promise<DailyMenu | null> => {
+    const docSnap = await getDoc(menuDocRef);
+    if (docSnap.exists()) {
+        return docSnap.data() as DailyMenu;
+    } else {
+        return {
+            main: "Shepherd's Pie",
+            alt: "Jacket Potato with Tuna",
+            dessert: "Apple Crumble & Custard"
+        };
+    }
+}
+
+export const updateLunchMenu = async (menu: DailyMenu) => {
+    await setDoc(menuDocRef, menu, { merge: true });
 };
 
 

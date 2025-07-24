@@ -74,3 +74,9 @@ export type Photo = {
 };
 
 export type PhotoWithId = Photo & { id: string };
+
+export type DailyMenu = {
+    main: string;
+    alt: string;
+    dessert: string;
+}

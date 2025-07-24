@@ -33,6 +33,7 @@ import {
   Settings,
   Mail,
   Camera,
+  Utensils,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -79,6 +80,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/staff', label: 'Staff', icon: Users },
     { href: '/admin/gallery', label: 'Photo Gallery', icon: Camera },
     { href: '/admin/documents', label: 'Documents', icon: FileText },
+    { href: '/admin/menu', label: 'Lunch Menu', icon: Utensils },
   ];
 
   const userManagementItems = [
