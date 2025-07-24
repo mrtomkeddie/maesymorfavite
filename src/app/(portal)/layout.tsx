@@ -14,12 +14,21 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   LayoutDashboard,
   Calendar,
   ClipboardCheck,
   LogOut,
   Loader2,
   Camera,
+  ChevronUp,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -98,24 +107,29 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleLogout} tooltip={{ children: 'Logout' }}>
-                  <LogOut />
-                  <span>Logout</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-            <div className="mt-4 flex items-center gap-3 p-2 group-data-[collapsible=icon]:justify-center">
-                <Avatar className="size-8">
-                    <AvatarImage src="https://placehold.co/40x40.png" data-ai-hint="person avatar" />
-                    <AvatarFallback>JD</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col text-sm group-data-[collapsible=icon]:hidden">
-                    <span className="font-semibold">Jane Doe</span>
-                    <span className="text-muted-foreground">Parent</span>
+             <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex w-full cursor-pointer items-center gap-3 p-2 transition-colors hover:bg-secondary rounded-md group-data-[collapsible=icon]:justify-center">
+                    <Avatar className="size-8">
+                        <AvatarImage src="https://placehold.co/40x40.png" data-ai-hint="person avatar" />
+                        <AvatarFallback>JD</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col text-sm group-data-[collapsible=icon]:hidden flex-grow">
+                        <span className="font-semibold">Jane Doe</span>
+                        <span className="text-muted-foreground">Parent</span>
+                    </div>
+                     <ChevronUp className="h-4 w-4 text-muted-foreground group-data-[collapsible=icon]:hidden" />
                 </div>
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="w-56 mb-2">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
