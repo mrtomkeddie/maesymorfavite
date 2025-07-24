@@ -154,7 +154,17 @@ export default function ParentsAdminPage() {
         if (!isOpen) setSelectedParent(null);
     }}>
       <div className="space-y-6">
-        <p className="text-muted-foreground">Add, edit, and manage parent accounts.</p>
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight">Parent Management</h1>
+                <p className="text-muted-foreground">Add, edit, and manage parent accounts.</p>
+            </div>
+             <DialogTrigger asChild>
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Parent
+                </Button>
+            </DialogTrigger>
+        </div>
 
         <Card>
           <CardHeader>

@@ -139,7 +139,17 @@ export default function NewsAdminPage() {
         if (!isOpen) setSelectedNews(null);
     }}>
       <div className="space-y-6">
-        <p className="text-muted-foreground">Create, edit, and manage all school announcements.</p>
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight">News & Alerts</h1>
+                <p className="text-muted-foreground">Create, edit, and manage all school announcements.</p>
+            </div>
+             <DialogTrigger asChild>
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add News Post
+                </Button>
+            </DialogTrigger>
+        </div>
         
 
         <Card>
@@ -258,7 +268,3 @@ export default function NewsAdminPage() {
     </Dialog>
   );
 }
-
-    
-
-    

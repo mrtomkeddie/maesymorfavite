@@ -138,7 +138,17 @@ export default function CalendarAdminPage() {
       if (!isOpen) setSelectedEvent(null);
     }}>
       <div className="space-y-6">
-        <p className="text-muted-foreground">Create, edit, and manage all school events.</p>
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
+                <p className="text-muted-foreground">Create, edit, and manage all school events.</p>
+            </div>
+             <DialogTrigger asChild>
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Event
+                </Button>
+            </DialogTrigger>
+        </div>
 
         <Card>
           <CardHeader>

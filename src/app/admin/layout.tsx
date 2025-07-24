@@ -30,47 +30,17 @@ import {
   BookUser,
   HelpCircle,
   Settings,
-  PlusCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-
-const pageTitles: Record<string, string> = {
-    '/admin/dashboard': 'Dashboard',
-    '/admin/news': 'News & Alerts',
-    '/admin/calendar': 'Calendar Management',
-    '/admin/staff': 'Staff Management',
-    '/admin/documents': 'Document Management',
-    '/admin/parents': 'Parent Management',
-    '/admin/children': 'Child Management',
-    '/admin/settings': 'Site Settings',
-    '/admin/help': 'Help',
-};
-
-
-function SidebarAutoClose() {
-  const { setOpen } = useSidebar();
-  const pathname = usePathname();
-
-  useEffect(() => {
-    // Close sidebar when pathname changes (navigation occurs)
-    setOpen(false);
-  }, [pathname, setOpen]);
-
-  return null;
-}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isAuth, setIsAuth] = useState<boolean | undefined>(undefined);
-
-  const currentPageTitle = Object.entries(pageTitles).find(([path]) => pathname.startsWith(path))?.[1] || 'Admin Panel';
 
   useEffect(() => {
     // We check for 'admin_auth' specifically for this layout.
@@ -89,6 +59,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const menuItems = [
     { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  ];
+
+  const contentManagementItems = [
     { href: '/admin/news', label: 'News & Alerts', icon: Newspaper },
     { href: '/admin/calendar', label: 'Calendar', icon: Calendar },
     { href: '/admin/staff', label: 'Staff', icon: Users },
@@ -102,7 +75,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   
   const settingsItems = [
     { href: '/admin/settings', label: 'Site Settings', icon: Settings },
-    { href: '/admin/help', label: 'Help', icon: HelpCircle },
+    // { href: '/admin/help', label: 'Help', icon: HelpCircle },
   ];
 
   if (pathname === '/admin/login') {
@@ -123,22 +96,36 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   
   return (
       <SidebarProvider>
-        <SidebarAutoClose />
-        <Sidebar variant="inset" collapsible="icon">
+        <Sidebar variant="sidebar" collapsible="icon">
           <SidebarHeader>
-            <div className="flex items-center gap-2">
+            <Link href="/admin/dashboard" className="flex items-center gap-2">
               <Image src="/logo.png" alt="Maes Y Morfa logo" width={28} height={28} className="w-7 h-7" />
               <span className="text-lg font-semibold text-foreground group-data-[collapsible=icon]:hidden">
                 Admin Panel
               </span>
-            </div>
+            </Link>
           </SidebarHeader>
           <SidebarContent>
             <SidebarMenu>
+               {menuItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === item.href}
+                        tooltip={{ children: item.label }}
+                    >
+                        <Link href={item.href}>
+                        <item.icon />
+                        <span>{item.label}</span>
+                        </Link>
+                    </SidebarMenuButton>
+                    </SidebarMenuItem>
+                ))}
+              <SidebarSeparator />
               <SidebarGroup>
                 <SidebarGroupLabel>Content</SidebarGroupLabel>
                 <SidebarGroupContent>
-                    {menuItems.map((item) => (
+                    {contentManagementItems.map((item) => (
                         <SidebarMenuItem key={item.href}>
                         <SidebarMenuButton
                             asChild
@@ -218,30 +205,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
-          <header className="flex h-16 shrink-0 items-center justify-between border-b bg-background px-6">
-            <div className="flex items-center gap-4">
-              <div className="lg:hidden">
-                <SidebarTrigger />
-              </div>
-              <h1 className="text-xl font-semibold">{currentPageTitle}</h1>
-            </div>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button>
-                  <PlusCircle className="mr-2" />
-                  Create New
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild><Link href="/admin/news">News Post</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link href="/admin/calendar">Calendar Event</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link href="/admin/staff">Staff Member</Link></DropdownMenuItem>
-                 <DropdownMenuItem asChild><Link href="/admin/documents">Document</Link></DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-          </header>
           <main className="p-4 md:p-6 lg:p-8">
             {children}
           </main>

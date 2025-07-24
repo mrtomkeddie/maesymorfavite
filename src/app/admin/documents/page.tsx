@@ -150,7 +150,17 @@ export default function DocumentsAdminPage() {
         if (!isOpen) setSelectedDocument(null);
     }}>
       <div className="space-y-6">
-        <p className="text-muted-foreground">Upload and manage policies, forms, and newsletters.</p>
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight">Document Management</h1>
+                <p className="text-muted-foreground">Upload and manage policies, forms, and newsletters.</p>
+            </div>
+             <DialogTrigger asChild>
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Upload Document
+                </Button>
+            </DialogTrigger>
+        </div>
         
         <Card>
           <CardHeader>

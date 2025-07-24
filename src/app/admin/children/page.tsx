@@ -216,7 +216,10 @@ export default function ChildrenAdminPage() {
     }}>
       <div className="space-y-6">
        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <p className="text-muted-foreground max-w-lg">Add, edit, and manage child profiles. Use the "Promote Year Groups" button at the end of the academic year to move all children up a year.</p>
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight">Child Management</h1>
+                <p className="text-muted-foreground">Add, edit, and manage child profiles.</p>
+            </div>
           <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" onClick={() => setIsPromoteAlertOpen(true)}>
                   <ChevronsUp className="mr-2 h-4 w-4" />
@@ -445,7 +448,7 @@ export default function ChildrenAdminPage() {
           </DialogContent>
         </Dialog>
       </div>
-      <DialogContent className="sm:max-w-2xl p-0">
+      <DialogContent className="sm:max-w-xl p-0">
           <DialogHeader className="p-6 pb-0">
               <DialogTitle>{selectedChild ? 'Edit' : 'Enrol'} Child</DialogTitle>
               <DialogDescription>
