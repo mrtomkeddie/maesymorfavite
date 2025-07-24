@@ -62,7 +62,7 @@ export default function DashboardPage() {
       if (event.relevantTo && parentChildrenYearGroups.some(year => event.relevantTo?.includes(year as any))) {
           return true;
       }
-      // Fallback for events without the 'relevantTo' property: show them by default
+      // Fallback for events without the new 'relevantTo' property: show them by default
       if (!event.relevantTo) {
           return true;
       }
