@@ -17,12 +17,6 @@ export default function DashboardPage() {
   const notices = mockNews.filter(n => n.published).slice(0, 3);
   const nextEvent = calendarEvents.find(e => new Date(e.start) > new Date());
 
-  const keyDocuments = [
-      { title: 'Term Dates 2024-25.pdf', href: '#' },
-      { title: 'Lunch Menu - Summer.pdf', href: '#' },
-      { title: 'Uniform Policy.pdf', href: '#' },
-  ]
-
   const stats = [
       { label: "Charlie's Attendance", value: "98%", icon: Percent, href: "#" },
       { label: "Unread Notifications", value: "3", icon: Bell, href: "/news" },
@@ -40,7 +34,7 @@ export default function DashboardPage() {
           {stats.map(stat => {
               const Icon = stat.icon;
               return (
-                  <Card key={stat.label}>
+                  <Card key={stat.label} className="hover:bg-secondary/50 transition-colors">
                     <Link href={stat.href}>
                       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                           <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
@@ -60,25 +54,25 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-primary" />
-                <span>Today's Notices</span>
+                <Newspaper className="h-5 w-5 text-primary" />
+                <span>Latest Updates</span>
               </CardTitle>
-              <CardDescription>The latest urgent updates and announcements.</CardDescription>
+              <CardDescription>The latest news and announcements from school.</CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-4">
-                {notices.map((notice, index) => (
-                  <li key={index} className="flex items-center justify-between gap-4 rounded-lg p-3 transition-colors hover:bg-secondary">
-                    <div>
-                      <p className="font-medium">{notice.title_en}</p>
-                      <p className="text-sm text-muted-foreground">{new Date(notice.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}</p>
-                    </div>
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link href={`/news/${notice.slug}`}><ArrowRight className="h-4 w-4" /></Link>
-                    </Button>
-                  </li>
+              <div className="space-y-4">
+                {notices.map((notice) => (
+                   <Link href={`/news/${notice.slug}`} key={notice.id} className="block p-4 rounded-lg border transition-colors hover:bg-secondary">
+                        <p className="font-semibold">{notice.title_en}</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {new Date(notice.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                        <p className="text-sm text-foreground/80 mt-2 line-clamp-2">
+                            {notice.body_en.replace(/<[^>]*>?/gm, '')}
+                        </p>
+                    </Link>
                 ))}
-              </ul>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -87,38 +81,17 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Your most common tasks, one click away.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button asChild className="w-full justify-start">
                 <Link href="/absence"><ClipboardCheck className="mr-2 h-4 w-4" /> Report an Absence</Link>
               </Button>
                <Button asChild variant="secondary" className="w-full justify-start">
-                <Link href="#"><Utensils className="mr-2 h-4 w-4" /> View Lunch Menu</Link>
+                <Link href="/calendar"><Calendar className="mr-2 h-4 w-4" /> View Calendar</Link>
               </Button>
                <Button asChild variant="secondary" className="w-full justify-start">
-                <Link href="#"><UserCheck className="mr-2 h-4 w-4" /> Update My Details</Link>
+                <Link href="#"><Utensils className="mr-2 h-4 w-4" /> View Lunch Menu</Link>
               </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
-                <span>Key Documents</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {keyDocuments.map(doc => (
-                  <li key={doc.title}>
-                    <Link href={doc.href} className="flex items-center gap-2 rounded-md p-2 text-sm font-medium transition-colors hover:bg-secondary hover:underline">
-                      {doc.title}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
             </CardContent>
           </Card>
         </div>
