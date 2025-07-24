@@ -31,9 +31,6 @@ const content = {
       readMore: 'Read More',
       viewAll: 'View All News'
     },
-    proof: {
-      quote: "300+ happy learners. Proud to serve Llanelli’s families."
-    },
     cta: {
       heading: 'Are you a Maes Y Morfa parent?',
       body: 'Log in to MorfaConnect to check your child’s progress, report absences, and get the latest updates—quickly and securely.',
@@ -59,9 +56,6 @@ const content = {
         heading: 'Newyddion Diweddaraf',
         readMore: 'Darllen Mwy',
         viewAll: 'Gweld Pob Newyddion'
-    },
-    proof: {
-        quote: "300+ o ddysgwyr hapus. Yn falch o wasanaethu teuluoedd Llanelli."
     },
     cta: {
       heading: 'Ydych chi’n rhiant Maes Y Morfa?',
@@ -187,6 +181,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-
-
