@@ -23,12 +23,6 @@ export default function DashboardPage() {
       { title: 'Uniform Policy.pdf', href: '#' },
   ]
 
-  const newsletters = [
-    { title: 'June 2024 Edition', image: 'https://placehold.co/300x400.png', imageHint: 'newsletter cover' },
-    { title: 'May 2024 Edition', image: 'https://placehold.co/300x400.png', imageHint: 'document cover' },
-    { title: 'April 2024 Edition', image: 'https://placehold.co/300x400.png', imageHint: 'document cover' },
-  ];
-  
   const stats = [
       { label: "Charlie's Attendance", value: "98%", icon: Percent, href: "#" },
       { label: "Unread Notifications", value: "3", icon: Bell, href: "/news" },
@@ -85,33 +79,6 @@ export default function DashboardPage() {
                   </li>
                 ))}
               </ul>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Newspaper className="h-5 w-5 text-primary" />
-                    <span>Latest Newsletters</span>
-                </CardTitle>
-                <CardDescription>Catch up on the latest school-wide updates.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {newsletters.map((newsletter, index) => (
-                    <Link href="#" key={index} className="group block space-y-2">
-                        <div className="overflow-hidden rounded-lg shadow-md transition-shadow duration-300 group-hover:shadow-xl">
-                            <Image 
-                                src={newsletter.image} 
-                                alt={newsletter.title}
-                                data-ai-hint={newsletter.imageHint}
-                                width={300}
-                                height={400}
-                                className="aspect-[3/4] h-full w-full object-cover transition-transform group-hover:scale-105"
-                            />
-                        </div>
-                        <p className="font-medium text-sm text-center">{newsletter.title}</p>
-                    </Link>
-                ))}
             </CardContent>
           </Card>
         </div>
