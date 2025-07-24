@@ -2,11 +2,12 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Newspaper, Calendar, Users, FileText, Settings, BookUser, Users2, ArrowRight, Lightbulb } from "lucide-react";
+import { Newspaper, Calendar, Users, FileText, Settings, BookUser, Users2, ArrowRight, Lightbulb, TrendingUp, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from 'framer-motion';
+import { getCollectionCount } from "@/lib/firebase/firestore";
 
 const managementTopics = [
     { id: 'news', title: 'News & Alerts', icon: Newspaper, href: '/admin/news',
@@ -82,8 +83,41 @@ const managementTopics = [
     },
 ];
 
+type Stat = {
+    label: string;
+    value: number | null;
+    icon: React.ElementType;
+}
+
 export default function AdminDashboardPage() {
     const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+    const [stats, setStats] = useState<Stat[]>([
+        { label: "Total Pupils", value: null, icon: BookUser },
+        { label: "Parent Accounts", value: null, icon: Users2 },
+        { label: "Documents", value: null, icon: FileText },
+    ]);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const [pupilCount, parentCount, documentCount] = await Promise.all([
+                    getCollectionCount('children'),
+                    getCollectionCount('parents'),
+                    getCollectionCount('documents'),
+                ]);
+                setStats([
+                    { label: "Total Pupils", value: pupilCount, icon: BookUser },
+                    { label: "Parent Accounts", value: parentCount, icon: Users2 },
+                    { label: "Documents", value: documentCount, icon: FileText },
+                ]);
+            } catch (error) {
+                console.error("Failed to fetch collection counts:", error);
+                // Keep values as null to show loading state or error
+            }
+        };
+
+        fetchStats();
+    }, []);
 
     const activeTopic = managementTopics.find(t => t.id === selectedTopic);
 
@@ -93,6 +127,29 @@ export default function AdminDashboardPage() {
                 <h1 className="text-3xl font-bold tracking-tight">Welcome Back!</h1>
                 <p className="text-muted-foreground">This is your content management system. Select a topic below for a quick guide.</p>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {stats.map(stat => {
+                    const Icon = stat.icon;
+                    return (
+                        <Card key={stat.label}>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
+                                <Icon className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                {stat.value === null ? (
+                                    <Loader2 className="h-6 w-6 animate-spin" />
+                                ) : (
+                                    <div className="text-2xl font-bold">{stat.value}</div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )
+                })}
+            </div>
+
+
              <Card>
                 <CardHeader>
                     <CardTitle>How to Use This Dashboard</CardTitle>
@@ -170,3 +227,5 @@ export default function AdminDashboardPage() {
         </div>
     );
 }
+
+    

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -40,6 +40,7 @@ import {
   Trash2,
   Loader2,
   User,
+  Search,
 } from 'lucide-react';
 import { getPaginatedStaff, deleteStaffMember } from '@/lib/firebase/firestore';
 import { QueryDocumentSnapshot } from 'firebase/firestore';
@@ -50,6 +51,7 @@ import { StaffForm } from '@/components/admin/StaffForm';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { db } from '@/lib/firebase/config';
+import { Input } from '@/components/ui/input';
 
 // Re-using the structure from the public about page for consistency
 const mockStaffFromAboutPage = [
@@ -81,11 +83,20 @@ export default function StaffAdminPage() {
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffMemberWithId | null>(null);
   const [staffToDelete, setStaffToDelete] = useState<StaffMemberWithId | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { toast } = useToast();
 
   const groupStaff = (staffList: StaffMemberWithId[]) => {
-    const grouped = staffList.reduce((acc, member) => {
+    let filteredStaff = staffList;
+    if (searchQuery) {
+        filteredStaff = staffList.filter(member => 
+            member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            member.role.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }
+    
+    const grouped = filteredStaff.reduce((acc, member) => {
       const team = member.team || 'Other';
       if (!acc[team]) {
         acc[team] = [];
@@ -94,7 +105,6 @@ export default function StaffAdminPage() {
       return acc;
     }, {} as Record<string, StaffMemberWithId[]>);
     
-    // Ensure the order is consistent
     const orderedGrouped: Record<string, StaffMemberWithId[]> = {};
     const teamOrder = [
         "Leadership Team", "Nursery & Reception", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6", "Support Staff", "Other"
@@ -106,7 +116,6 @@ export default function StaffAdminPage() {
         }
     });
 
-    // Add any other teams that might not be in the predefined order
     Object.keys(grouped).forEach(team => {
         if (!orderedGrouped[team]) {
             orderedGrouped[team] = grouped[team];
@@ -115,6 +124,12 @@ export default function StaffAdminPage() {
 
     return orderedGrouped;
   };
+  
+  useEffect(() => {
+    setGroupedStaff(groupStaff(staff));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, staff]);
+
 
   const generateMockStaff = () => {
     return mockStaffFromAboutPage.map((member, i) => ({
@@ -140,18 +155,18 @@ export default function StaffAdminPage() {
       }
       
       const { data, lastDoc: newLastDoc } = await getPaginatedStaff(50, initial ? undefined : lastDoc); // Fetch more to allow grouping
-      let newStaff: StaffMemberWithId[] = [];
+      let newStaffList: StaffMemberWithId[] = [];
       if (initial) {
         setStaff(data);
-        newStaff = data;
+        newStaffList = data;
       } else {
         setStaff(prev => {
           const combined = [...prev, ...data];
-          newStaff = combined;
+          newStaffList = combined;
           return combined;
         });
       }
-      setGroupedStaff(groupStaff(initial ? data : newStaff));
+      setGroupedStaff(groupStaff(newStaffList));
       setLastDoc(newLastDoc);
       setHasMore(!!newLastDoc && data.length === 50);
     } catch (error) {
@@ -171,6 +186,7 @@ export default function StaffAdminPage() {
 
   useEffect(() => {
     fetchStaff(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleFormSuccess = () => {
@@ -241,10 +257,24 @@ export default function StaffAdminPage() {
         
         <Card>
           <CardHeader>
-            <CardTitle>Staff Directory</CardTitle>
-            <CardDescription>
-              A list of all staff members, grouped by team.
-            </CardDescription>
+            <div className="flex flex-col gap-4 md:flex-row md:justify-between">
+                <div>
+                    <CardTitle>Staff Directory</CardTitle>
+                    <CardDescription>
+                    A list of all staff members, grouped by team.
+                    </CardDescription>
+                </div>
+                <div className="relative w-full md:w-auto">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        type="search"
+                        placeholder="Search by name or role..."
+                        className="w-full pl-8 md:w-[250px]"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -291,7 +321,7 @@ export default function StaffAdminPage() {
                         </AccordionItem>
                       ))}
                     </Accordion>
-                    {hasMore && (
+                    {hasMore && Object.keys(groupStaff(staff)).length === Object.keys(groupedStaff).length && (
                       <div className="flex justify-center mt-4">
                         <Button onClick={() => fetchStaff(false)} disabled={isLoadingMore}>
                           {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
@@ -302,7 +332,7 @@ export default function StaffAdminPage() {
                   </>
                 ) : (
                   <div className="h-24 text-center flex items-center justify-center">
-                    <p>No staff members found. Add one to get started.</p>
+                    <p>No staff members found matching your search.</p>
                   </div>
                 )}
               </>
@@ -339,3 +369,5 @@ export default function StaffAdminPage() {
     </Dialog>
   );
 }
+
+    

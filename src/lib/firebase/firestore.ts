@@ -1,6 +1,7 @@
 
 
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, writeBatch, where, getDoc, limit, startAfter, count } from "firebase/firestore"; 
+
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, writeBatch, where, getDoc, limit, startAfter, count, getCountFromServer } from "firebase/firestore"; 
 import { db } from "./config";
 import type { NewsPost } from "@/lib/mockNews";
 import type { CalendarEvent } from "@/lib/mockCalendar";
@@ -401,3 +402,22 @@ export const getPaginatedParents = async (limitNum = 20, lastDoc?: QueryDocument
     const data = querySnapshot.docs.map(doc => ({ ...doc.data() as Parent, id: doc.id }));
     return { data, lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] };
 };
+
+
+// === UTILITIES ===
+export const getCollectionCount = async (collectionName: string): Promise<number> => {
+    try {
+        const coll = collection(db, collectionName);
+        const snapshot = await getCountFromServer(coll);
+        return snapshot.data().count;
+    } catch (e) {
+        console.error(`Failed to get count for ${collectionName}:`, e);
+        // In a mock/dev environment, you might want to return a mock number
+        if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+            return Math.floor(Math.random() * 100);
+        }
+        throw e;
+    }
+}
+
+    

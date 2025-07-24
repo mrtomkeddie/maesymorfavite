@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -16,8 +16,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Input } from '@/components/ui/input';
 
-import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, FileText, ExternalLink } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, FileText, Search } from 'lucide-react';
 import { NewsForm } from '@/components/admin/NewsForm';
 import { getNews, deleteNews, NewsPostWithId, getPaginatedNews } from '@/lib/firebase/firestore';
 import { deleteFile } from '@/lib/firebase/storage';
@@ -27,6 +28,8 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { QueryDocumentSnapshot } from 'firebase/firestore';
 import { news as mockNewsData } from '@/lib/mockNews';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 export default function NewsAdminPage() {
   const [news, setNews] = useState<NewsPostWithId[]>([]);
@@ -38,6 +41,8 @@ export default function NewsAdminPage() {
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [selectedNews, setSelectedNews] = useState<NewsPostWithId | null>(null);
   const [newsToDelete, setNewsToDelete] = useState<NewsPostWithId | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showUrgentOnly, setShowUrgentOnly] = useState(false);
 
   const { toast } = useToast();
 
@@ -87,7 +92,19 @@ export default function NewsAdminPage() {
 
   useEffect(() => {
     fetchNews(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const filteredNews = useMemo(() => {
+    let result = [...news];
+    if (showUrgentOnly) {
+      result = result.filter(n => n.isUrgent);
+    }
+    if (searchQuery) {
+      result = result.filter(n => n.title_en.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+    return result;
+  }, [news, searchQuery, showUrgentOnly]);
 
   const handleFormSuccess = () => {
     setIsDialogOpen(false);
@@ -159,8 +176,28 @@ export default function NewsAdminPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Published News</CardTitle>
-            <CardDescription>A list of all current news posts and alerts.</CardDescription>
+            <div className="flex flex-col gap-4 md:flex-row md:justify-between">
+                <div>
+                    <CardTitle>Published News</CardTitle>
+                    <CardDescription>A list of all current news posts and alerts.</CardDescription>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <div className="relative w-full md:w-auto">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Search by title..."
+                            className="w-full pl-8 md:w-[250px]"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="urgent-filter" checked={showUrgentOnly} onCheckedChange={(checked) => setShowUrgentOnly(checked as boolean)} />
+                        <Label htmlFor="urgent-filter" className="text-sm font-medium">Show urgent only</Label>
+                    </div>
+                </div>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -180,8 +217,8 @@ export default function NewsAdminPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {news.length > 0 ? (
-                      news.map((post) => (
+                    {filteredNews.length > 0 ? (
+                      filteredNews.map((post) => (
                         <TableRow key={post.id}>
                           <TableCell className="font-medium">{post.title_en}</TableCell>
                            <TableCell>{isValidDate(post.date) ? format(new Date(post.date), 'dd MMM yyyy') : 'Invalid Date'}</TableCell>
@@ -228,7 +265,7 @@ export default function NewsAdminPage() {
                     )}
                   </TableBody>
                 </Table>
-                {hasMore && (
+                {hasMore && filteredNews.length === news.length && (
                   <div className="flex justify-center mt-4">
                     <Button onClick={() => fetchNews(false)} disabled={isLoadingMore}>
                       {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
@@ -273,3 +310,5 @@ export default function NewsAdminPage() {
     </Dialog>
   );
 }
+
+    

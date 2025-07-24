@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -17,15 +17,16 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, Link as LinkIcon } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, Link as LinkIcon, Search } from 'lucide-react';
 import { getDocuments, deleteDocument, getPaginatedDocuments } from '@/lib/firebase/firestore';
 import type { DocumentWithId } from '@/lib/types';
 import { deleteFile } from '@/lib/firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { DocumentForm } from '@/components/admin/DocumentForm';
-import Link from 'next/link';
+import { DocumentForm, documentCategories } from '@/components/admin/DocumentForm';
 import { QueryDocumentSnapshot } from 'firebase/firestore';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function DocumentsAdminPage() {
   const [documents, setDocuments] = useState<DocumentWithId[]>([]);
@@ -37,6 +38,8 @@ export default function DocumentsAdminPage() {
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<DocumentWithId | null>(null);
   const [documentToDelete, setDocumentToDelete] = useState<DocumentWithId | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
   const { toast } = useToast();
 
@@ -98,7 +101,19 @@ export default function DocumentsAdminPage() {
 
   useEffect(() => {
     fetchDocuments(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const filteredDocuments = useMemo(() => {
+    let result = [...documents];
+    if (categoryFilter !== 'all') {
+      result = result.filter(doc => doc.category === categoryFilter);
+    }
+    if (searchQuery) {
+      result = result.filter(doc => doc.title.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+    return result;
+  }, [documents, searchQuery, categoryFilter]);
 
   const handleFormSuccess = () => {
     setIsDialogOpen(false);
@@ -164,8 +179,33 @@ export default function DocumentsAdminPage() {
         
         <Card>
           <CardHeader>
-            <CardTitle>Uploaded Documents</CardTitle>
-            <CardDescription>A list of all documents available on the parent portal.</CardDescription>
+            <div className="flex flex-col gap-4 md:flex-row md:justify-between">
+                <div>
+                    <CardTitle>Uploaded Documents</CardTitle>
+                    <CardDescription>A list of all documents available on the parent portal.</CardDescription>
+                </div>
+                 <div className="flex flex-wrap items-center gap-2">
+                    <div className="relative w-full md:w-auto">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Search by title..."
+                            className="w-full pl-8 md:w-[250px]"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                     <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                        <SelectTrigger className='w-full md:w-[180px]'>
+                            <SelectValue placeholder="Filter by category..."/>
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Categories</SelectItem>
+                            {documentCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -184,8 +224,8 @@ export default function DocumentsAdminPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {documents.length > 0 ? (
-                      documents.map((doc) => (
+                    {filteredDocuments.length > 0 ? (
+                      filteredDocuments.map((doc) => (
                         <TableRow key={doc.id}>
                           <TableCell className="font-medium">{doc.title}</TableCell>
                           <TableCell><Badge variant="outline">{doc.category}</Badge></TableCell>
@@ -229,7 +269,7 @@ export default function DocumentsAdminPage() {
                     )}
                   </TableBody>
                 </Table>
-                {hasMore && (
+                {hasMore && filteredDocuments.length === documents.length && (
                   <div className="flex justify-center mt-4">
                     <Button onClick={() => fetchDocuments(false)} disabled={isLoadingMore}>
                       {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
@@ -274,3 +314,5 @@ export default function DocumentsAdminPage() {
     </Dialog>
   );
 }
+
+    
