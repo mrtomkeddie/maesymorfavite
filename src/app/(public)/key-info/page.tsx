@@ -4,7 +4,9 @@
 import { useLanguage } from './../LanguageProvider';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, ExternalLink, Calendar, Shirt, Utensils, ShieldCheck } from "lucide-react";
+import { Download, ExternalLink, Calendar, Shirt, Utensils, ShieldCheck, Loader2 } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { getDocuments, DocumentWithId } from '@/lib/firebase/firestore';
 
 const content = {
   en: {
@@ -13,7 +15,7 @@ const content = {
     termDates: {
       title: "Term Dates",
       body: "View the academic calendar for the current school year. Please note INSET days are subject to change.",
-      button: "Download Term Dates 2024-25"
+      button: "Download Term Dates"
     },
     uniform: {
       title: "School Uniform",
@@ -29,11 +31,12 @@ const content = {
       title: "Statutory Policies",
       body: "Access our key statutory policies below.",
       links: [
-        { label: "Safeguarding Policy", href: "#" },
-        { label: "Privacy Policy", href: "#" },
-        { label: "Complaints Procedure", href: "#" }
+        { label: "Safeguarding Policy", category: "Policy" },
+        { label: "Privacy Policy", category: "Policy" },
+        { label: "Complaints Procedure", category: "Policy" }
       ]
-    }
+    },
+    noDocument: "Document not available.",
   },
   cy: {
     title: "Gwybodaeth Allweddol",
@@ -41,7 +44,7 @@ const content = {
     termDates: {
       title: "Dyddiadau'r Tymor",
       body: "Gweler y calendr academaidd ar gyfer y flwyddyn ysgol gyfredol. Nodwch y gall diwrnodau HMS newid.",
-      button: "Lawrlwytho Dyddiadau Tymor 2024-25"
+      button: "Lawrlwytho Dyddiadau Tymor"
     },
     uniform: {
       title: "Gwisg Ysgol",
@@ -57,23 +60,49 @@ const content = {
       title: "Polisïau Statudol",
       body: "Cyrchwch ein polisïau statudol allweddol isod.",
       links: [
-        { label: "Polisi Diogelu", href: "#" },
-        { label: "Polisi Preifatrwydd", href: "#" },
-        { label: "Gweithdrefn Cwynion", href: "#" }
+        { label: "Polisi Diogelu", category: "Policy" },
+        { label: "Polisi Preifatrwydd", category: "Policy" },
+        { label: "Gweithdrefn Cwynion", category: "Policy" }
       ]
-    }
+    },
+    noDocument: "Dogfen ddim ar gael.",
   }
 };
+
+type InfoCardData = {
+  icon: React.ElementType;
+  title: string;
+  body: string;
+  button: string;
+  category: "Term Dates" | "Uniform" | "Lunch Menu";
+};
+
 
 export default function KeyInfoPage() {
     const { language } = useLanguage();
     const t = content[language];
+    const [docs, setDocs] = useState<DocumentWithId[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const infoCards = [
-        { icon: Calendar, data: t.termDates },
-        { icon: Shirt, data: t.uniform },
-        { icon: Utensils, data: t.lunchMenu }
+    useEffect(() => {
+        getDocuments().then((data) => {
+            setDocs(data);
+            setIsLoading(false);
+        }).catch(err => {
+            console.error(err);
+            setIsLoading(false);
+        });
+    }, []);
+
+    const findDocUrl = (category: string) => docs.find(d => d.category === category)?.fileUrl;
+
+    const infoCards: InfoCardData[] = [
+        { icon: Calendar, title: t.termDates.title, body: t.termDates.body, button: t.termDates.button, category: "Term Dates" },
+        { icon: Shirt, title: t.uniform.title, body: t.uniform.body, button: t.uniform.button, category: "Uniform" },
+        { icon: Utensils, title: t.lunchMenu.title, body: t.lunchMenu.body, button: t.lunchMenu.button, category: "Lunch Menu" },
     ];
+    
+    const policyDocs = docs.filter(d => d.category === 'Policy');
 
     return (
         <div className="bg-background">
@@ -88,54 +117,57 @@ export default function KeyInfoPage() {
                            {t.intro}
                         </p>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {infoCards.map((card, index) => {
-                            const Icon = card.icon;
-                            return (
-                                <Card key={index} className="flex flex-col">
-                                    <CardHeader className="flex-row items-center gap-4">
-                                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary shadow-inner flex-shrink-0">
-                                            <Icon className="h-6 w-6 text-primary" />
-                                        </div>
-                                        <CardTitle className="font-headline text-xl">{card.data.title}</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="flex-grow">
-                                        <p className="text-muted-foreground text-sm mb-4">{card.data.body}</p>
-                                    </CardContent>
-                                    <div className="p-6 pt-0">
-                                        <Button className="w-full whitespace-normal h-auto py-2" asChild>
-                                            <a href="#" download>
-                                                <Download className="mr-2 h-4 w-4" />
-                                                {card.data.button}
-                                            </a>
-                                        </Button>
-                                    </div>
-                                </Card>
-                            )
-                        })}
-                    </div>
-                    
-                     <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-3 font-headline text-2xl">
-                               <ShieldCheck className="h-6 w-6 text-primary" /> {t.policies.title}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-muted-foreground mb-4">{t.policies.body}</p>
-                            <div className="flex flex-wrap gap-2">
-                                {t.policies.links.map(link => (
-                                    <Button asChild variant="outline" key={link.label}>
-                                        <a href={link.href} target="_blank" rel="noopener noreferrer">
-                                            {link.label} <ExternalLink className="ml-2 h-4 w-4" />
-                                        </a>
-                                    </Button>
-                                ))}
+                    {isLoading ? <div className="flex justify-center"><Loader2 className="animate-spin" /></div> : (
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {infoCards.map((card, index) => {
+                                    const Icon = card.icon;
+                                    const docUrl = findDocUrl(card.category);
+                                    return (
+                                        <Card key={index} className="flex flex-col">
+                                            <CardHeader className="flex-row items-center gap-4">
+                                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary shadow-inner flex-shrink-0">
+                                                    <Icon className="h-6 w-6 text-primary" />
+                                                </div>
+                                                <CardTitle className="font-headline text-xl">{card.title}</CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="flex-grow">
+                                                <p className="text-muted-foreground text-sm mb-4">{card.body}</p>
+                                            </CardContent>
+                                            <div className="p-6 pt-0">
+                                                <Button className="w-full whitespace-normal h-auto py-2" asChild disabled={!docUrl}>
+                                                    <a href={docUrl || "#"} download target="_blank" rel="noopener noreferrer">
+                                                        <Download className="mr-2 h-4 w-4" />
+                                                        {docUrl ? card.button : t.noDocument}
+                                                    </a>
+                                                </Button>
+                                            </div>
+                                        </Card>
+                                    )
+                                })}
                             </div>
-                        </CardContent>
-                    </Card>
-
+                            
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-3 font-headline text-2xl">
+                                    <ShieldCheck className="h-6 w-6 text-primary" /> {t.policies.title}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-muted-foreground mb-4">{t.policies.body}</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {policyDocs.length > 0 ? policyDocs.map(link => (
+                                            <Button asChild variant="outline" key={link.id}>
+                                                <a href={link.fileUrl} target="_blank" rel="noopener noreferrer">
+                                                    {link.title} <ExternalLink className="ml-2 h-4 w-4" />
+                                                </a>
+                                            </Button>
+                                        )) : <p className="text-sm text-muted-foreground">{t.noDocument}</p>}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </>
+                    )}
                 </div>
             </section>
         </div>

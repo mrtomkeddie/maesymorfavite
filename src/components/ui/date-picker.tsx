@@ -39,22 +39,19 @@ export function DatePicker({ date, onDateChange, fromYear, toYear, className }: 
   useEffect(() => {
     const maxDays = daysInMonth(year, month);
     if (Number(day) > maxDays) {
-        // If the current day is invalid for the selected month/year,
-        // we call onDateChange with undefined to clear the invalid date
-        // but we don't reset the day here to avoid a loop.
-        // The user must select a new valid day.
-        onDateChange(undefined);
+        setDay(String(maxDays)); // Adjust day if it's out of bounds
     } else if (day && month && year) {
         const newDate = new Date(Number(year), Number(month), Number(day));
         if (!isNaN(newDate.getTime())) {
-            onDateChange(newDate);
+            // Only call if the date is actually different
+            if (newDate.getTime() !== date?.getTime()) {
+                onDateChange(newDate);
+            }
         }
     } else {
         onDateChange(undefined);
     }
-  // This dependency array was incorrect. We need to only react to day, month, year changes.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [day, month, year]);
+  }, [day, month, year, date, onDateChange]);
 
 
   return (

@@ -39,10 +39,10 @@ const content = {
     },
     keyInfo: {
       heading: 'Key Information',
-      note: 'For downloadable forms and up-to-date details, log in to the Parent Portal.',
+      note: 'Find key school documents and policies on our information page.',
       buttons: [
         { icon: Calendar, label: 'Term Dates', href: '/key-info' },
-        { icon: Shirt, label: 'Uniform', href: '/key-info' },
+        { icon: Shirt, label: 'Uniform Policy', href: '/key-info' },
         { icon: Utensils, label: 'Lunch Menu', href: '/key-info' }
       ]
     },
@@ -88,10 +88,10 @@ const content = {
     },
     keyInfo: {
       heading: 'Gwybodaeth Allweddol',
-      note: 'Am ffurflenni y gellir eu lawrlwytho a manylion cyfredol, mewngofnodwch i Borth y Rhieni.',
+      note: 'Dewch o hyd i ddogfennau a pholisïau allweddol yr ysgol ar ein tudalen wybodaeth.',
       buttons: [
         { icon: Calendar, label: 'Dyddiadau Tymor', href: '/key-info' },
-        { icon: Shirt, label: 'Gwisg Ysgol', href: '/key-info' },
+        { icon: Shirt, label: 'Polisi Gwisg Ysgol', href: '/key-info' },
         { icon: Utensils, label: 'Bwydlen Ginio', href: '/key-info' }
       ]
     },
