@@ -4,26 +4,113 @@
 import { useLanguage } from '@/app/(public)/LanguageProvider';
 import { news as mockNews } from '@/lib/mockNews';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, Calendar, Paperclip } from 'lucide-react';
+import { ArrowLeft, Calendar, Paperclip, Send, Loader2, MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
+import { addInboxMessage } from '@/lib/firebase/firestore';
+
 
 const content = {
     en: {
         back: 'Back to all news',
         urgent: 'Urgent',
         by: 'Posted on',
-        attachment: 'Attachment'
+        attachment: 'Attachment',
+        questionTitle: "Have a question about this?",
+        questionDesc: "Your message will be sent privately to the school office.",
+        messageLabel: "Your Message",
+        sendButton: "Send to Admin",
+        toastSuccess: "Your message has been sent.",
+        toastError: "Could not send your message. Please try again."
     },
     cy: {
         back: 'Yn ôl i\'r holl newyddion',
         urgent: 'Pwysig',
         by: 'Postiwyd ar',
-        attachment: 'Atodiad'
+        attachment: 'Atodiad',
+        questionTitle: "Oes cwestiwn gennych am hyn?",
+        questionDesc: "Anfonir eich neges yn breifat at swyddfa'r ysgol.",
+        messageLabel: "Eich Neges",
+        sendButton: "Anfon at y Gweinyddwr",
+        toastSuccess: "Mae eich neges wedi'i hanfon.",
+        toastError: "Methu anfon eich neges. Rhowch gynnig arall arni."
     }
 }
+
+const messageFormSchema = z.object({
+  message: z.string().min(10, { message: "Message must be at least 10 characters." }),
+});
+
+const ContactAdminForm = ({ articleTitle, t }: { articleTitle: string, t: typeof content['en'] }) => {
+    const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(false);
+    
+    const form = useForm<z.infer<typeof messageFormSchema>>({
+        resolver: zodResolver(messageFormSchema),
+        defaultValues: { message: "" },
+    });
+
+    async function onSubmit(values: z.infer<typeof messageFormSchema>) {
+        setIsLoading(true);
+        const parentInfo = { name: "Jane Doe", email: "parent@example.com" }; // Mocked parent
+
+        try {
+            await addInboxMessage({
+                type: 'contact',
+                subject: `Question re: "${articleTitle}"`,
+                body: values.message,
+                sender: parentInfo,
+                isRead: false,
+                createdAt: new Date().toISOString(),
+            });
+            toast({ title: t.toastSuccess });
+            form.reset();
+        } catch (error) {
+            console.error("Failed to send message:", error);
+            toast({ title: t.toastError, variant: 'destructive' });
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    return (
+        <Card className="mt-12">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-3"><MessageSquare className="h-6 w-6 text-primary"/> {t.questionTitle}</CardTitle>
+                <CardDescription>{t.questionDesc}</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField control={form.control} name="message" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>{t.messageLabel}</FormLabel>
+                                <FormControl>
+                                    <Textarea {...field} rows={4} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                        <Button type="submit" disabled={isLoading}>
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            <Send className="mr-2 h-4 w-4" /> {t.sendButton}
+                        </Button>
+                    </form>
+                </Form>
+            </CardContent>
+        </Card>
+    );
+};
+
 
 export default function NewsArticlePage({ params }: { params: { slug: string } }) {
     const { language } = useLanguage();
@@ -31,6 +118,14 @@ export default function NewsArticlePage({ params }: { params: { slug: string } }
     
     const slug = params.slug;
     const post = mockNews.find(p => p.slug === slug);
+
+    const [isParent, setIsParent] = useState(false);
+
+    useEffect(() => {
+        // Check if the user is a logged-in parent
+        const authStatus = localStorage.getItem('isAuthenticated') === 'true' && localStorage.getItem('userRole') === 'parent';
+        setIsParent(authStatus);
+    }, []);
 
     if (!post) {
         notFound();
@@ -87,9 +182,13 @@ export default function NewsArticlePage({ params }: { params: { slug: string } }
                             </div>
                         )}
                     </article>
+
+                    {isParent && <ContactAdminForm articleTitle={post.title_en} t={t} />}
                 </div>
             </section>
         </div>
     )
 
 }
+
+    
