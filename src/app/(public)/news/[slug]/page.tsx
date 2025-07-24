@@ -4,7 +4,7 @@
 import { useLanguage } from '@/app/(public)/LanguageProvider';
 import { news as mockNews } from '@/lib/mockNews';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, Calendar, Paperclip, Send, Loader2, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Calendar, Paperclip, Send, Loader2, MessageSquare, HelpCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,9 @@ const content = {
         messageLabel: "Your Message",
         sendButton: "Send to Admin",
         toastSuccess: "Your message has been sent.",
-        toastError: "Could not send your message. Please try again."
+        toastError: "Could not send your message. Please try again.",
+        publicQuestion: "Have a question? Please use our main contact form.",
+        contactButton: "Go to Contact Page"
     },
     cy: {
         back: 'Yn ôl i\'r holl newyddion',
@@ -42,7 +44,9 @@ const content = {
         messageLabel: "Eich Neges",
         sendButton: "Anfon at y Gweinyddwr",
         toastSuccess: "Mae eich neges wedi'i hanfon.",
-        toastError: "Methu anfon eich neges. Rhowch gynnig arall arni."
+        toastError: "Methu anfon eich neges. Rhowch gynnig arall arni.",
+        publicQuestion: "Oes gennych chi gwestiwn? Defnyddiwch ein prif ffurflen gyswllt.",
+        contactButton: "Ewch i'r Dudalen Gyswllt"
     }
 }
 
@@ -50,9 +54,15 @@ const messageFormSchema = z.object({
   message: z.string().min(10, { message: "Message must be at least 10 characters." }),
 });
 
-const ContactAdminForm = ({ articleTitle, t }: { articleTitle: string, t: typeof content['en'] }) => {
+const ContactAdminSection = ({ articleTitle, t }: { articleTitle: string, t: typeof content['en'] }) => {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
+    const [isParent, setIsParent] = useState(false);
+
+    useEffect(() => {
+        const authStatus = localStorage.getItem('isAuthenticated') === 'true' && localStorage.getItem('userRole') === 'parent';
+        setIsParent(authStatus);
+    }, []);
     
     const form = useForm<z.infer<typeof messageFormSchema>>({
         resolver: zodResolver(messageFormSchema),
@@ -82,33 +92,50 @@ const ContactAdminForm = ({ articleTitle, t }: { articleTitle: string, t: typeof
         }
     }
 
+    if (isParent) {
+        return (
+            <Card className="mt-12">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-3"><MessageSquare className="h-6 w-6 text-primary"/> {t.questionTitle}</CardTitle>
+                    <CardDescription>{t.questionDesc}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                            <FormField control={form.control} name="message" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>{t.messageLabel}</FormLabel>
+                                    <FormControl>
+                                        <Textarea {...field} rows={4} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                            <Button type="submit" disabled={isLoading}>
+                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                <Send className="mr-2 h-4 w-4" /> {t.sendButton}
+                            </Button>
+                        </form>
+                    </Form>
+                </CardContent>
+            </Card>
+        );
+    }
+    
+    // Fallback for non-logged in users
     return (
-        <Card className="mt-12">
+         <Card className="mt-12 text-center bg-secondary/30">
             <CardHeader>
-                <CardTitle className="flex items-center gap-3"><MessageSquare className="h-6 w-6 text-primary"/> {t.questionTitle}</CardTitle>
-                <CardDescription>{t.questionDesc}</CardDescription>
+                <CardTitle className="flex items-center justify-center gap-3"><HelpCircle className="h-6 w-6 text-primary"/> {t.questionTitle}</CardTitle>
             </CardHeader>
             <CardContent>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <FormField control={form.control} name="message" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>{t.messageLabel}</FormLabel>
-                                <FormControl>
-                                    <Textarea {...field} rows={4} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                        <Button type="submit" disabled={isLoading}>
-                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            <Send className="mr-2 h-4 w-4" /> {t.sendButton}
-                        </Button>
-                    </form>
-                </Form>
+                <p className="text-muted-foreground">{t.publicQuestion}</p>
+                <Button asChild className="mt-4">
+                    <Link href="/contact">{t.contactButton}</Link>
+                </Button>
             </CardContent>
         </Card>
-    );
+    )
 };
 
 
@@ -118,14 +145,6 @@ export default function NewsArticlePage({ params }: { params: { slug: string } }
     
     const slug = params.slug;
     const post = mockNews.find(p => p.slug === slug);
-
-    const [isParent, setIsParent] = useState(false);
-
-    useEffect(() => {
-        // Check if the user is a logged-in parent
-        const authStatus = localStorage.getItem('isAuthenticated') === 'true' && localStorage.getItem('userRole') === 'parent';
-        setIsParent(authStatus);
-    }, []);
 
     if (!post) {
         notFound();
@@ -183,7 +202,7 @@ export default function NewsArticlePage({ params }: { params: { slug: string } }
                         )}
                     </article>
 
-                    {isParent && <ContactAdminForm articleTitle={post.title_en} t={t} />}
+                    <ContactAdminSection articleTitle={post.title_en} t={t} />
                 </div>
             </section>
         </div>
