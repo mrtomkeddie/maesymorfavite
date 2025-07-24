@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, FileText, ExternalLink } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, FileText, ExternalLink, Search, ArrowUp, ArrowDown } from 'lucide-react';
 import { getCalendarEvents, deleteCalendarEvent, CalendarEventWithId, getPaginatedCalendarEvents } from '@/lib/firebase/firestore';
 import { deleteFile } from '@/lib/firebase/storage';
 import { format } from 'date-fns';
@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { CalendarForm } from '@/components/admin/CalendarForm';
 import { QueryDocumentSnapshot } from 'firebase/firestore';
 import { calendarEvents } from '@/lib/mockCalendar';
+import { Input } from '@/components/ui/input';
 
 export default function CalendarAdminPage() {
   const [events, setEvents] = useState<CalendarEventWithId[]>([]);
@@ -37,6 +38,9 @@ export default function CalendarAdminPage() {
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEventWithId | null>(null);
   const [eventToDelete, setEventToDelete] = useState<CalendarEventWithId | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+
 
   const { toast } = useToast();
 
@@ -86,6 +90,29 @@ export default function CalendarAdminPage() {
   useEffect(() => {
     fetchEvents(true);
   }, []);
+
+  const filteredAndSortedEvents = useMemo(() => {
+    let result = [...events];
+
+    if (searchQuery) {
+        result = result.filter(event =>
+            event.title_en.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }
+
+    result.sort((a, b) => {
+        const dateA = new Date(a.start).getTime();
+        const dateB = new Date(b.start).getTime();
+        if (sortOrder === 'asc') {
+            return dateA - dateB;
+        } else {
+            return dateB - dateA;
+        }
+    });
+
+    return result;
+  }, [events, searchQuery, sortOrder]);
+
 
   const handleFormSuccess = () => {
     setIsDialogOpen(false);
@@ -152,8 +179,28 @@ export default function CalendarAdminPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Upcoming Events</CardTitle>
-            <CardDescription>A list of all current and future school events.</CardDescription>
+            <div className="flex flex-col gap-4 md:flex-row md:justify-between">
+              <div>
+                <CardTitle>Upcoming Events</CardTitle>
+                <CardDescription>A list of all current and future school events.</CardDescription>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                  <div className="relative w-full md:w-auto">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                          type="search"
+                          placeholder="Search by title..."
+                          className="w-full pl-8 md:w-[250px]"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                  </div>
+                  <Button variant="outline" size="icon" onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}>
+                      {sortOrder === 'desc' ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />}
+                      <span className="sr-only">Toggle sort order</span>
+                  </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -173,8 +220,8 @@ export default function CalendarAdminPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {events.length > 0 ? (
-                      events.map((event) => (
+                    {filteredAndSortedEvents.length > 0 ? (
+                      filteredAndSortedEvents.map((event) => (
                         <TableRow key={event.id}>
                           <TableCell className="font-medium">{event.title_en}</TableCell>
                           <TableCell>{format(new Date(event.start), 'dd MMM yyyy')}</TableCell>
@@ -224,7 +271,7 @@ export default function CalendarAdminPage() {
                     )}
                   </TableBody>
                 </Table>
-                {hasMore && (
+                {hasMore && filteredAndSortedEvents.length === events.length && (
                   <div className="flex justify-center mt-4">
                     <Button onClick={() => fetchEvents(false)} disabled={isLoadingMore}>
                       {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
