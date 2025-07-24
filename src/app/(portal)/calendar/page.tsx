@@ -15,6 +15,7 @@ import {
   CalendarPlus,
   Paperclip,
   Filter,
+  ArrowRight
 } from 'lucide-react';
 import { calendarEvents, CalendarEvent } from '@/lib/mockCalendar';
 import { format } from 'date-fns';
@@ -23,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import Link from 'next/link';
 
 
 const content = {
@@ -35,6 +37,7 @@ const content = {
     subscribeDescription: '(Events auto-update in your calendar app)',
     attachments: 'Attachments',
     filterLabel: "Only show events for my children",
+    detailsButton: "View Details",
     tags: {
       Holiday: 'Holiday',
       INSET: 'INSET Day',
@@ -52,6 +55,7 @@ const content = {
     subscribeDescription: '(Mae digwyddiadau\'n diweddaru\'n awtomatig yn eich ap calendr)',
     attachments: 'Atodiadau',
     filterLabel: "Dangos digwyddiadau ar gyfer fy mhlant yn unig",
+    detailsButton: "Gweld Manylion",
     tags: {
       Holiday: 'Gwyliau',
       INSET: 'Diwrnod HMS',
@@ -114,44 +118,58 @@ export default function CalendarPage() {
   }, [isFiltered]);
 
 
-  const EventItem = ({ event }: { event: CalendarEvent }) => (
-    <div className="relative rounded-lg border p-4 transition-all hover:shadow-md bg-card">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:gap-4">
-        <div className="mb-2 sm:mb-0">
-          <div className="text-center font-bold text-primary">
-            <div className="text-3xl">{format(new Date(event.start), 'dd')}</div>
-            <div className="text-sm uppercase">{format(new Date(event.start), 'MMM')}</div>
-          </div>
-        </div>
-        <div className="flex-grow">
-          <h3 className="font-bold text-lg">{event[language === 'en' ? 'title_en' : 'title_cy']}</h3>
-          <div className="text-sm text-muted-foreground mb-2">
-            {event.allDay ? t.allDay : `${format(new Date(event.start), 'p')} ${event.end ? `- ${format(new Date(event.end), 'p')}` : ''}`}
-          </div>
-          <p className="text-sm mb-3">
-            {event[language === 'en' ? 'description_en' : 'description_cy']}
-          </p>
-           <div className="flex flex-wrap gap-2">
-            {event.tags.map(tag => (
-              <Badge key={tag} className={cn('font-normal', tagColors[tag])}>{t.tags[tag]}</Badge>
-            ))}
-          </div>
-          {event.attachments.length > 0 && (
-            <div className="mt-3">
-              <h4 className="text-sm font-semibold mb-1 flex items-center gap-1"><Paperclip className="h-4 w-4" /> {t.attachments}</h4>
-              <div className="flex flex-col items-start gap-1">
-                {event.attachments.map(att => (
-                  <Button key={att.name} variant="link" size="sm" asChild className="p-0 h-auto">
-                    <a href={att.url} download>{att.name}</a>
-                  </Button>
-                ))}
-              </div>
+  const EventItem = ({ event }: { event: CalendarEvent }) => {
+    const newsSlug = event.title_en.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+
+    return (
+        <div className="relative rounded-lg border p-4 transition-all hover:shadow-md bg-card">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:gap-4">
+            <div className="mb-2 sm:mb-0">
+            <div className="text-center font-bold text-primary">
+                <div className="text-3xl">{format(new Date(event.start), 'dd')}</div>
+                <div className="text-sm uppercase">{format(new Date(event.start), 'MMM')}</div>
             </div>
-          )}
+            </div>
+            <div className="flex-grow">
+            <h3 className="font-bold text-lg">{event[language === 'en' ? 'title_en' : 'title_cy']}</h3>
+            <div className="text-sm text-muted-foreground mb-2">
+                {event.allDay ? t.allDay : `${format(new Date(event.start), 'p')} ${event.end ? `- ${format(new Date(event.end), 'p')}` : ''}`}
+            </div>
+            <p className="text-sm mb-3">
+                {event[language === 'en' ? 'description_en' : 'description_cy']}
+            </p>
+            <div className="flex flex-wrap gap-2">
+                {event.tags.map(tag => (
+                <Badge key={tag} className={cn('font-normal', tagColors[tag])}>{t.tags[tag]}</Badge>
+                ))}
+            </div>
+            
+            <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                {event.attachments.length > 0 && (
+                    <div className="mt-3">
+                    <h4 className="text-sm font-semibold mb-1 flex items-center gap-1"><Paperclip className="h-4 w-4" /> {t.attachments}</h4>
+                    <div className="flex flex-col items-start gap-1">
+                        {event.attachments.map(att => (
+                        <Button key={att.name} variant="link" size="sm" asChild className="p-0 h-auto">
+                            <a href={att.url} download>{att.name}</a>
+                        </Button>
+                        ))}
+                    </div>
+                    </div>
+                )}
+                {event.linkedNewsPostId && (
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href={`/news/${newsSlug}`}>
+                            {t.detailsButton} <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
+                    </Button>
+                )}
+            </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+        </div>
+    );
+  }
 
 
   const ListView = () => (

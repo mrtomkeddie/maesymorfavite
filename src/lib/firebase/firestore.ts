@@ -1,6 +1,7 @@
 
 
 
+
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, writeBatch, where, getDoc, limit, startAfter, count, getCountFromServer } from "firebase/firestore"; 
 import { db } from "./config";
 import type { NewsPost } from "@/lib/mockNews";
@@ -419,5 +420,3 @@ export const getCollectionCount = async (collectionName: string): Promise<number
         throw e;
     }
 }
-
-    
