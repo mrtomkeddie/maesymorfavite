@@ -51,14 +51,18 @@ export default function DashboardPage() {
   const nextEvent = calendarEvents.find(e => new Date(e.start) > new Date());
   
   const relevantEvents = calendarEvents.filter(event => {
+      // Don't show past events
       if (new Date(event.start) < new Date()) return false;
 
+      // Always include events marked for "All"
       if (event.relevantTo?.includes('All')) {
           return true;
       }
+      // Include events if there's an overlap between the event's relevant years and the parent's children's years
       if (event.relevantTo && parentChildrenYearGroups.some(year => event.relevantTo?.includes(year as any))) {
           return true;
       }
+      // Fallback for events without the 'relevantTo' property: show them by default
       if (!event.relevantTo) {
           return true;
       }
