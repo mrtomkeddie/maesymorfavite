@@ -26,7 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { QueryDocumentSnapshot } from 'firebase/firestore';
-import { news } from '@/lib/mockNews';
+import { news as mockNewsData } from '@/lib/mockNews';
 
 export default function NewsAdminPage() {
   const [news, setNews] = useState<NewsPostWithId[]>([]);
@@ -67,15 +67,16 @@ export default function NewsAdminPage() {
     } catch (error) {
       console.log('Firebase not configured, using mock data');
       // Use mock data if Firebase fails
-      const mockNewsData = news.map((post, index) => ({
+      const mockData = mockNewsData.map((post, index) => ({
         ...post,
-        id: `mock_${index}`
+        id: `mock_${index}`,
+        date: post.date || new Date().toISOString(),
       }));
       
       if (initial) {
-        setNews(mockNewsData);
+        setNews(mockData);
       } else {
-        setNews(prev => [...prev, ...mockNewsData]);
+        setNews(prev => [...prev, ...mockData]);
       }
       setHasMore(false); // No more mock data to load
     }
@@ -132,6 +133,10 @@ export default function NewsAdminPage() {
         setNewsToDelete(null);
       }
   };
+  
+  const isValidDate = (date: any) => {
+    return date && !isNaN(new Date(date).getTime());
+  }
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
@@ -179,7 +184,7 @@ export default function NewsAdminPage() {
                       news.map((post) => (
                         <TableRow key={post.id}>
                           <TableCell className="font-medium">{post.title_en}</TableCell>
-                          <TableCell>{format(new Date(post.date), 'dd MMM yyyy')}</TableCell>
+                           <TableCell>{isValidDate(post.date) ? format(new Date(post.date), 'dd MMM yyyy') : 'Invalid Date'}</TableCell>
                            <TableCell>
                             {post.isUrgent && <Badge variant="destructive">Urgent</Badge>}
                            </TableCell>
