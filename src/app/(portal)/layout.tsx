@@ -54,11 +54,45 @@ export const LanguageToggle = () => {
     )
 }
 
+const content = {
+  en: {
+    title: 'Parent Portal',
+    menu: {
+      dashboard: 'Dashboard',
+      calendar: 'Calendar',
+      gallery: 'Photo Gallery',
+      absence: 'Report Absence',
+    },
+    account: {
+      title: 'My Account',
+      logout: 'Logout',
+      role: 'Parent',
+    }
+  },
+  cy: {
+    title: 'Porth Rieni',
+    menu: {
+      dashboard: 'Dangosfwrdd',
+      calendar: 'Calendr',
+      gallery: 'Oriel Ffotograffau',
+      absence: 'Riportio Absenoldeb',
+    },
+    account: {
+      title: 'Fy Nghyfrif',
+      logout: 'Allgofnodi',
+      role: 'Rhiant',
+    }
+  }
+};
+
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isAuth, setIsAuth] = useState<boolean | undefined>(undefined);
+  const { language } = useLanguage();
+  const t = content[language];
+
 
   useEffect(() => {
     // We check for 'parent_auth' specifically for this layout.
@@ -76,10 +110,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   };
 
   const menuItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/calendar', label: 'Calendar', icon: Calendar },
-    { href: '/gallery', label: 'Photo Gallery', icon: Camera },
-    { href: '/absence', label: 'Report Absence', icon: ClipboardCheck },
+    { href: '/dashboard', label: t.menu.dashboard, icon: LayoutDashboard },
+    { href: '/calendar', label: t.menu.calendar, icon: Calendar },
+    { href: '/gallery', label: t.menu.gallery, icon: Camera },
+    { href: '/absence', label: t.menu.absence, icon: ClipboardCheck },
   ];
   
   if (isAuth === undefined) {
@@ -101,7 +135,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             <Link href="/dashboard" className="flex items-center gap-2">
               <Image src="/logo.png" alt="Maes Y Morfa logo" width={28} height={28} className="w-7 h-7" />
               <span className="text-lg font-extrabold tracking-tighter text-foreground group-data-[collapsible=icon]:hidden">
-                Parent Portal
+                {t.title}
               </span>
             </Link>
           </SidebarHeader>
@@ -133,17 +167,17 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                     </Avatar>
                     <div className="flex flex-col text-sm group-data-[collapsible=icon]:hidden flex-grow">
                         <span className="font-semibold">Jane Doe</span>
-                        <span className="text-muted-foreground">Parent</span>
+                        <span className="text-muted-foreground">{t.account.role}</span>
                     </div>
                      <ChevronUp className="h-4 w-4 text-muted-foreground group-data-[collapsible=icon]:hidden" />
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="start" className="w-56 mb-2">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>{t.account.title}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Logout</span>
+                  <span>{t.account.logout}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

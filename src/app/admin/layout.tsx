@@ -69,11 +69,82 @@ export const AdminLanguageToggle = () => {
     )
 }
 
+const content = {
+  en: {
+    title: 'Admin Portal',
+    menu: {
+      dashboard: 'Dashboard',
+      inbox: 'Inbox',
+    },
+    groups: {
+        content: 'Content',
+        users: 'Users',
+        system: 'System',
+    },
+    contentManagement: {
+      news: 'News & Alerts',
+      calendar: 'Calendar',
+      staff: 'Staff',
+      gallery: 'Photo Gallery',
+      documents: 'Documents',
+      menu: 'Lunch Menu',
+    },
+    userManagement: {
+      parents: 'Parents',
+      children: 'Children',
+    },
+    settings: {
+      site: 'Site Settings',
+    },
+    account: {
+        title: 'My Account',
+        role: 'Administrator',
+        logout: 'Logout'
+    }
+  },
+  cy: {
+    title: 'Porth Gweinyddu',
+    menu: {
+      dashboard: 'Dangosfwrdd',
+      inbox: 'Mewnflwch',
+    },
+    groups: {
+        content: 'Cynnwys',
+        users: 'Defnyddwyr',
+        system: 'System',
+    },
+    contentManagement: {
+      news: 'Newyddion a Hysbysiadau',
+      calendar: 'Calendr',
+      staff: 'Staff',
+      gallery: 'Oriel Ffotograffau',
+      documents: 'Dogfennau',
+      menu: 'Bwydlen Ginio',
+    },
+    userManagement: {
+      parents: 'Rhieni',
+      children: 'Plant',
+    },
+    settings: {
+      site: 'Gosodiadau Gwefan',
+    },
+     account: {
+        title: 'Fy Nghyfrif',
+        role: 'Gweinyddwr',
+        logout: 'Allgofnodi'
+    }
+  }
+};
+
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isAuth, setIsAuth] = useState<boolean | undefined>(undefined);
   const [unreadCount, setUnreadCount] = useState(0);
+  const { language } = useLanguage();
+  const t = content[language];
+
 
   useEffect(() => {
     // We check for 'admin_auth' specifically for this layout.
@@ -97,26 +168,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   const menuItems = [
-    { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/inbox', label: 'Inbox', icon: Mail, badge: unreadCount },
+    { href: '/admin/dashboard', label: t.menu.dashboard, icon: LayoutDashboard },
+    { href: '/admin/inbox', label: t.menu.inbox, icon: Mail, badge: unreadCount },
   ];
 
   const contentManagementItems = [
-    { href: '/admin/news', label: 'News & Alerts', icon: Newspaper },
-    { href: '/admin/calendar', label: 'Calendar', icon: Calendar },
-    { href: '/admin/staff', label: 'Staff', icon: Users },
-    { href: '/admin/gallery', label: 'Photo Gallery', icon: Camera },
-    { href: '/admin/documents', label: 'Documents', icon: FileText },
-    { href: '/admin/menu', label: 'Lunch Menu', icon: Utensils },
+    { href: '/admin/news', label: t.contentManagement.news, icon: Newspaper },
+    { href: '/admin/calendar', label: t.contentManagement.calendar, icon: Calendar },
+    { href: '/admin/staff', label: t.contentManagement.staff, icon: Users },
+    { href: '/admin/gallery', label: t.contentManagement.gallery, icon: Camera },
+    { href: '/admin/documents', label: t.contentManagement.documents, icon: FileText },
+    { href: '/admin/menu', label: t.contentManagement.menu, icon: Utensils },
   ];
 
   const userManagementItems = [
-      { href: '/admin/parents', label: 'Parents', icon: Users2 },
-      { href: '/admin/children', label: 'Children', icon: BookUser },
+      { href: '/admin/parents', label: t.userManagement.parents, icon: Users2 },
+      { href: '/admin/children', label: t.userManagement.children, icon: BookUser },
   ];
   
   const settingsItems = [
-    { href: '/admin/settings', label: 'Site Settings', icon: Settings },
+    { href: '/admin/settings', label: t.settings.site, icon: Settings },
     // { href: '/admin/help', label: 'Help', icon: HelpCircle },
   ];
 
@@ -143,7 +214,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Link href="/admin/dashboard" className="flex items-center gap-2">
               <Image src="/logo.png" alt="Maes Y Morfa logo" width={28} height={28} className="w-7 h-7" />
               <span className="text-lg font-extrabold tracking-tighter text-foreground group-data-[collapsible=icon]:hidden">
-                Admin Portal
+                {t.title}
               </span>
             </Link>
           </SidebarHeader>
@@ -166,7 +237,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 ))}
               <SidebarSeparator />
               <SidebarGroup>
-                <SidebarGroupLabel>Content</SidebarGroupLabel>
+                <SidebarGroupLabel>{t.groups.content}</SidebarGroupLabel>
                 <SidebarGroupContent>
                     {contentManagementItems.map((item) => (
                         <SidebarMenuItem key={item.href}>
@@ -186,7 +257,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </SidebarGroup>
               <SidebarSeparator />
                <SidebarGroup>
-                <SidebarGroupLabel>Users</SidebarGroupLabel>
+                <SidebarGroupLabel>{t.groups.users}</SidebarGroupLabel>
                  <SidebarGroupContent>
                     {userManagementItems.map((item) => (
                         <SidebarMenuItem key={item.href}>
@@ -206,7 +277,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                </SidebarGroup>
                 <SidebarSeparator />
                  <SidebarGroup>
-                    <SidebarGroupLabel>System</SidebarGroupLabel>
+                    <SidebarGroupLabel>{t.groups.system}</SidebarGroupLabel>
                     <SidebarGroupContent>
                         {settingsItems.map((item) => (
                             <SidebarMenuItem key={item.href}>
@@ -236,17 +307,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     </Avatar>
                     <div className="flex flex-col text-sm group-data-[collapsible=icon]:hidden flex-grow">
                         <span className="font-semibold">Admin User</span>
-                        <span className="text-muted-foreground">Administrator</span>
+                        <span className="text-muted-foreground">{t.account.role}</span>
                     </div>
                      <ChevronUp className="h-4 w-4 text-muted-foreground group-data-[collapsible=icon]:hidden" />
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="start" className="w-56 mb-2">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>{t.account.title}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Logout</span>
+                  <span>{t.account.logout}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
