@@ -202,127 +202,114 @@ export default function StaffAdminPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-headline">Staff Management</h1>
-          <p className="text-muted-foreground">Add, edit, and manage staff profiles.</p>
-        </div>
-        <Dialog
-          open={isDialogOpen}
-          onOpenChange={(isOpen) => {
-            setIsDialogOpen(isOpen);
-            if (!isOpen) setSelectedStaff(null);
-          }}
-        >
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" /> Add Staff Member
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{selectedStaff ? 'Edit' : 'Add'} Staff Member</DialogTitle>
-              <DialogDescription>
-                Fill in the details for the staff member. Click save when you're done.
-              </DialogDescription>
-            </DialogHeader>
-            <StaffForm onSuccess={handleFormSuccess} existingStaff={selectedStaff} />
-          </DialogContent>
-        </Dialog>
+    <Dialog
+      open={isDialogOpen}
+      onOpenChange={(isOpen) => {
+        setIsDialogOpen(isOpen);
+        if (!isOpen) setSelectedStaff(null);
+      }}
+    >
+      <div className="space-y-6">
+        <p className="text-muted-foreground">Add, edit, and manage staff profiles.</p>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Staff Directory</CardTitle>
+            <CardDescription>
+              A list of all staff members, grouped by team.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex justify-center items-center h-48">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <>
+                {console.log('Rendering staff page, groupedStaff keys:', Object.keys(groupedStaff), 'staff length:', staff.length)}
+                {Object.keys(groupedStaff).length > 0 ? (
+                  <>
+                    <Accordion type="multiple" className="w-full">
+                      {Object.entries(groupedStaff).map(([team, members]) => (
+                        <AccordionItem value={team} key={team}>
+                          <AccordionTrigger className="text-lg font-semibold">{team}</AccordionTrigger>
+                          <AccordionContent>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+                              {members.map((member) => (
+                                <Card key={member.id} className="flex flex-col">
+                                    <CardHeader className="flex flex-row items-center gap-4">
+                                        <Avatar className="h-16 w-16">
+                                            <AvatarImage src={member.photoUrl} alt={member.name} />
+                                            <AvatarFallback><User /></AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <CardTitle className="text-xl">{member.name}</CardTitle>
+                                            <p className="text-sm text-primary">{member.role}</p>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="flex-grow">
+                                        {member.bio && <p className="text-sm text-muted-foreground">{member.bio}</p>}
+                                    </CardContent>
+                                    <div className="flex items-center justify-end p-4 border-t">
+                                        <Button variant="ghost" size="sm" onClick={() => handleEdit(member)}>
+                                            <Pencil className="mr-2 h-4 w-4" /> Edit
+                                        </Button>
+                                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => openDeleteAlert(member)}>
+                                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                        </Button>
+                                    </div>
+                                </Card>
+                              ))}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                    {hasMore && (
+                      <div className="flex justify-center mt-4">
+                        <Button onClick={() => fetchStaff(false)} disabled={isLoadingMore}>
+                          {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+                          Load More
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="h-24 text-center flex items-center justify-center">
+                    <p>No staff members found. Add one to get started.</p>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete this staff member
+                and remove their data from our servers.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Staff Directory</CardTitle>
-          <CardDescription>
-            A list of all staff members, grouped by team.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center items-center h-48">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <>
-              {console.log('Rendering staff page, groupedStaff keys:', Object.keys(groupedStaff), 'staff length:', staff.length)}
-              {Object.keys(groupedStaff).length > 0 ? (
-                <>
-                  <Accordion type="multiple" className="w-full">
-                    {Object.entries(groupedStaff).map(([team, members]) => (
-                      <AccordionItem value={team} key={team}>
-                        <AccordionTrigger className="text-lg font-semibold">{team}</AccordionTrigger>
-                        <AccordionContent>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
-                            {members.map((member) => (
-                              <Card key={member.id} className="flex flex-col">
-                                  <CardHeader className="flex flex-row items-center gap-4">
-                                      <Avatar className="h-16 w-16">
-                                          <AvatarImage src={member.photoUrl} alt={member.name} />
-                                          <AvatarFallback><User /></AvatarFallback>
-                                      </Avatar>
-                                      <div>
-                                          <CardTitle className="text-xl">{member.name}</CardTitle>
-                                          <p className="text-sm text-primary">{member.role}</p>
-                                      </div>
-                                  </CardHeader>
-                                  <CardContent className="flex-grow">
-                                      {member.bio && <p className="text-sm text-muted-foreground">{member.bio}</p>}
-                                  </CardContent>
-                                  <div className="flex items-center justify-end p-4 border-t">
-                                      <Button variant="ghost" size="sm" onClick={() => handleEdit(member)}>
-                                          <Pencil className="mr-2 h-4 w-4" /> Edit
-                                      </Button>
-                                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => openDeleteAlert(member)}>
-                                          <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                      </Button>
-                                  </div>
-                              </Card>
-                            ))}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                  {hasMore && (
-                    <div className="flex justify-center mt-4">
-                      <Button onClick={() => fetchStaff(false)} disabled={isLoadingMore}>
-                        {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
-                        Load More
-                      </Button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="h-24 text-center flex items-center justify-center">
-                  <p>No staff members found. Add one to get started.</p>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete this staff member
-              and remove their data from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+       <DialogContent className="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{selectedStaff ? 'Edit' : 'Add'} Staff Member</DialogTitle>
+          <DialogDescription>
+            Fill in the details for the staff member. Click save when you're done.
+          </DialogDescription>
+        </DialogHeader>
+        <StaffForm onSuccess={handleFormSuccess} existingStaff={selectedStaff} />
+      </DialogContent>
+    </Dialog>
   );
 }
-
-    
-
-    

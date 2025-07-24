@@ -149,202 +149,193 @@ export default function ParentsAdminPage() {
   }, [parents, searchQuery]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-            <h1 className="text-3xl font-bold font-headline">Parent Management</h1>
-            <p className="text-muted-foreground">Add, edit, and manage parent accounts.</p>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
-            setIsDialogOpen(isOpen);
-            if (!isOpen) setSelectedParent(null);
-        }}>
-          <DialogTrigger asChild>
-            <Button>
-              <UserPlus className="mr-2 h-4 w-4" /> Add Parent
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-2xl max-h-[90vh]">
+    <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
+        setIsDialogOpen(isOpen);
+        if (!isOpen) setSelectedParent(null);
+    }}>
+      <div className="space-y-6">
+        <p className="text-muted-foreground">Add, edit, and manage parent accounts.</p>
+
+        <Card>
+          <CardHeader>
+              <div className='flex flex-col gap-4 md:flex-row md:justify-between'>
+                  <div>
+                      <CardTitle>All Parent Accounts</CardTitle>
+                      <CardDescription>A list of all registered parents.</CardDescription>
+                  </div>
+                  <div className="relative w-full md:w-auto">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                          type="search"
+                          placeholder="Search by name..."
+                          className="w-full pl-8 md:w-[250px]"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                  </div>
+              </div>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex justify-center items-center h-48">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Linked Children</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredParents.length > 0 ? (
+                      filteredParents.map((parent) => (
+                        <TableRow key={parent.id}>
+                          <TableCell className="font-medium">{parent.name}</TableCell>
+                          <TableCell>{parent.email}</TableCell>
+                           <TableCell>
+                            {getLinkedChildrenNames(parent.id)}
+                           </TableCell>
+                          <TableCell className="text-right">
+                             <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                        <span className="sr-only">Open menu</span>
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuItem onClick={() => handleViewParent(parent)}>
+                                        <Eye className="mr-2 h-4 w-4" />
+                                        View
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleEdit(parent)}>
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => openDeleteAlert(parent)} className="text-destructive focus:text-destructive">
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Delete
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={4} className="h-24 text-center">
+                          No parents found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+                {hasMore && filteredParents.length === parents.length && (
+                  <div className="flex justify-center mt-4">
+                    <Button onClick={() => fetchParentsAndChildren(false)} disabled={isLoadingMore}>
+                      {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+                      Load More
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+        
+        <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the parent account.
+                  This will not delete their children's records but will unlink them.
+              </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <Dialog open={isViewParentDialogOpen} onOpenChange={setIsViewParentDialogOpen}>
+          <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>{selectedParent ? 'Edit' : 'Add'} Parent</DialogTitle>
+              <DialogTitle>{parentToView?.name}</DialogTitle>
               <DialogDescription>
-                Fill in the details for the parent account.
+                Parent Details
               </DialogDescription>
             </DialogHeader>
-            <ParentForm
-              onSuccess={handleFormSuccess}
-              existingParent={selectedParent}
-              allChildren={children}
-            />
+            <ScrollArea className="max-h-[70vh] pr-6">
+              {parentToView && (
+                <div className="space-y-4 py-4">
+                  <div className="space-y-4">
+                    <div>
+                        <Label className="font-semibold">Email Address</Label>
+                        <p className="text-muted-foreground">{parentToView.email}</p>
+                    </div>
+                    <div>
+                        <Label className="font-semibold">Mobile Number</Label>
+                        <p className="text-muted-foreground">{parentToView.phone || 'Not provided'}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <Label className="font-semibold">Linked Children</Label>
+                    {(() => {
+                      const linkedChildren = children.filter(c => c.linkedParents?.some(lp => lp.parentId === parentToView.id));
+                      return linkedChildren.length > 0 ? (
+                        <div className="mt-2 space-y-3">
+                          {linkedChildren.map((child) => {
+                            const relationship = child.linkedParents?.find(lp => lp.parentId === parentToView.id)?.relationship;
+                            return (
+                              <div key={child.id} className="flex items-center justify-between rounded-lg p-3 bg-secondary">
+                                <div>
+                                  <p className="font-medium text-secondary-foreground">{child.name}</p>
+                                  <p className="text-sm text-secondary-foreground/80">{child.yearGroup} ({relationship})</p>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground mt-2">No children linked to this parent.</p>
+                      );
+                    })()}
+                  </div>
+                </div>
+              )}
+            </ScrollArea>
+            <div className="flex justify-end pt-4 border-t">
+              <Button onClick={() => handleEdit(parentToView!)}>
+                  <Pencil className="mr-2 h-4 w-4" /> Edit Parent
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      <Card>
-        <CardHeader>
-            <div className='flex flex-col gap-4 md:flex-row md:justify-between'>
-                <div>
-                    <CardTitle>All Parent Accounts</CardTitle>
-                    <CardDescription>A list of all registered parents.</CardDescription>
-                </div>
-                <div className="relative w-full md:w-auto">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        type="search"
-                        placeholder="Search by name..."
-                        className="w-full pl-8 md:w-[250px]"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                </div>
-            </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center items-center h-48">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Linked Children</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredParents.length > 0 ? (
-                    filteredParents.map((parent) => (
-                      <TableRow key={parent.id}>
-                        <TableCell className="font-medium">{parent.name}</TableCell>
-                        <TableCell>{parent.email}</TableCell>
-                         <TableCell>
-                          {getLinkedChildrenNames(parent.id)}
-                         </TableCell>
-                        <TableCell className="text-right">
-                           <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" className="h-8 w-8 p-0">
-                                      <span className="sr-only">Open menu</span>
-                                      <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuItem onClick={() => handleViewParent(parent)}>
-                                      <Eye className="mr-2 h-4 w-4" />
-                                      View
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleEdit(parent)}>
-                                      <Pencil className="mr-2 h-4 w-4" />
-                                      Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => openDeleteAlert(parent)} className="text-destructive focus:text-destructive">
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      Delete
-                                  </DropdownMenuItem>
-                              </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center">
-                        No parents found.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-              {hasMore && filteredParents.length === parents.length && (
-                <div className="flex justify-center mt-4">
-                  <Button onClick={() => fetchParentsAndChildren(false)} disabled={isLoadingMore}>
-                    {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
-                    Load More
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
-      
-      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the parent account.
-                This will not delete their children's records but will unlink them.
-            </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <Dialog open={isViewParentDialogOpen} onOpenChange={setIsViewParentDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+       <DialogContent className="sm:max-w-2xl max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle>{parentToView?.name}</DialogTitle>
+            <DialogTitle>{selectedParent ? 'Edit' : 'Add'} Parent</DialogTitle>
             <DialogDescription>
-              Parent Details
+              Fill in the details for the parent account.
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="max-h-[70vh] pr-6">
-            {parentToView && (
-              <div className="space-y-4 py-4">
-                <div className="space-y-4">
-                  <div>
-                      <Label className="font-semibold">Email Address</Label>
-                      <p className="text-muted-foreground">{parentToView.email}</p>
-                  </div>
-                  <div>
-                      <Label className="font-semibold">Mobile Number</Label>
-                      <p className="text-muted-foreground">{parentToView.phone || 'Not provided'}</p>
-                  </div>
-                </div>
-                
-                <div className="border-t pt-4">
-                  <Label className="font-semibold">Linked Children</Label>
-                  {(() => {
-                    const linkedChildren = children.filter(c => c.linkedParents?.some(lp => lp.parentId === parentToView.id));
-                    return linkedChildren.length > 0 ? (
-                      <div className="mt-2 space-y-3">
-                        {linkedChildren.map((child) => {
-                          const relationship = child.linkedParents?.find(lp => lp.parentId === parentToView.id)?.relationship;
-                          return (
-                            <div key={child.id} className="flex items-center justify-between rounded-lg p-3 bg-secondary">
-                              <div>
-                                <p className="font-medium text-secondary-foreground">{child.name}</p>
-                                <p className="text-sm text-secondary-foreground/80">{child.yearGroup} ({relationship})</p>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground mt-2">No children linked to this parent.</p>
-                    );
-                  })()}
-                </div>
-              </div>
-            )}
-          </ScrollArea>
-          <div className="flex justify-end pt-4 border-t">
-            <Button onClick={() => handleEdit(parentToView!)}>
-                <Pencil className="mr-2 h-4 w-4" /> Edit Parent
-            </Button>
-          </div>
+          <ParentForm
+            onSuccess={handleFormSuccess}
+            existingParent={selectedParent}
+            allChildren={children}
+          />
         </DialogContent>
-      </Dialog>
-    </div>
+    </Dialog>
   );
 }

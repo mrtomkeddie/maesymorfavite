@@ -134,136 +134,128 @@ export default function NewsAdminPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-            <h1 className="text-3xl font-bold font-headline">News & Alerts</h1>
-            <p className="text-muted-foreground">Create, edit, and manage all school announcements.</p>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
-            setIsDialogOpen(isOpen);
-            if (!isOpen) setSelectedNews(null);
-        }}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" /> Add News Post
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{selectedNews ? 'Edit' : 'Create'} News Post</DialogTitle>
-              <DialogDescription>
-                Fill in the details below. Click save when you're done.
-              </DialogDescription>
-            </DialogHeader>
-            <NewsForm
-              onSuccess={handleFormSuccess}
-              existingNews={selectedNews}
-            />
-          </DialogContent>
-        </Dialog>
-      </div>
+    <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
+        setIsDialogOpen(isOpen);
+        if (!isOpen) setSelectedNews(null);
+    }}>
+      <div className="space-y-6">
+        <p className="text-muted-foreground">Create, edit, and manage all school announcements.</p>
+        
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Published News</CardTitle>
-          <CardDescription>A list of all current news posts and alerts.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center items-center h-48">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Attachment</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {news.length > 0 ? (
-                    news.map((post) => (
-                      <TableRow key={post.id}>
-                        <TableCell className="font-medium">{post.title_en}</TableCell>
-                        <TableCell>{format(new Date(post.date), 'dd MMM yyyy')}</TableCell>
-                         <TableCell>
-                          {post.isUrgent && <Badge variant="destructive">Urgent</Badge>}
-                         </TableCell>
-                         <TableCell>
-                          {post.attachmentUrl && (
-                              <a href={post.attachmentUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-primary hover:underline">
-                                  <FileText className="h-4 w-4" /> View
-                              </a>
-                          )}
-                         </TableCell>
-                        <TableCell className="text-right">
-                           <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" className="h-8 w-8 p-0">
-                                      <span className="sr-only">Open menu</span>
-                                      <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuItem onClick={() => handleEdit(post)}>
-                                      <Pencil className="mr-2 h-4 w-4" />
-                                      Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => openDeleteAlert(post)} className="text-destructive focus:text-destructive">
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      Delete
-                                  </DropdownMenuItem>
-                              </DropdownMenuContent>
-                          </DropdownMenu>
+        <Card>
+          <CardHeader>
+            <CardTitle>Published News</CardTitle>
+            <CardDescription>A list of all current news posts and alerts.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex justify-center items-center h-48">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Attachment</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {news.length > 0 ? (
+                      news.map((post) => (
+                        <TableRow key={post.id}>
+                          <TableCell className="font-medium">{post.title_en}</TableCell>
+                          <TableCell>{format(new Date(post.date), 'dd MMM yyyy')}</TableCell>
+                           <TableCell>
+                            {post.isUrgent && <Badge variant="destructive">Urgent</Badge>}
+                           </TableCell>
+                           <TableCell>
+                            {post.attachmentUrl && (
+                                <a href={post.attachmentUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-primary hover:underline">
+                                    <FileText className="h-4 w-4" /> View
+                                </a>
+                            )}
+                           </TableCell>
+                          <TableCell className="text-right">
+                             <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                        <span className="sr-only">Open menu</span>
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuItem onClick={() => handleEdit(post)}>
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => openDeleteAlert(post)} className="text-destructive focus:text-destructive">
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Delete
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-24 text-center">
+                          No news posts found.
                         </TableCell>
                       </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={5} className="h-24 text-center">
-                        No news posts found.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-              {hasMore && (
-                <div className="flex justify-center mt-4">
-                  <Button onClick={() => fetchNews(false)} disabled={isLoadingMore}>
-                    {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
-                    Load More
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
-      
-      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the news post
-                and remove its data from our servers.
-            </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+                    )}
+                  </TableBody>
+                </Table>
+                {hasMore && (
+                  <div className="flex justify-center mt-4">
+                    <Button onClick={() => fetchNews(false)} disabled={isLoadingMore}>
+                      {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+                      Load More
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+        
+        <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the news post
+                  and remove its data from our servers.
+              </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+
+       <DialogContent className="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedNews ? 'Edit' : 'Create'} News Post</DialogTitle>
+            <DialogDescription>
+              Fill in the details below. Click save when you're done.
+            </DialogDescription>
+          </DialogHeader>
+          <NewsForm
+            onSuccess={handleFormSuccess}
+            existingNews={selectedNews}
+          />
+        </DialogContent>
+    </Dialog>
   );
 }
 

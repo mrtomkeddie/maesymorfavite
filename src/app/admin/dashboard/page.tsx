@@ -15,9 +15,9 @@ export default function AdminDashboardPage() {
 
     return (
         <div className="space-y-8">
-            <div>
-                <h1 className="text-3xl font-bold font-headline">Admin Dashboard</h1>
-                <p className="text-muted-foreground">Welcome to the MorfaConnect content management system.</p>
+             <div className="space-y-1">
+                <h2 className="text-2xl font-semibold">Welcome Back!</h2>
+                <p className="text-muted-foreground">Here's a quick overview of the content management system.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

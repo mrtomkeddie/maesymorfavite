@@ -210,257 +210,254 @@ export default function ChildrenAdminPage() {
 
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-            <h1 className="text-3xl font-bold font-headline">Child Management</h1>
-            <p className="text-muted-foreground">Add, edit, and manage child profiles.</p>
+     <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
+        setIsDialogOpen(isOpen);
+        if (!isOpen) setSelectedChild(null);
+    }}>
+      <div className="space-y-6">
+       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <p className="text-muted-foreground max-w-lg">Add, edit, and manage child profiles. Use the "Promote Year Groups" button at the end of the academic year to move all children up a year.</p>
+          <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" onClick={() => setIsPromoteAlertOpen(true)}>
+                  <ChevronsUp className="mr-2 h-4 w-4" />
+                  Promote Year Groups
+              </Button>
+              <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+                  <DialogTrigger asChild>
+                      <Button variant="outline">
+                          <UploadCloud className="mr-2 h-4 w-4" />
+                          Import from CSV
+                      </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-3xl">
+                      <DialogHeader>
+                          <DialogTitle>Import Children from CSV</DialogTitle>
+                          <DialogDescription>
+                              Upload a CSV file to bulk-add children. Make sure the CSV columns match the required format.
+                          </DialogDescription>
+                      </DialogHeader>
+                      <CsvImportDialog<Child>
+                          onSuccess={handleImportSuccess}
+                          requiredFields={['name', 'yearGroup']}
+                          templateUrl="/templates/children_template.csv"
+                          templateName="children_template.csv"
+                      />
+                  </DialogContent>
+              </Dialog>
+              <DialogTrigger asChild>
+                  <Button>
+                  <PlusCircle className="mr-2 h-4 w-4" /> Enrol Child
+                  </Button>
+              </DialogTrigger>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" onClick={() => setIsPromoteAlertOpen(true)}>
-                <ChevronsUp className="mr-2 h-4 w-4" />
-                Promote Year Groups
-            </Button>
-            <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
-                <DialogTrigger asChild>
-                    <Button variant="outline">
-                        <UploadCloud className="mr-2 h-4 w-4" />
-                        Import from CSV
-                    </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-3xl">
-                    <DialogHeader>
-                        <DialogTitle>Import Children from CSV</DialogTitle>
-                        <DialogDescription>
-                            Upload a CSV file to bulk-add children. Make sure the CSV columns match the required format.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <CsvImportDialog<Child>
-                        onSuccess={handleImportSuccess}
-                        requiredFields={['name', 'yearGroup']}
-                        templateUrl="/templates/children_template.csv"
-                        templateName="children_template.csv"
-                    />
-                </DialogContent>
-            </Dialog>
-            <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
-                setIsDialogOpen(isOpen);
-                if (!isOpen) setSelectedChild(null);
-            }}>
-            <DialogTrigger asChild>
-                <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Enrol Child
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-3xl p-0">
-                <DialogHeader className="p-6 pb-0">
-                    <DialogTitle>{selectedChild ? 'Edit' : 'Enrol'} Child</DialogTitle>
-                    <DialogDescription>
-                        Fill in the details for the child and link their parents.
-                    </DialogDescription>
-                </DialogHeader>
-                <ChildForm
-                    onSuccess={handleFormSuccess}
-                    existingChild={selectedChild}
-                    allParents={parents}
-                />
-            </DialogContent>
-            </Dialog>
-        </div>
-      </div>
-      
-       <Card>
-        <CardHeader>
-            <div className='flex flex-col gap-4 md:flex-row md:justify-between'>
-                <div>
-                    <CardTitle>All Children</CardTitle>
-                    <CardDescription>A list of all currently enrolled children.</CardDescription>
-                </div>
-                <div className='flex flex-wrap items-center gap-2'>
-                    <div className="relative w-full md:w-auto">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="search"
-                            placeholder="Search by name..."
-                            className="w-full pl-8 md:w-[250px]"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                    <Select value={yearFilter} onValueChange={setYearFilter}>
-                        <SelectTrigger className='w-full md:w-[180px]'>
-                            <SelectValue placeholder="Filter by year..."/>
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Year Groups</SelectItem>
-                            {yearGroups.map(yg => <SelectItem key={yg} value={yg}>{yg}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                    <Button variant="outline" size="icon" onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}>
-                        {sortOrder === 'asc' ? <ArrowUpAZ className="h-4 w-4" /> : <ArrowDownZA className="h-4 w-4" />}
-                    </Button>
-                </div>
-            </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center items-center h-48">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Year Group</TableHead>
-                    <TableHead>Linked Parent(s)</TableHead>
-                    <TableHead className="text-right w-[80px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAndSortedChildren.length > 0 ? (
-                    filteredAndSortedChildren.map((child) => (
-                      <TableRow key={child.id}>
-                        <TableCell className="font-medium">{child.name}</TableCell>
-                        <TableCell>{child.yearGroup}</TableCell>
-                        <TableCell>{getParentInfo(child.linkedParents)}</TableCell>
-                        <TableCell className="text-right">
-                           <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" className="h-8 w-8 p-0">
-                                      <span className="sr-only">Open menu</span>
-                                      <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuItem onClick={() => handleViewChild(child)}>
-                                      <Eye className="mr-2 h-4 w-4" />
-                                      View
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleEdit(child)}>
-                                      <Pencil className="mr-2 h-4 w-4" />
-                                      Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => openDeleteAlert(child)} className="text-destructive focus:text-destructive">
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      Delete
-                                  </DropdownMenuItem>
-                              </DropdownMenuContent>
-                          </DropdownMenu>
+        
+         <Card>
+          <CardHeader>
+              <div className='flex flex-col gap-4 md:flex-row md:justify-between'>
+                  <div>
+                      <CardTitle>All Children</CardTitle>
+                      <CardDescription>A list of all currently enrolled children.</CardDescription>
+                  </div>
+                  <div className='flex flex-wrap items-center gap-2'>
+                      <div className="relative w-full md:w-auto">
+                          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input
+                              type="search"
+                              placeholder="Search by name..."
+                              className="w-full pl-8 md:w-[250px]"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                          />
+                      </div>
+                      <Select value={yearFilter} onValueChange={setYearFilter}>
+                          <SelectTrigger className='w-full md:w-[180px]'>
+                              <SelectValue placeholder="Filter by year..."/>
+                          </SelectTrigger>
+                          <SelectContent>
+                              <SelectItem value="all">All Year Groups</SelectItem>
+                              {yearGroups.map(yg => <SelectItem key={yg} value={yg}>{yg}</SelectItem>)}
+                          </SelectContent>
+                      </Select>
+                      <Button variant="outline" size="icon" onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}>
+                          {sortOrder === 'asc' ? <ArrowUpAZ className="h-4 w-4" /> : <ArrowDownZA className="h-4 w-4" />}
+                      </Button>
+                  </div>
+              </div>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex justify-center items-center h-48">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Year Group</TableHead>
+                      <TableHead>Linked Parent(s)</TableHead>
+                      <TableHead className="text-right w-[80px]">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredAndSortedChildren.length > 0 ? (
+                      filteredAndSortedChildren.map((child) => (
+                        <TableRow key={child.id}>
+                          <TableCell className="font-medium">{child.name}</TableCell>
+                          <TableCell>{child.yearGroup}</TableCell>
+                          <TableCell>{getParentInfo(child.linkedParents)}</TableCell>
+                          <TableCell className="text-right">
+                             <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                        <span className="sr-only">Open menu</span>
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuItem onClick={() => handleViewChild(child)}>
+                                        <Eye className="mr-2 h-4 w-4" />
+                                        View
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleEdit(child)}>
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => openDeleteAlert(child)} className="text-destructive focus:text-destructive">
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Delete
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-24 text-center">
+                          No children found matching the current filter.
                         </TableCell>
                       </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={5} className="h-24 text-center">
-                        No children found matching the current filter.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-              {hasMore && (
-                <div className="flex justify-center mt-4">
-                  <Button onClick={() => fetchChildrenAndParents(false)} disabled={isLoadingMore}>
-                    {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
-                    Load More
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
-      
-      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the child's record.
-            </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={isPromoteAlertOpen} onOpenChange={setIsPromoteAlertOpen}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-            <AlertDialogTitle>Promote all year groups?</AlertDialogTitle>
-            <AlertDialogDescription>
-                This action will move every child up to the next year group (e.g., Year 1 → Year 2). 
-                Children in Year 6 will be archived as 'Leavers {leaversYear}'. This action cannot be undone.
-            </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-            <AlertDialogCancel disabled={isProcessing}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handlePromote} disabled={isProcessing}>
-                {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Confirm & Promote
-            </AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <Dialog open={isViewChildDialogOpen} onOpenChange={setIsViewChildDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-                <DialogTitle>{childToView?.name}</DialogTitle>
-                <DialogDescription>
-                Child Details
-                </DialogDescription>
-            </DialogHeader>
-            <ScrollArea className="max-h-[70vh] pr-6">
-            {childToView && (
-                <div className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <Label className="font-semibold">Year Group</Label>
-                        <p className="text-muted-foreground">{childToView.yearGroup}</p>
-                    </div>
-                    <div>
-                        <Label className="font-semibold">Date of Birth</Label>
-                        <p className="text-muted-foreground">
-                            {childToView.dob ? format(new Date(childToView.dob), 'dd MMMM yyyy') : 'Not set'}
-                        </p>
-                    </div>
-                </div>
-                
-                <div className="border-t pt-4">
-                    <Label className="font-semibold">Linked Parent(s)</Label>
-                    {childToView.linkedParents && childToView.linkedParents.length > 0 ? (
-                        <div className="mt-2 space-y-3">
-                        {childToView.linkedParents.map(link => {
-                            const parent = parents.find(p => p.id === link.parentId);
-                            return parent ? (
-                            <div key={link.parentId} className='text-sm p-2 bg-secondary rounded-md'>
-                                <p className="font-semibold">{parent.name} <span className="font-normal text-muted-foreground">({link.relationship})</span></p>
-                                <p className="text-muted-foreground">{parent.email}</p>
-                            </div>
-                            ) : null;
-                        })}
-                        </div>
-                    ) : (
-                         <p className="text-sm text-muted-foreground mt-2">No parents linked.</p>
                     )}
-                </div>
-                </div>
+                  </TableBody>
+                </Table>
+                {hasMore && (
+                  <div className="flex justify-center mt-4">
+                    <Button onClick={() => fetchChildrenAndParents(false)} disabled={isLoadingMore}>
+                      {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+                      Load More
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
-            </ScrollArea>
-           <div className="flex justify-end pt-4 border-t">
-                <Button onClick={() => handleEdit(childToView!)}>
-                    <Pencil className="mr-2 h-4 w-4" /> Edit Child
-                </Button>
-            </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+          </CardContent>
+        </Card>
+        
+        <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the child's record.
+              </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={isPromoteAlertOpen} onOpenChange={setIsPromoteAlertOpen}>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+              <AlertDialogTitle>Promote all year groups?</AlertDialogTitle>
+              <AlertDialogDescription>
+                  This action will move every child up to the next year group (e.g., Year 1 → Year 2). 
+                  Children in Year 6 will be archived as 'Leavers {leaversYear}'. This action cannot be undone.
+              </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+              <AlertDialogCancel disabled={isProcessing}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handlePromote} disabled={isProcessing}>
+                  {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Confirm & Promote
+              </AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <Dialog open={isViewChildDialogOpen} onOpenChange={setIsViewChildDialogOpen}>
+          <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                  <DialogTitle>{childToView?.name}</DialogTitle>
+                  <DialogDescription>
+                  Child Details
+                  </DialogDescription>
+              </DialogHeader>
+              <ScrollArea className="max-h-[70vh] pr-6">
+              {childToView && (
+                  <div className="space-y-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                      <div>
+                          <Label className="font-semibold">Year Group</Label>
+                          <p className="text-muted-foreground">{childToView.yearGroup}</p>
+                      </div>
+                      <div>
+                          <Label className="font-semibold">Date of Birth</Label>
+                          <p className="text-muted-foreground">
+                              {childToView.dob ? format(new Date(childToView.dob), 'dd MMMM yyyy') : 'Not set'}
+                          </p>
+                      </div>
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                      <Label className="font-semibold">Linked Parent(s)</Label>
+                      {childToView.linkedParents && childToView.linkedParents.length > 0 ? (
+                          <div className="mt-2 space-y-3">
+                          {childToView.linkedParents.map(link => {
+                              const parent = parents.find(p => p.id === link.parentId);
+                              return parent ? (
+                              <div key={link.parentId} className='text-sm p-2 bg-secondary rounded-md'>
+                                  <p className="font-semibold">{parent.name} <span className="font-normal text-muted-foreground">({link.relationship})</span></p>
+                                  <p className="text-muted-foreground">{parent.email}</p>
+                              </div>
+                              ) : null;
+                          })}
+                          </div>
+                      ) : (
+                           <p className="text-sm text-muted-foreground mt-2">No parents linked.</p>
+                      )}
+                  </div>
+                  </div>
+              )}
+              </ScrollArea>
+             <div className="flex justify-end pt-4 border-t">
+                  <Button onClick={() => handleEdit(childToView!)}>
+                      <Pencil className="mr-2 h-4 w-4" /> Edit Child
+                  </Button>
+              </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+      <DialogContent className="sm:max-w-2xl p-0">
+          <DialogHeader className="p-6 pb-0">
+              <DialogTitle>{selectedChild ? 'Edit' : 'Enrol'} Child</DialogTitle>
+              <DialogDescription>
+                  Fill in the details for the child and link their parents.
+              </DialogDescription>
+          </DialogHeader>
+          <ChildForm
+              onSuccess={handleFormSuccess}
+              existingChild={selectedChild}
+              allParents={parents}
+          />
+      </DialogContent>
+    </Dialog>
   );
 }
