@@ -71,17 +71,17 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   return (
     <LanguageProvider>
       <SidebarProvider>
-        <Sidebar variant="inset" collapsible="icon">
-          <SidebarHeader>
-            <div className="flex items-center gap-2">
+        <Sidebar variant="sidebar" collapsible="icon">
+          <SidebarHeader className="border-b p-4">
+            <Link href="/dashboard" className="flex items-center gap-2">
               <Image src="/logo.png" alt="Maes Y Morfa logo" width={28} height={28} className="w-7 h-7" />
               <span className="text-lg font-semibold text-foreground group-data-[collapsible=icon]:hidden">
                 MorfaConnect
               </span>
-            </div>
+            </Link>
           </SidebarHeader>
           <SidebarContent>
-            <SidebarMenu>
+            <SidebarMenu className="p-2">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
@@ -124,7 +124,9 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             <div className="lg:hidden">
               <SidebarTrigger />
             </div>
-            <h1 className="text-lg font-semibold lg:hidden">MorfaConnect</h1>
+            <h1 className="text-lg font-semibold lg:hidden">
+              {menuItems.find(item => pathname.startsWith(item.href))?.label || 'MorfaConnect'}
+            </h1>
           </header>
           <main className="p-4 md:p-6 lg:p-8">
             {children}
