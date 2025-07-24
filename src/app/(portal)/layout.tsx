@@ -47,9 +47,9 @@ export const LanguageToggle = () => {
     const t = content[language];
     return (
         <div className="flex items-center gap-1 border rounded-full p-1 text-sm bg-background">
-            <Button variant={language === 'cy' ? 'secondary' : 'ghost'} size="sm" className={`rounded-full px-3 py-1 h-auto text-xs portal-lang-toggle`} onClick={() => setLanguage('cy')}>{t.lang1}</Button>
+            <Button variant={language === 'cy' ? 'default' : 'ghost'} size="sm" className={`rounded-full px-3 py-1 h-auto text-xs portal-lang-toggle ${language === 'cy' ? 'bg-accent hover:bg-accent/80 text-accent-foreground' : ''}`} onClick={() => setLanguage('cy')}>{t.lang1}</Button>
             <div className="w-px h-4 bg-border"></div>
-            <Button variant={language === 'en' ? 'secondary' : 'ghost'} size="sm" className={`rounded-full px-3 py-1 h-auto text-xs portal-lang-toggle`} onClick={() => setLanguage('en')}>{t.lang2}</Button>
+            <Button variant={language === 'en' ? 'default' : 'ghost'} size="sm" className={`rounded-full px-3 py-1 h-auto text-xs portal-lang-toggle ${language === 'en' ? 'bg-accent hover:bg-accent/80 text-accent-foreground' : ''}`} onClick={() => setLanguage('en')}>{t.lang2}</Button>
         </div>
     )
 }
