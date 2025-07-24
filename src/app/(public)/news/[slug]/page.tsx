@@ -31,8 +31,10 @@ const content = {
         sendButton: "Send to Admin",
         toastSuccess: "Your message has been sent.",
         toastError: "Could not send your message. Please try again.",
-        publicQuestion: "Have a question? Please use our main contact form.",
-        contactButton: "Go to Contact Page"
+        publicQuestion: "Parents can log in to send a message directly from this page.",
+        publicQuestionCta: "Alternatively, please use our main contact form.",
+        loginButton: "Parent Login",
+        contactButton: "Contact Us"
     },
     cy: {
         back: 'Yn ôl i\'r holl newyddion',
@@ -45,8 +47,10 @@ const content = {
         sendButton: "Anfon at y Gweinyddwr",
         toastSuccess: "Mae eich neges wedi'i hanfon.",
         toastError: "Methu anfon eich neges. Rhowch gynnig arall arni.",
-        publicQuestion: "Oes gennych chi gwestiwn? Defnyddiwch ein prif ffurflen gyswllt.",
-        contactButton: "Ewch i'r Dudalen Gyswllt"
+        publicQuestion: "Gall rhieni fewngofnodi i anfon neges yn uniongyrchol o'r dudalen hon.",
+        publicQuestionCta: "Fel arall, defnyddiwch ein prif ffurflen gyswllt.",
+        loginButton: "Mewngofnodi Rhiant",
+        contactButton: "Cysylltu â Ni"
     }
 }
 
@@ -130,9 +134,15 @@ const ContactAdminSection = ({ articleTitle, t }: { articleTitle: string, t: typ
             </CardHeader>
             <CardContent>
                 <p className="text-muted-foreground">{t.publicQuestion}</p>
-                <Button asChild className="mt-4">
-                    <Link href="/contact">{t.contactButton}</Link>
-                </Button>
+                 <p className="text-muted-foreground text-sm mt-1">{t.publicQuestionCta}</p>
+                <div className="flex flex-col sm:flex-row gap-2 mt-4 justify-center">
+                    <Button asChild>
+                        <Link href="/login">{t.loginButton}</Link>
+                    </Button>
+                    <Button asChild variant="outline">
+                        <Link href="/contact">{t.contactButton}</Link>
+                    </Button>
+                </div>
             </CardContent>
         </Card>
     )
@@ -209,5 +219,3 @@ export default function NewsArticlePage({ params }: { params: { slug: string } }
     )
 
 }
-
-    
