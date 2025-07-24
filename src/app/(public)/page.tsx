@@ -133,7 +133,7 @@ export default function HomePage() {
                     <Link href="/news">{t.latestNews.viewAll}</Link>
                 </Button>
             </div>
-             <div className="text-center mt-16 pt-12 border-t">
+             <div className="text-center mt-24">
               <h2 className="font-headline text-3xl font-bold tracking-tighter text-foreground md:text-4xl">
                 {t.keyInfo.heading}
               </h2>
