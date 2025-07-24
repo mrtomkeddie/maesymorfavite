@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useLanguage } from './../LanguageProvider';
@@ -156,7 +157,7 @@ export default function ContactPage() {
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <p className="text-muted-foreground">{settings?.address || 'Address not available'}</p>
+                                    <p className="text-muted-foreground whitespace-pre-line">{settings?.address || 'Address not available'}</p>
                                 </CardContent>
                             </Card>
                             <Card>

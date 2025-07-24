@@ -1,4 +1,5 @@
 
+
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, writeBatch, where, getDoc, limit, startAfter, count } from "firebase/firestore"; 
 import { db } from "./config";
 import type { NewsPost } from "@/lib/mockNews";
@@ -309,7 +310,7 @@ export const getSiteSettings = async (): Promise<SiteSettings | null> => {
     } else {
         // Return default values if document doesn't exist
         return {
-            address: "Maes Y Morfa Primary School, School Road, Llanelli, SA15 1EX",
+            address: "Ysgol Maes Y Morfa,\nOlive St,\nLlanelli\nSA15 2AP",
             phone: "01234 567890",
             email: "admin@maesymorfa.cymru"
         };

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useLanguage } from '@/app/(public)/LanguageProvider';
@@ -92,7 +93,7 @@ export function PublicFooter() {
                  <Link href="/">
                     <Image src="/logo-white-footer.png" alt="Maes Y Morfa logo" width={1640} height={403} className="h-12 w-auto" />
                 </Link>
-                <div className="text-sm text-background/70 mt-4 space-y-1">
+                <div className="text-sm text-background/70 mt-4 space-y-1 whitespace-pre-line">
                     {settings ? (
                        <>
                         <p>{settings.address}</p>

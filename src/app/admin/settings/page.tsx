@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getSiteSettings, updateSiteSettings, SiteSettings } from '@/lib/firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 
 const urlValidation = z.string().url({ message: "Please enter a valid URL starting with https://" }).optional().or(z.literal(''));
 
@@ -127,7 +129,7 @@ export default function SettingsAdminPage() {
                                     <FormItem>
                                     <FormLabel>School Address</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Maes Y Morfa Primary School, School Road, Llanelli, SA15 1EX" {...field} />
+                                        <Textarea placeholder="Ysgol Maes Y Morfa,&#x0a;Olive St,&#x0a;Llanelli&#x0a;SA15 2AP" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                     </FormItem>
