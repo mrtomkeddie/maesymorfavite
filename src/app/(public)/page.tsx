@@ -75,7 +75,7 @@ const content = {
 export default function HomePage() {
   const { language } = useLanguage();
   const t = content[language];
-  const latestNews = mockNews.filter(n => n.published).slice(0, 2);
+  const latestNews = mockNews.filter(n => n.published).slice(0, 3);
   const urgentNews: UrgentNewsPost | undefined = mockNews.find(p => p.isUrgent && p.published) as UrgentNewsPost;
 
   return (
@@ -116,7 +116,7 @@ export default function HomePage() {
               <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground md:text-5xl mb-8">
                 {t.latestNews.heading}
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-8">
                  {latestNews.map((post) => {
                   const plainBody = post[`body_${language}`].replace(/<[^>]*>?/gm, '');
                   return (
@@ -169,23 +169,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      
-
-      {/* Social Proof Section */}
-       <section className="w-full py-16 md:py-24">
-        <div className="container mx-auto max-w-4xl px-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-8">
-                 <div className="md:col-span-1">
-                    <Image src="https://placehold.co/400x400.png" data-ai-hint="school building entrance" alt="Maes Y Morfa school building" width={400} height={400} className="rounded-full object-cover aspect-square shadow-lg mx-auto" />
-                 </div>
-                 <div className="md:col-span-2 text-center md:text-left">
-                    <blockquote className="text-2xl font-semibold text-foreground md:text-3xl lg:text-4xl italic">
-                        "{t.proof.quote}"
-                    </blockquote>
-                 </div>
-            </div>
-        </div>
-       </section>
 
         {/* Login Prompt Section */}
         <section className="w-full py-16 md:py-24 bg-primary text-primary-foreground">
@@ -204,5 +187,6 @@ export default function HomePage() {
     </div>
   );
 }
+
 
 
