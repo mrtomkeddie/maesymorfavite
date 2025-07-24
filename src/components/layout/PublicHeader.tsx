@@ -101,7 +101,7 @@ export function PublicHeader() {
                         const Icon = link.icon;
                         return (
                             <SheetClose asChild key={link.href}>
-                                <Link href={link.href} className="flex items-center gap-4 rounded-lg p-3 text-lg font-medium text-foreground/80 transition-colors hover:bg-secondary">
+                                <Link href={link.href} className="flex items-center gap-4 rounded-lg p-3 text-lg font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground">
                                     <Icon className="h-6 w-6 text-primary" />
                                     <span>{link.label}</span>
                                 </Link>
