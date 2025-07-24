@@ -100,7 +100,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* News & Key Info Section */}
        <section className="w-full py-16 md:py-24 bg-secondary/30">
         <div className="container mx-auto max-w-7xl px-8">
            <div className="text-center mb-12">
@@ -133,6 +132,25 @@ export default function HomePage() {
                 <Button asChild size="lg" variant="outline">
                     <Link href="/news">{t.latestNews.viewAll}</Link>
                 </Button>
+            </div>
+             <div className="text-center mt-16 pt-12 border-t">
+              <h2 className="font-headline text-3xl font-bold tracking-tighter text-foreground md:text-4xl">
+                {t.keyInfo.heading}
+              </h2>
+              <p className="mt-2 text-muted-foreground">{t.keyInfo.note}</p>
+              <div className="mt-8 flex flex-wrap justify-center gap-4">
+                  {t.keyInfo.buttons.map(button => {
+                      const Icon = button.icon;
+                      return (
+                          <Button asChild variant="secondary" key={button.label} size="lg">
+                              <Link href={button.href}>
+                                  <Icon className="mr-2 h-5 w-5" />
+                                  {button.label}
+                              </Link>
+                          </Button>
+                      )
+                  })}
+              </div>
             </div>
         </div>
       </section>
