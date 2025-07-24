@@ -13,7 +13,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { getSiteSettings, SiteSettings } from '@/lib/firebase/firestore';
+import { getSiteSettings, SiteSettings, addInboxMessage } from '@/lib/firebase/firestore';
 
 const content = {
   en: {
@@ -93,14 +93,35 @@ export default function ContactPage() {
 
     async function onSubmit(values: z.infer<ReturnType<typeof formSchema>>) {
         setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setIsLoading(false);
-        form.reset();
-        toast({
-            title: t.toastSuccessTitle,
-            description: t.toastSuccessDesc,
-        });
-        console.log("Form submitted:", values);
+        try {
+             await addInboxMessage({
+                type: 'contact',
+                subject: `Contact Form: Inquiry from ${values.name}`,
+                body: values.message,
+                sender: {
+                    name: values.name,
+                    email: values.email
+                },
+                isRead: false,
+                createdAt: new Date().toISOString(),
+            });
+
+            form.reset();
+            toast({
+                title: t.toastSuccessTitle,
+                description: t.toastSuccessDesc,
+            });
+
+        } catch (error) {
+            console.error("Failed to submit contact form:", error);
+            toast({
+                title: "Submission Failed",
+                description: "Could not send your message. Please try again later.",
+                variant: 'destructive',
+            });
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     if (isSettingsLoading) {

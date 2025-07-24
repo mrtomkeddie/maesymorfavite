@@ -17,6 +17,7 @@ import {
   SidebarGroupContent,
   SidebarSeparator,
   useSidebar,
+  SidebarMenuBadge,
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
@@ -30,17 +31,20 @@ import {
   BookUser,
   HelpCircle,
   Settings,
+  Mail,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
+import { getUnreadMessageCount } from '@/lib/firebase/firestore';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isAuth, setIsAuth] = useState<boolean | undefined>(undefined);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     // We check for 'admin_auth' specifically for this layout.
@@ -51,6 +55,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [router, pathname]);
 
+  useEffect(() => {
+    if (isAuth) {
+        getUnreadMessageCount().then(setUnreadCount).catch(console.error);
+    }
+  }, [isAuth, pathname]); // Refetch on path change to update badge
+
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('userRole');
@@ -59,6 +69,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const menuItems = [
     { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/admin/inbox', label: 'Inbox', icon: Mail, badge: unreadCount },
   ];
 
   const contentManagementItems = [
@@ -115,8 +126,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         tooltip={{ children: item.label }}
                     >
                         <Link href={item.href}>
-                        <item.icon />
-                        <span>{item.label}</span>
+                            <item.icon />
+                            <span>{item.label}</span>
+                            {item.badge && item.badge > 0 && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
                         </Link>
                     </SidebarMenuButton>
                     </SidebarMenuItem>

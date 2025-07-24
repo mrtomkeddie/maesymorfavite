@@ -50,3 +50,17 @@ export type SiteSettings = {
     instagramUrl?: string;
     youtubeUrl?: string;
 }
+
+export type InboxMessage = {
+    type: 'contact' | 'absence';
+    subject: string;
+    body: string;
+    sender: {
+        name: string;
+        email: string;
+    };
+    isRead: boolean;
+    createdAt: string; // ISO 8601
+}
+
+export type InboxMessageWithId = InboxMessage & { id: string };

@@ -1,9 +1,9 @@
 
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, writeBatch, where, getDoc, limit, startAfter } from "firebase/firestore"; 
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, writeBatch, where, getDoc, limit, startAfter, count } from "firebase/firestore"; 
 import { db } from "./config";
 import type { NewsPost } from "@/lib/mockNews";
 import type { CalendarEvent } from "@/lib/mockCalendar";
-import type { StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, LinkedParent } from "@/lib/types";
+import type { StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, LinkedParent, InboxMessage, InboxMessageWithId } from "@/lib/types";
 import { yearGroups } from "@/components/admin/ChildForm";
 import { QueryDocumentSnapshot } from "firebase/firestore";
 
@@ -319,6 +319,37 @@ export const getSiteSettings = async (): Promise<SiteSettings | null> => {
 export const updateSiteSettings = async (settings: SiteSettings) => {
     await setDoc(settingsDocRef, settings, { merge: true });
 };
+
+
+// === INBOX ===
+const inboxCollection = collection(db, "inbox");
+
+export const addInboxMessage = async (messageData: InboxMessage) => {
+    await addDoc(inboxCollection, messageData);
+};
+
+export const getInboxMessages = async (): Promise<InboxMessageWithId[]> => {
+    const q = query(inboxCollection, orderBy("createdAt", "desc"));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ ...doc.data() as InboxMessage, id: doc.id }));
+}
+
+export const updateInboxMessage = async (id: string, data: Partial<InboxMessage>) => {
+    const messageDoc = doc(db, "inbox", id);
+    await updateDoc(messageDoc, data);
+}
+
+export const deleteInboxMessage = async (id: string) => {
+    const messageDoc = doc(db, "inbox", id);
+    await deleteDoc(messageDoc);
+}
+
+export const getUnreadMessageCount = async (): Promise<number> => {
+    const q = query(inboxCollection, where("isRead", "==", false));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.size;
+};
+
 
 // === PAGINATED FETCH HELPERS ===
 

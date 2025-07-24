@@ -31,6 +31,7 @@ import { cn } from '@/lib/utils';
 import { CalendarIcon, Loader2, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { addInboxMessage } from '@/lib/firebase/firestore';
 
 const mockChildren = [
   { id: 'child_1', name: 'Charlie K.' },
@@ -63,16 +64,48 @@ export default function AbsencePage() {
 
   async function onSubmit(values: z.infer<typeof absenceFormSchema>) {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    
+    // In a real app, you'd get the logged-in parent's info
+    const parentInfo = { name: "Jane Doe", email: "parent@example.com" };
+    const childName = mockChildren.find(c => c.id === values.childId)?.name || 'Unknown Child';
+
+    const messageBody = `
+Child: ${childName}
+Date of Absence: ${format(values.absenceDate, 'PPP')}
+Reason: ${values.reason}
+---
+Submitted by: ${parentInfo.name} (${parentInfo.email})
+    `;
+    
+    try {
+        await addInboxMessage({
+            type: 'absence',
+            subject: `Absence Report for ${childName}`,
+            body: messageBody,
+            sender: parentInfo,
+            isRead: false,
+            createdAt: new Date().toISOString(),
+        });
+        
+        toast({
+            title: "Absence Reported Successfully",
+            description: `We've received the absence report for ${childName}. The school office has been notified.`,
+            variant: 'default',
+        });
+        
+        form.reset();
+
+    } catch (error) {
+        console.error("Failed to submit absence report:", error);
+        toast({
+            title: "Submission Failed",
+            description: "Could not submit the absence report. Please try again later or contact the school office directly.",
+            variant: 'destructive',
+        });
+    }
+
+
     setIsLoading(false);
-
-    toast({
-        title: "Absence Reported Successfully",
-        description: `We've received the absence report for ${mockChildren.find(c => c.id === values.childId)?.name} on ${format(values.absenceDate, 'PPP')}.`,
-        variant: 'default',
-    });
-
-    form.reset();
   }
 
   return (
