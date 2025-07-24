@@ -3,8 +3,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,13 +14,17 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Trash2, Loader2, Eye, Mail, ClipboardCheck, ArrowUp, ArrowDown } from 'lucide-react';
+import { MoreHorizontal, Trash2, Loader2, Eye, Mail, ClipboardCheck, ArrowUp, ArrowDown, Search } from 'lucide-react';
 import { getInboxMessages, updateInboxMessage, deleteInboxMessage, InboxMessageWithId } from '@/lib/firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { format, formatDistanceToNow } from 'date-fns';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+type SortableField = 'createdAt' | 'sender.name' | 'subject';
 
 export default function InboxAdminPage() {
   const [messages, setMessages] = useState<InboxMessageWithId[]>([]);
@@ -31,6 +33,10 @@ export default function InboxAdminPage() {
   const [messageToDelete, setMessageToDelete] = useState<InboxMessageWithId | null>(null);
   const [messageToView, setMessageToView] = useState<InboxMessageWithId | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [sortBy, setSortBy] = useState<SortableField>('createdAt');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
 
   const { toast } = useToast();
@@ -56,13 +62,45 @@ export default function InboxAdminPage() {
     fetchMessages();
   }, []);
   
-  const sortedMessages = useMemo(() => {
-    return [...messages].sort((a, b) => {
-      const dateA = new Date(a.createdAt).getTime();
-      const dateB = new Date(b.createdAt).getTime();
-      return sortOrder === 'asc' ? dateA - dateB : dateB - a.createdAt;
+  const processedMessages = useMemo(() => {
+    let filtered = [...messages];
+
+    // Apply type filter
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(m => m.type === typeFilter);
+    }
+
+    // Apply search query
+    if (searchQuery) {
+        filtered = filtered.filter(m => 
+            m.sender.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            m.subject.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }
+
+    // Apply sorting
+    return filtered.sort((a, b) => {
+      let valA: string | number;
+      let valB: string | number;
+
+      if (sortBy === 'createdAt') {
+        valA = new Date(a.createdAt).getTime();
+        valB = new Date(b.createdAt).getTime();
+      } else if (sortBy === 'sender.name') {
+        valA = a.sender.name;
+        valB = b.sender.name;
+      } else { // subject
+        valA = a.subject;
+        valB = b.subject;
+      }
+      
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      } else {
+        return sortOrder === 'asc' ? (valA as number) - (valB as number) : (valB as number) - (valA as number);
+      }
     });
-  }, [messages, sortOrder]);
+  }, [messages, typeFilter, searchQuery, sortBy, sortOrder]);
 
 
   const openDeleteAlert = (message: InboxMessageWithId) => {
@@ -99,7 +137,8 @@ export default function InboxAdminPage() {
     if (!message.isRead) {
         try {
             await updateInboxMessage(message.id, { isRead: true });
-            fetchMessages(); // Optimistically update UI
+            // Optimistically update UI
+            setMessages(prev => prev.map(m => m.id === message.id ? {...m, isRead: true} : m));
         } catch (error) {
             console.error("Failed to mark message as read:", error);
         }
@@ -118,20 +157,54 @@ export default function InboxAdminPage() {
                   {unreadCount > 0 ? `You have ${unreadCount} unread messages.` : 'No unread messages.'}
               </p>
           </div>
-           <Button variant="outline" onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}>
-                Sort by Date
-                {sortOrder === 'desc' ? <ArrowDown className="ml-2 h-4 w-4" /> : <ArrowUp className="ml-2 h-4 w-4" />}
-                <span className="sr-only">Toggle sort order</span>
-            </Button>
       </div>
-
-      <Card>
-        <CardContent className="p-0">
+      
+       <div className="rounded-lg border">
+        <div className="p-4 flex flex-col md:flex-row gap-2 bg-muted/50 border-b">
+            <div className="relative w-full md:flex-grow">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                    type="search"
+                    placeholder="Search by sender or subject..."
+                    className="w-full pl-8"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+            </div>
+            <div className="grid grid-cols-2 md:flex gap-2">
+                 <Select value={typeFilter} onValueChange={setTypeFilter}>
+                    <SelectTrigger className='w-full md:w-[150px]'>
+                        <SelectValue placeholder="Filter by type..."/>
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="absence">Absence</SelectItem>
+                        <SelectItem value="contact">Contact</SelectItem>
+                    </SelectContent>
+                </Select>
+                 <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortableField)}>
+                    <SelectTrigger className='w-full md:w-[150px]'>
+                        <SelectValue placeholder="Sort by..."/>
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="createdAt">Date</SelectItem>
+                        <SelectItem value="sender.name">From</SelectItem>
+                        <SelectItem value="subject">Subject</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Button variant="outline" size="icon" onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}>
+                    {sortOrder === 'desc' ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />}
+                    <span className="sr-only">Toggle sort order</span>
+                </Button>
+            </div>
+        </div>
+        <div className="p-0">
           {isLoading ? (
             <div className="flex justify-center items-center h-48">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -143,9 +216,9 @@ export default function InboxAdminPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedMessages.length > 0 ? (
-                  sortedMessages.map((message) => (
-                    <TableRow key={message.id} className={cn(!message.isRead && 'bg-secondary font-bold')}>
+                {processedMessages.length > 0 ? (
+                  processedMessages.map((message) => (
+                    <TableRow key={message.id} className={!message.isRead ? 'bg-secondary/40 font-bold' : ''} data-state={!message.isRead ? 'unread' : 'read'}>
                       <TableCell>{message.sender.name}</TableCell>
                       <TableCell className="font-medium">{message.subject}</TableCell>
                       <TableCell>
@@ -179,15 +252,16 @@ export default function InboxAdminPage() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} className="h-24 text-center">
-                      Your inbox is empty.
+                      Your inbox is empty or no messages match your search.
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
       
       <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
         <AlertDialogContent>
@@ -238,4 +312,5 @@ export default function InboxAdminPage() {
       </Dialog>
     </div>
   );
-}
+
+    
