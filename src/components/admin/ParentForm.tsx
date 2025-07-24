@@ -24,20 +24,81 @@ import { ParentWithId, ChildWithId, Child, LinkedParent } from '@/lib/types';
 import { Checkbox } from '../ui/checkbox';
 import { Separator } from '../ui/separator';
 import { ScrollArea } from '../ui/scroll-area';
+import { useLanguage } from '@/app/(public)/LanguageProvider';
 
-const linkedChildSchema = z.object({
+const linkedChildSchema = (t: any) => z.object({
   childId: z.string(),
-  relationship: z.string().min(2, { message: "Relationship is required." })
+  relationship: z.string().min(2, { message: t.relationship_message })
 });
 
-const formSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  email: z.string().email({ message: 'A valid email is required.' }),
+const formSchema = (t: any) => z.object({
+  name: z.string().min(2, { message: t.name_message }),
+  email: z.string().email({ message: t.email_message }),
   phone: z.string().optional(),
-  linkedChildren: z.array(linkedChildSchema).default([]),
+  linkedChildren: z.array(linkedChildSchema(t)).default([]),
 });
 
-type ParentFormValues = z.infer<typeof formSchema>;
+const content = {
+    en: {
+        formSchema: {
+            relationship_message: "Relationship is required.",
+            name_message: 'Name must be at least 2 characters.',
+            email_message: 'A valid email is required.',
+        },
+        parentName: "Parent's Full Name",
+        parentNamePlaceholder: "e.g., Jane Doe",
+        parentEmail: "Parent's Email Address",
+        parentEmailPlaceholder: "e.g., jane.doe@email.com",
+        parentEmailDesc: "This will be their username for the Parent Portal.",
+        parentPhone: "Mobile Number (Optional)",
+        parentPhonePlaceholder: "e.g., 07123456789",
+        parentPhoneDesc: "Used for SMS alerts in the future.",
+        linkedChildren: "Linked Children",
+        linkedChildrenDesc: "Select children and specify the relationship.",
+        childSearchPlaceholder: "Search for a child to link...",
+        relationshipPlaceholder: "Relationship",
+        toastSuccess: {
+            update: { title: "Success!", description: "Parent account has been updated." },
+            add: { title: "Success!", description: "Parent account has been created." }
+        },
+        toastError: {
+            title: "Error",
+            description: "Something went wrong. Please try again."
+        },
+        submitUpdate: "Update Parent",
+        submitAdd: "Add Parent"
+    },
+    cy: {
+        formSchema: {
+            relationship_message: "Mae angen perthynas.",
+            name_message: 'Rhaid i\'r enw fod o leiaf 2 nod.',
+            email_message: 'Mae angen cyfeiriad e-bost dilys.',
+        },
+        parentName: "Enw Llawn y Rhiant",
+        parentNamePlaceholder: "e.e., Siân Jones",
+        parentEmail: "Cyfeiriad E-bost y Rhiant",
+        parentEmailPlaceholder: "e.e., sian.jones@email.com",
+        parentEmailDesc: "Hwn fydd eu henw defnyddiwr ar gyfer Porth y Rieni.",
+        parentPhone: "Rhif Ffôn Symudol (Dewisol)",
+        parentPhonePlaceholder: "e.e., 07123456789",
+        parentPhoneDesc: "Defnyddir ar gyfer rhybuddion SMS yn y dyfodol.",
+        linkedChildren: "Plant Cysylltiedig",
+        linkedChildrenDesc: "Dewiswch blant a nodwch y berthynas.",
+        childSearchPlaceholder: "Chwilio am blentyn i'w gysylltu...",
+        relationshipPlaceholder: "Perthynas",
+        toastSuccess: {
+            update: { title: "Llwyddiant!", description: "Mae cyfrif y rhiant wedi'i ddiweddaru." },
+            add: { title: "Llwyddiant!", description: "Mae cyfrif rhiant newydd wedi'i greu." }
+        },
+        toastError: {
+            title: "Gwall",
+            description: "Aeth rhywbeth o'i le. Ceisiwch eto."
+        },
+        submitUpdate: "Diweddaru Rhiant",
+        submitAdd: "Ychwanegu Rhiant"
+    }
+}
+
 
 interface ParentFormProps {
   onSuccess: () => void;
@@ -46,13 +107,15 @@ interface ParentFormProps {
 }
 
 export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFormProps) {
+  const { language } = useLanguage();
+  const t = content[language];
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [childSearch, setChildSearch] = useState('');
 
 
-  const form = useForm<ParentFormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<ReturnType<typeof formSchema>>>({
+    resolver: zodResolver(formSchema(t.formSchema)),
     defaultValues: {
       name: '',
       email: '',
@@ -91,7 +154,7 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
     }
   }, [existingParent, allChildren, form])
 
-  const onSubmit = async (values: ParentFormValues) => {
+  const onSubmit = async (values: z.infer<ReturnType<typeof formSchema>>) => {
     setIsLoading(true);
 
     try {
@@ -146,20 +209,13 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
       }
 
 
-      toast({
-        title: 'Success!',
-        description: `Parent account has been ${existingParent ? 'updated' : 'created'}.`,
-      });
+      toast(existingParent ? t.toastSuccess.update : t.toastSuccess.add);
       
       onSuccess();
 
     } catch (error) {
       console.error('Error submitting form:', error);
-      toast({
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-        variant: 'destructive',
-      });
+      toast(t.toastError);
     } finally {
       setIsLoading(false);
     }
@@ -179,9 +235,9 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Parent's Full Name</FormLabel>
+              <FormLabel>{t.parentName}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Jane Doe" {...field} />
+                <Input placeholder={t.parentNamePlaceholder} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -192,12 +248,12 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Parent's Email Address</FormLabel>
+              <FormLabel>{t.parentEmail}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., jane.doe@email.com" type="email" {...field} />
+                <Input placeholder={t.parentEmailPlaceholder} type="email" {...field} />
               </FormControl>
                <FormDescription>
-                    This will be their username for the Parent Portal.
+                    {t.parentEmailDesc}
                 </FormDescription>
               <FormMessage />
             </FormItem>
@@ -209,12 +265,12 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Mobile Number (Optional)</FormLabel>
+              <FormLabel>{t.parentPhone}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., 07123456789" type="tel" {...field} />
+                <Input placeholder={t.parentPhonePlaceholder} type="tel" {...field} />
               </FormControl>
                <FormDescription>
-                    Used for SMS alerts in the future.
+                    {t.parentPhoneDesc}
                 </FormDescription>
               <FormMessage />
             </FormItem>
@@ -224,11 +280,11 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
         <Separator />
         
         <div className="space-y-2">
-            <FormLabel>Linked Children</FormLabel>
-            <FormDescription>Select children and specify the relationship.</FormDescription>
+            <FormLabel>{t.linkedChildren}</FormLabel>
+            <FormDescription>{t.linkedChildrenDesc}</FormDescription>
             
             <Input 
-                placeholder="Search for a child to link..."
+                placeholder={t.childSearchPlaceholder}
                 value={childSearch}
                 onChange={(e) => setChildSearch(e.target.value)}
                 className="mb-2"
@@ -258,7 +314,7 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
                                     name={`linkedChildren.${linkedIndex}.relationship`}
                                     render={({ field }) => (
                                         <FormControl>
-                                            <Input {...field} placeholder="Relationship" className="h-8"/>
+                                            <Input {...field} placeholder={t.relationshipPlaceholder} className="h-8"/>
                                         </FormControl>
                                     )}
                                 />
@@ -274,7 +330,7 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
         <div className="flex justify-end">
           <Button type="submit" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {existingParent ? 'Update Parent' : 'Add Parent'}
+            {existingParent ? t.submitUpdate : t.submitAdd}
           </Button>
         </div>
       </form>

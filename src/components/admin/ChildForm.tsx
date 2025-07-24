@@ -36,6 +36,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '../ui/checkbox';
 import { DatePicker } from '../ui/date-picker';
+import { useLanguage } from '@/app/(public)/LanguageProvider';
 
 export const yearGroups = [
     "Nursery",
@@ -48,28 +49,108 @@ export const yearGroups = [
     "Year 6",
 ];
 
-const newParentSchema = z.object({
-    name: z.string().min(2, { message: 'Name is required.' }),
-    email: z.string().email({ message: 'A valid email is required.' }),
+const newParentSchema = (t: any) => z.object({
+    name: z.string().min(2, { message: t.name_message }),
+    email: z.string().email({ message: t.email_message }),
     phone: z.string().optional(),
-    relationship: z.string().min(2, { message: "Relationship is required." }),
+    relationship: z.string().min(2, { message: t.relationship_message }),
 });
 
-const existingParentLinkSchema = z.object({
+const existingParentLinkSchema = (t: any) => z.object({
     parentId: z.string(),
-    relationship: z.string().min(2, { message: "Relationship is required." })
+    relationship: z.string().min(2, { message: t.relationship_message })
 });
 
 
-const formSchema = z.object({
-  name: z.string().min(2, { message: "Child's name must be at least 2 characters." }),
-  yearGroup: z.string({ required_error: 'Please select a year group.' }),
+const formSchema = (t: any) => z.object({
+  name: z.string().min(2, { message: t.child_name_message }),
+  yearGroup: z.string({ required_error: t.yearGroup_required_error }),
   dob: z.date().optional(),
-  linkedParents: z.array(existingParentLinkSchema).default([]),
-  newParents: z.array(newParentSchema).default([]),
+  linkedParents: z.array(existingParentLinkSchema(t)).default([]),
+  newParents: z.array(newParentSchema(t)).default([]),
 });
 
-type EnrolFormValues = z.infer<typeof formSchema>;
+const content = {
+    en: {
+        formSchema: {
+            name_message: 'Name is required.',
+            email_message: 'A valid email is required.',
+            relationship_message: "Relationship is required.",
+            child_name_message: "Child's name must be at least 2 characters.",
+            yearGroup_required_error: 'Please select a year group.',
+        },
+        childDetails: "Child's Details",
+        fullName: "Full Name",
+        fullNamePlaceholder: "e.g., Tom Jones",
+        yearGroup: "Year Group",
+        yearGroupPlaceholder: "Select a year group",
+        dob: "Date of Birth",
+        parents: "Parents/Guardians",
+        linkExisting: "Link Existing Parents",
+        linkExistingPlaceholder: "Search for existing parents...",
+        linkButton: "Link",
+        linkedParents: "Linked Parents",
+        relationshipPlaceholder: "Relationship, e.g., Mother",
+        addNew: "Add New Parents",
+        parentName: "Parent Name",
+        parentEmail: "Parent Email",
+        parentPhone: "Parent Phone (Optional)",
+        parentPhonePlaceholder: "Mobile Number",
+        childRelationship: "Relationship to Child",
+        childRelationshipPlaceholder: "e.g., Mother, Guardian",
+        addNewButton: "Add a New Parent",
+        toastSuccess: {
+            update: { title: "Success!", description: "Child has been updated." },
+            add: { title: "Success!", description: "Child has been enrolled." }
+        },
+        toastError: {
+            title: "Error",
+            description: "Something went wrong. Please try again."
+        },
+        submitUpdate: "Update Child",
+        submitEnrol: "Enrol Child"
+    },
+    cy: {
+        formSchema: {
+            name_message: 'Mae angen enw.',
+            email_message: 'Mae angen cyfeiriad e-bost dilys.',
+            relationship_message: "Mae angen perthynas.",
+            child_name_message: "Rhaid i enw'r plentyn fod o leiaf 2 nod.",
+            yearGroup_required_error: 'Dewiswch grŵp blwyddyn.',
+        },
+        childDetails: "Manylion y Plentyn",
+        fullName: "Enw Llawn",
+        fullNamePlaceholder: "e.e., Tomos Jones",
+        yearGroup: "Grŵp Blwyddyn",
+        yearGroupPlaceholder: "Dewiswch grŵp blwyddyn",
+        dob: "Dyddiad Geni",
+        parents: "Rhieni/Gwarcheidwaid",
+        linkExisting: "Cysylltu Rhieni Presennol",
+        linkExistingPlaceholder: "Chwilio am rieni presennol...",
+        linkButton: "Cysylltu",
+        linkedParents: "Rhieni Cysylltiedig",
+        relationshipPlaceholder: "Perthynas, e.e., Mam",
+        addNew: "Ychwanegu Rhieni Newydd",
+        parentName: "Enw'r Rhiant",
+        parentEmail: "E-bost y Rhiant",
+        parentPhone: "Ffôn y Rhiant (Dewisol)",
+        parentPhonePlaceholder: "Rhif Ffôn Symudol",
+        childRelationship: "Perthynas â'r Plentyn",
+        childRelationshipPlaceholder: "e.e., Mam, Gwarcheidwad",
+        addNewButton: "Ychwanegu Rhiant Newydd",
+        toastSuccess: {
+            update: { title: "Llwyddiant!", description: "Mae'r plentyn wedi'i ddiweddaru." },
+            add: { title: "Llwyddiant!", description: "Mae'r plentyn wedi'i gofrestru." }
+        },
+        toastError: {
+            title: "Gwall",
+            description: "Aeth rhywbeth o'i le. Ceisiwch eto."
+        },
+        submitUpdate: "Diweddaru Plentyn",
+        submitEnrol: "Cofrestru Plentyn"
+    }
+}
+
 
 interface ChildFormProps {
   onSuccess: () => void;
@@ -78,13 +159,15 @@ interface ChildFormProps {
 }
 
 export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormProps) {
+  const { language } = useLanguage();
+  const t = content[language];
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [parentSearch, setParentSearch] = useState('');
   const currentYear = new Date().getFullYear();
 
-  const form = useForm<EnrolFormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<ReturnType<typeof formSchema>>>({
+    resolver: zodResolver(formSchema(t.formSchema)),
     defaultValues: {
       name: '',
       yearGroup: '',
@@ -124,7 +207,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
   }, [existingChild, form]);
 
 
-  const onSubmit = async (values: EnrolFormValues) => {
+  const onSubmit = async (values: z.infer<ReturnType<typeof formSchema>>) => {
     setIsLoading(true);
 
     try {
@@ -146,24 +229,17 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
         
         if (existingChild) {
             await updateChild(existingChild.id, childData);
+             toast(t.toastSuccess.update);
         } else {
             await addChild(childData);
+            toast(t.toastSuccess.add);
         }
         
-        toast({
-            title: 'Success!',
-            description: `Child has been ${existingChild ? 'updated' : 'enrolled'}.`,
-        });
-
         onSuccess();
 
     } catch (error) {
       console.error('Error submitting form:', error);
-      toast({
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-        variant: 'destructive',
-      });
+      toast(t.toastError);
     } finally {
       setIsLoading(false);
     }
@@ -181,16 +257,16 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
         <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-2 pb-6 px-6">
             <div>
-                <h3 className="text-lg font-medium">Child's Details</h3>
+                <h3 className="text-lg font-medium">{t.childDetails}</h3>
                 <div className="space-y-4 mt-2">
                     <FormField
                     control={form.control}
                     name="name"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Full Name</FormLabel>
+                        <FormLabel>{t.fullName}</FormLabel>
                         <FormControl>
-                            <Input placeholder="e.g., Tom Jones" {...field} />
+                            <Input placeholder={t.fullNamePlaceholder} {...field} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -203,11 +279,11 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                             name="yearGroup"
                             render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Year Group</FormLabel>
+                                <FormLabel>{t.yearGroup}</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
                                     <SelectTrigger>
-                                    <SelectValue placeholder="Select a year group" />
+                                    <SelectValue placeholder={t.yearGroupPlaceholder} />
                                     </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
@@ -227,7 +303,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                             name="dob"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Date of Birth</FormLabel>
+                                    <FormLabel>{t.dob}</FormLabel>
                                     <FormControl>
                                        <DatePicker
                                             date={field.value}
@@ -247,12 +323,12 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
             <Separator />
 
             <div>
-                <h3 className="text-lg font-medium">Parents/Guardians</h3>
+                <h3 className="text-lg font-medium">{t.parents}</h3>
                 <div className="space-y-4 mt-2">
                     <div className="space-y-4 rounded-md border p-4">
-                        <FormLabel>Link Existing Parents</FormLabel>
+                        <FormLabel>{t.linkExisting}</FormLabel>
                         <Input 
-                            placeholder="Search for existing parents..."
+                            placeholder={t.linkExistingPlaceholder}
                             value={parentSearch}
                             onChange={(e) => setParentSearch(e.target.value)}
                             className="mb-2"
@@ -273,7 +349,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                                                 replaceLinkedParents([...current, { parentId: parent.id, relationship: '' }]);
                                             }}
                                         >
-                                            Link
+                                            {t.linkButton}
                                         </Button>
                                     </div>
                                 ))}
@@ -283,7 +359,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                     
                     {linkedParentFields.length > 0 && (
                         <div className="space-y-2">
-                            <FormLabel>Linked Parents</FormLabel>
+                            <FormLabel>{t.linkedParents}</FormLabel>
                             {linkedParentFields.map((field, index) => {
                                 const parent = allParents.find(p => p.id === field.parentId);
                                 return (
@@ -295,7 +371,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                                             render={({ field }) => (
                                                 <FormItem>
                                                     <FormControl>
-                                                        <Input {...field} placeholder="Relationship, e.g., Mother" />
+                                                        <Input {...field} placeholder={t.relationshipPlaceholder} />
                                                     </FormControl>
                                                 </FormItem>
                                             )}
@@ -323,7 +399,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                     <Separator />
 
                     <div>
-                        <FormLabel>Add New Parents</FormLabel>
+                        <FormLabel>{t.addNew}</FormLabel>
                         <div className="space-y-4 mt-2">
                             {fields.map((field, index) => (
                                 <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
@@ -342,8 +418,8 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                                         name={`newParents.${index}.name`}
                                         render={({ field }) => (
                                             <FormItem>
-                                            <FormLabel>Parent Name</FormLabel>
-                                            <FormControl><Input {...field} placeholder="Full Name" /></FormControl>
+                                            <FormLabel>{t.parentName}</FormLabel>
+                                            <FormControl><Input {...field} placeholder={t.fullNamePlaceholder} /></FormControl>
                                             <FormMessage />
                                             </FormItem>
                                         )}
@@ -353,8 +429,8 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                                         name={`newParents.${index}.email`}
                                         render={({ field }) => (
                                             <FormItem>
-                                            <FormLabel>Parent Email</FormLabel>
-                                            <FormControl><Input {...field} placeholder="Email Address" type="email" /></FormControl>
+                                            <FormLabel>{t.parentEmail}</FormLabel>
+                                            <FormControl><Input {...field} placeholder="email@example.com" type="email" /></FormControl>
                                             <FormMessage />
                                             </FormItem>
                                         )}
@@ -364,8 +440,8 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                                         name={`newParents.${index}.phone`}
                                         render={({ field }) => (
                                             <FormItem>
-                                            <FormLabel>Parent Phone (Optional)</FormLabel>
-                                            <FormControl><Input {...field} placeholder="Mobile Number" type="tel" /></FormControl>
+                                            <FormLabel>{t.parentPhone}</FormLabel>
+                                            <FormControl><Input {...field} placeholder={t.parentPhonePlaceholder} type="tel" /></FormControl>
                                             <FormMessage />
                                             </FormItem>
                                         )}
@@ -375,8 +451,8 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                                         name={`newParents.${index}.relationship`}
                                         render={({ field }) => (
                                             <FormItem>
-                                            <FormLabel>Relationship to Child</FormLabel>
-                                            <FormControl><Input {...field} placeholder="e.g., Mother, Guardian" /></FormControl>
+                                            <FormLabel>{t.childRelationship}</FormLabel>
+                                            <FormControl><Input {...field} placeholder={t.childRelationshipPlaceholder} /></FormControl>
                                             <FormMessage />
                                             </FormItem>
                                         )}
@@ -392,7 +468,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
                             onClick={() => append({ name: '', email: '', phone: '', relationship: '' })}
                         >
                             <PlusCircle className="mr-2 h-4 w-4" />
-                            Add a New Parent
+                            {t.addNewButton}
                         </Button>
                     </div>
                 </div>
@@ -402,7 +478,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
             <div className="flex justify-end pt-4 border-t sticky bottom-0 bg-background z-10">
             <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {existingChild ? 'Update Child' : 'Enrol Child'}
+                {existingChild ? t.submitUpdate : t.submitEnrol}
             </Button>
             </div>
         </form>

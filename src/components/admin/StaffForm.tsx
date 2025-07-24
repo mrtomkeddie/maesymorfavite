@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Progress } from '../ui/progress';
+import { useLanguage } from '@/app/(public)/LanguageProvider';
 
 export const staffTeams = [
     "Leadership Team",
@@ -43,15 +44,76 @@ export const staffTeams = [
     "Support Staff"
 ];
 
-const formSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  role: z.string().min(2, { message: 'Role must be at least 2 characters.' }),
-  team: z.string({ required_error: 'Please select a team.' }),
+const formSchema = (t: any) => z.object({
+  name: z.string().min(2, { message: t.name_message }),
+  role: z.string().min(2, { message: t.role_message }),
+  team: z.string({ required_error: t.team_required_error }),
   bio: z.string().optional(),
   photo: z.any().optional(),
 });
 
-type StaffFormValues = z.infer<typeof formSchema>;
+const content = {
+    en: {
+        formSchema: {
+            name_message: 'Name must be at least 2 characters.',
+            role_message: 'Role must be at least 2 characters.',
+            team_required_error: 'Please select a team.',
+        },
+        nameLabel: 'Full Name',
+        namePlaceholder: 'e.g., Jane Doe',
+        roleLabel: 'Role / Title',
+        rolePlaceholder: 'e.g., Headteacher',
+        teamLabel: 'Team / Year Group',
+        teamPlaceholder: 'Select a team',
+        bioLabel: 'Bio (Optional)',
+        bioPlaceholder: 'A short introduction...',
+        photoLabel: 'Profile Photo (Optional)',
+        photoDesc: 'Upload a photo of the staff member.',
+        uploadComplete: 'Upload complete!',
+        toastSuccess: {
+            update: { title: "Success!", description: "Staff member has been updated." },
+            add: { title: "Success!", description: "New staff member has been added." }
+        },
+        toastError: {
+            title: "Error",
+            description: "Something went wrong. Please try again."
+        },
+        submitButton: {
+            update: 'Update Staff',
+            add: 'Add Staff'
+        }
+    },
+    cy: {
+        formSchema: {
+            name_message: 'Rhaid i\'r enw fod o leiaf 2 nod.',
+            role_message: 'Rhaid i\'r rôl fod o leiaf 2 nod.',
+            team_required_error: 'Dewiswch dîm.',
+        },
+        nameLabel: 'Enw Llawn',
+        namePlaceholder: 'e.e., Siân Jones',
+        roleLabel: 'Rôl / Teitl',
+        rolePlaceholder: 'e.e., Pennaeth',
+        teamLabel: 'Tîm / Grŵp Blwyddyn',
+        teamPlaceholder: 'Dewiswch dîm',
+        bioLabel: 'Bywgraffiad (Dewisol)',
+        bioPlaceholder: 'Cyflwyniad byr...',
+        photoLabel: 'Llun Proffil (Dewisol)',
+        photoDesc: 'Uwchlwythwch lun o\'r aelod staff.',
+        uploadComplete: 'Wedi\'i uwchlwytho\'n llwyddiannus!',
+        toastSuccess: {
+            update: { title: "Llwyddiant!", description: "Mae aelod staff wedi'i ddiweddaru." },
+            add: { title: "Llwyddiant!", description: "Mae aelod staff newydd wedi'i ychwanegu." }
+        },
+        toastError: {
+            title: "Gwall",
+            description: "Aeth rhywbeth o'i le. Ceisiwch eto."
+        },
+        submitButton: {
+            update: 'Diweddaru Staff',
+            add: 'Ychwanegu Staff'
+        }
+    }
+};
 
 interface StaffFormProps {
   onSuccess: () => void;
@@ -59,12 +121,14 @@ interface StaffFormProps {
 }
 
 export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
+  const { language } = useLanguage();
+  const t = content[language];
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
-  const form = useForm<StaffFormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<ReturnType<typeof formSchema>>>({
+    resolver: zodResolver(formSchema(t.formSchema)),
     defaultValues: {
       name: existingStaff?.name || '',
       role: existingStaff?.role || '',
@@ -74,7 +138,7 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
     },
   });
 
-  const onSubmit = async (values: StaffFormValues) => {
+  const onSubmit = async (values: z.infer<ReturnType<typeof formSchema>>) => {
     setIsLoading(true);
 
     try {
@@ -104,16 +168,10 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
 
       if (existingStaff) {
         await updateStaffMember(existingStaff.id, staffData);
-        toast({
-          title: 'Success!',
-          description: 'Staff member has been updated.',
-        });
+        toast(t.toastSuccess.update);
       } else {
         await addStaffMember(staffData);
-        toast({
-          title: 'Success!',
-          description: 'New staff member has been added.',
-        });
+        toast(t.toastSuccess.add);
       }
       
       form.reset();
@@ -121,11 +179,7 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
 
     } catch (error) {
       console.error('Error submitting form:', error);
-      toast({
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-        variant: 'destructive',
-      });
+      toast(t.toastError);
     } finally {
       setIsLoading(false);
       setUploadProgress(null);
@@ -140,9 +194,9 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Full Name</FormLabel>
+              <FormLabel>{t.nameLabel}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Jane Doe" {...field} />
+                <Input placeholder={t.namePlaceholder} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -153,9 +207,9 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
           name="role"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Role / Title</FormLabel>
+              <FormLabel>{t.roleLabel}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Headteacher" {...field} />
+                <Input placeholder={t.rolePlaceholder} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -167,11 +221,11 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
             name="team"
             render={({ field }) => (
             <FormItem>
-                <FormLabel>Team / Year Group</FormLabel>
+                <FormLabel>{t.teamLabel}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                     <SelectTrigger>
-                    <SelectValue placeholder="Select a team" />
+                    <SelectValue placeholder={t.teamPlaceholder} />
                     </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -192,10 +246,10 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
           name="bio"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Bio (Optional)</FormLabel>
+              <FormLabel>{t.bioLabel}</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="A short introduction..."
+                  placeholder={t.bioPlaceholder}
                   className="min-h-[100px]"
                   {...field}
                 />
@@ -210,7 +264,7 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
           name="photo"
           render={({ field: { onChange, ...rest } }) => (
             <FormItem>
-              <FormLabel>Profile Photo (Optional)</FormLabel>
+              <FormLabel>{t.photoLabel}</FormLabel>
               <FormControl>
                  <Input 
                     type="file" 
@@ -220,7 +274,7 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
                 />
               </FormControl>
               <FormDescription>
-                Upload a photo of the staff member.
+                {t.photoDesc}
               </FormDescription>
                {uploadProgress !== null && uploadProgress < 100 && (
                 <Progress value={uploadProgress} className="w-full mt-2" />
@@ -228,7 +282,7 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
               {uploadProgress === 100 && (
                 <div className="flex items-center text-sm text-green-600 mt-2">
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  <span>Upload complete!</span>
+                  <span>{t.uploadComplete}</span>
                 </div>
               )}
               <FormMessage />
@@ -239,7 +293,7 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
         <div className="flex justify-end">
           <Button type="submit" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {existingStaff ? 'Update Staff' : 'Add Staff'}
+            {existingStaff ? t.submitButton.update : t.submitButton.add}
           </Button>
         </div>
       </form>

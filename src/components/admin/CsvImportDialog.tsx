@@ -14,6 +14,8 @@ import { bulkAddChildren, getParents, ParentWithId } from '@/lib/firebase/firest
 import { Child } from '@/lib/types';
 import { yearGroups } from './ChildForm';
 import { Input } from '../ui/input';
+import { useLanguage } from '@/app/(public)/LanguageProvider';
+
 
 interface CsvImportDialogProps<T> {
   onSuccess: () => void;
@@ -28,7 +30,65 @@ type ValidatedRow<T> = {
     errors: string[];
 }
 
+const content = {
+    en: {
+        error: {
+            parsing: "Error parsing CSV: ",
+            missingColumns: "CSV file is missing required columns: ",
+            requiredField: "' is a required field.",
+            invalidYear: "Invalid Year Group: '",
+            importFailed: "An error occurred during the import process. Please check the data and try again."
+        },
+        fileSelect: "Please select a file to process.",
+        importErrorTitle: "Import Error",
+        csvFileLabel: "CSV File",
+        processButton: "Process and Preview",
+        templateLink: "Download CSV template",
+        previewTitle: "Import Preview",
+        validationErrorTitle: "Validation Errors Found",
+        validationErrorDesc: "{invalidCount} rows have errors and will be skipped. Only {validCount} valid rows will be imported.",
+        validationSuccessDesc: "All {validCount} rows are valid and ready to be imported.",
+        statusHeader: "Status",
+        statusValid: "Valid",
+        startOverButton: "Start Over",
+        importButton: "Import {validCount} Valid Records",
+        toastSuccess: {
+            title: "Import Successful",
+            description: "{validCount} records have been successfully imported."
+        }
+    },
+    cy: {
+        error: {
+            parsing: "Gwall wrth ddosrannu CSV: ",
+            missingColumns: "Mae colofnau gofynnol ar goll o'r ffeil CSV: ",
+            requiredField: "' yn faes gofynnol.",
+            invalidYear: "Grŵp Blwyddyn Annilys: '",
+            importFailed: "Digwyddodd gwall yn ystod y broses fewnforio. Gwiriwch y data a cheisiwch eto."
+        },
+        fileSelect: "Dewiswch ffeil i'w phrosesu.",
+        importErrorTitle: "Gwall Mewnforio",
+        csvFileLabel: "Ffeil CSV",
+        processButton: "Prosesu a Rhagolwg",
+        templateLink: "Lawrlwytho templed CSV",
+        previewTitle: "Rhagolwg Mewnforio",
+        validationErrorTitle: "Canfuwyd Gwallau Dilysu",
+        validationErrorDesc: "Mae gan {invalidCount} res wallau a chânt eu hepgor. Dim ond {validCount} rhes ddilys a fewnforir.",
+        validationSuccessDesc: "Mae pob un o'r {validCount} rhes yn ddilys ac yn barod i'w mewnforio.",
+        statusHeader: "Statws",
+        statusValid: "Dilys",
+        startOverButton: "Dechrau Drosodd",
+        importButton: "Mewnforio {validCount} Cofnod Dilys",
+        toastSuccess: {
+            title: "Mewnforio'n Llwyddiannus",
+            description: "Mae {validCount} cofnod wedi'u mewnforio'n llwyddiannus."
+        }
+    }
+}
+
+
 export function CsvImportDialog<T extends object>({ onSuccess, requiredFields, templateUrl, templateName }: CsvImportDialogProps<T>) {
+  const { language } = useLanguage();
+  const t = content[language];
   const [file, setFile] = useState<File | null>(null);
   const [validatedData, setValidatedData] = useState<ValidatedRow<T>[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +105,7 @@ export function CsvImportDialog<T extends object>({ onSuccess, requiredFields, t
 
   const processFile = useCallback(async () => {
     if (!file) {
-      setError("Please select a file to process.");
+      setError(t.fileSelect);
       return;
     }
     setIsProcessing(true);
@@ -60,7 +120,7 @@ export function CsvImportDialog<T extends object>({ onSuccess, requiredFields, t
       skipEmptyLines: true,
       complete: (results) => {
         if (results.errors.length > 0) {
-          setError(`Error parsing CSV: ${results.errors[0].message}`);
+          setError(`${t.error.parsing}${results.errors[0].message}`);
           setIsProcessing(false);
           return;
         }
@@ -68,7 +128,7 @@ export function CsvImportDialog<T extends object>({ onSuccess, requiredFields, t
         const headers = results.meta.fields || [];
         const missingHeaders = requiredFields.filter(field => !headers.includes(field as string));
         if (missingHeaders.length > 0) {
-          setError(`CSV file is missing required columns: ${missingHeaders.join(', ')}.`);
+          setError(`${t.error.missingColumns}${missingHeaders.join(', ')}.`);
           setIsProcessing(false);
           return;
         }
@@ -79,14 +139,14 @@ export function CsvImportDialog<T extends object>({ onSuccess, requiredFields, t
             // Required field validation
             requiredFields.forEach(field => {
                 if (!row[field] || String(row[field]).trim() === '') {
-                    rowErrors.push(`'${String(field)}' is a required field.`);
+                    rowErrors.push(`'${String(field)}${t.error.requiredField}`);
                 }
             });
 
             // Child-specific validation
             const childRow = row as unknown as Child;
             if (childRow.yearGroup && !yearGroups.includes(childRow.yearGroup)) {
-                rowErrors.push(`Invalid Year Group: '${childRow.yearGroup}'.`);
+                rowErrors.push(`${t.error.invalidYear}${childRow.yearGroup}'.`);
             }
             
             return {
@@ -104,7 +164,7 @@ export function CsvImportDialog<T extends object>({ onSuccess, requiredFields, t
         setIsProcessing(false);
       }
     });
-  }, [file, requiredFields]);
+  }, [file, requiredFields, t]);
 
   const handleImport = async () => {
     setIsProcessing(true);
@@ -114,13 +174,13 @@ export function CsvImportDialog<T extends object>({ onSuccess, requiredFields, t
         // This is specific to children, needs generalization for other types
         await bulkAddChildren(validRows as Child[]);
         toast({
-            title: "Import Successful",
-            description: `${validRows.length} records have been successfully imported.`,
+            title: t.toastSuccess.title,
+            description: t.toastSuccess.description.replace('{validCount}', String(validRows.length)),
         });
         onSuccess();
     } catch(err) {
         console.error("Import failed: ", err);
-        setError("An error occurred during the import process. Please check the data and try again.");
+        setError(t.error.importFailed);
     } finally {
         setIsProcessing(false);
     }
@@ -141,7 +201,7 @@ export function CsvImportDialog<T extends object>({ onSuccess, requiredFields, t
       {error && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Import Error</AlertTitle>
+          <AlertTitle>{t.importErrorTitle}</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
@@ -149,31 +209,31 @@ export function CsvImportDialog<T extends object>({ onSuccess, requiredFields, t
       {validatedData.length === 0 ? (
         <div className='space-y-4'>
             <div className='grid grid-cols-1 space-y-2'>
-                <label htmlFor="csv-upload" className='text-sm font-medium'>CSV File</label>
+                <label htmlFor="csv-upload" className='text-sm font-medium'>{t.csvFileLabel}</label>
                 <Input id="csv-upload" type="file" accept=".csv" onChange={handleFileChange} />
             </div>
              <Button onClick={processFile} disabled={!file || isProcessing}>
                 {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Process and Preview
+                {t.processButton}
             </Button>
             <div className="text-center mt-2">
                  <Button variant="link" asChild>
                     <a href={templateUrl}>
-                        Download CSV template
+                        {t.templateLink}
                     </a>
                 </Button>
             </div>
         </div>
       ) : (
         <div className="space-y-4">
-            <h3 className="font-semibold">Import Preview</h3>
+            <h3 className="font-semibold">{t.previewTitle}</h3>
             {invalidCount > 0 && <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Validation Errors Found</AlertTitle>
-                <AlertDescription>{invalidCount} rows have errors and will be skipped. Only {validCount} valid rows will be imported.</AlertDescription>
+                <AlertTitle>{t.validationErrorTitle}</AlertTitle>
+                <AlertDescription>{t.validationErrorDesc.replace('{invalidCount}', String(invalidCount)).replace('{validCount}', String(validCount))}</AlertDescription>
             </Alert>}
             {validCount > 0 && invalidCount === 0 && <Alert variant="default">
-                <AlertDescription>All {validCount} rows are valid and ready to be imported.</AlertDescription>
+                <AlertDescription>{t.validationSuccessDesc.replace('{validCount}', String(validCount))}</AlertDescription>
             </Alert>}
 
             <ScrollArea className="h-64 w-full rounded-md border">
@@ -181,7 +241,7 @@ export function CsvImportDialog<T extends object>({ onSuccess, requiredFields, t
                     <TableHeader>
                         <TableRow>
                             {tableHeaders.map(header => <TableHead key={header}>{header}</TableHead>)}
-                             <TableHead>Status</TableHead>
+                             <TableHead>{t.statusHeader}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -189,7 +249,7 @@ export function CsvImportDialog<T extends object>({ onSuccess, requiredFields, t
                             <TableRow key={rowIndex} className={!row.isValid ? 'bg-destructive/10' : ''}>
                                 {tableHeaders.map(header => <TableCell key={header}>{String(row.data[header as keyof T] ?? '')}</TableCell>)}
                                 <TableCell>
-                                    {row.isValid ? <span className='text-green-600'>Valid</span> : 
+                                    {row.isValid ? <span className='text-green-600'>{t.statusValid}</span> : 
                                     <div className='text-destructive text-xs'>
                                         {row.errors.map((e,i) => <div key={i}>{e}</div>)}
                                     </div>}
@@ -201,11 +261,11 @@ export function CsvImportDialog<T extends object>({ onSuccess, requiredFields, t
             </ScrollArea>
             <div className="flex justify-between items-center">
                 <Button variant="outline" onClick={resetState} disabled={isProcessing}>
-                    Start Over
+                    {t.startOverButton}
                 </Button>
                 <Button onClick={handleImport} disabled={isProcessing || validCount === 0}>
                     {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Import {validCount} Valid Records
+                    {t.importButton.replace('{validCount}', String(validCount))}
                 </Button>
             </div>
         </div>

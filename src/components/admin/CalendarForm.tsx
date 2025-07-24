@@ -30,15 +30,16 @@ import { Calendar } from '../ui/calendar';
 import { Progress } from '../ui/progress';
 import { Checkbox } from '../ui/checkbox';
 import { yearGroups as allYearGroups } from './ChildForm';
+import { useLanguage } from '@/app/(public)/LanguageProvider';
 
 const yearGroupOptions = ['All', ...allYearGroups];
 
-const formSchema = z.object({
-  title_en: z.string().min(5, { message: 'Title must be at least 5 characters.' }),
-  start: z.date({ required_error: 'An event date is required.' }),
+const formSchema = (t: any) => z.object({
+  title_en: z.string().min(5, { message: t.title_en_message }),
+  start: z.date({ required_error: t.start_required_error }),
   description_en: z.string().optional(),
   relevantTo: z.array(z.string()).refine(value => value.some(item => item), {
-      message: "You have to select at least one year group.",
+      message: t.relevantTo_message,
   }),
   isUrgent: z.boolean().default(false),
   showOnHomepage: z.boolean().default(false),
@@ -46,7 +47,84 @@ const formSchema = z.object({
   crossPostToNews: z.boolean().default(false),
 });
 
-type CalendarFormValues = z.infer<typeof formSchema>;
+const content = {
+    en: {
+        formSchema: {
+            title_en_message: 'Title must be at least 5 characters.',
+            start_required_error: 'An event date is required.',
+            relevantTo_message: "You have to select at least one year group.",
+        },
+        titleLabel: 'Event Title',
+        titlePlaceholder: 'e.g., School Sports Day',
+        dateLabel: 'Date of Event',
+        datePlaceholder: 'Pick a date',
+        descriptionLabel: 'Description (Optional)',
+        descriptionPlaceholder: 'Provide more details about the event...',
+        relevantToLabel: 'Relevant To',
+        relevantToDesc: 'Select which year groups this event applies to.',
+        urgentLabel: 'Urgent Alert',
+        urgentDesc: 'Mark this as an urgent announcement.',
+        homepageLabel: 'Show on Homepage',
+        homepageDesc: 'Display this event on the public homepage.',
+        crossPostLabel: 'Cross-post to News',
+        crossPostDesc: 'Automatically create a news item for this event.',
+        attachmentLabel: 'Attachment (Optional)',
+        attachmentDesc: "Upload a PDF or image if needed (e.g., a permission slip).",
+        uploadComplete: 'Upload complete!',
+        toastSuccessUpdate: {
+            title: 'Success!',
+            description: 'Calendar event has been updated.',
+        },
+        toastSuccessAdd: {
+            title: 'Success!',
+            description: 'New calendar event has been created.',
+        },
+        toastError: {
+            title: 'Error',
+            description: 'Something went wrong. Please try again.',
+        },
+        submitButtonUpdate: 'Update Event',
+        submitButtonCreate: 'Create Event',
+    },
+    cy: {
+        formSchema: {
+            title_en_message: 'Rhaid i\'r teitl fod o leiaf 5 nod.',
+            start_required_error: 'Mae angen dyddiad digwyddiad.',
+            relevantTo_message: "Rhaid i chi ddewis o leiaf un grŵp blwyddyn.",
+        },
+        titleLabel: 'Teitl y Digwyddiad',
+        titlePlaceholder: 'e.e., Diwrnod Chwaraeon Ysgol',
+        dateLabel: 'Dyddiad y Digwyddiad',
+        datePlaceholder: 'Dewiswch ddyddiad',
+        descriptionLabel: 'Disgrifiad (Dewisol)',
+        descriptionPlaceholder: 'Rhowch fwy o fanylion am y digwyddiad...',
+        relevantToLabel: 'Perthnasol i',
+        relevantToDesc: 'Dewiswch pa grwpiau blwyddyn y mae\'r digwyddiad hwn yn berthnasol iddynt.',
+        urgentLabel: 'Hysbysiad Brys',
+        urgentDesc: 'Nodwch hwn fel cyhoeddiad brys.',
+        homepageLabel: 'Dangos ar y Tudalen Cartref',
+        homepageDesc: 'Dangoswch y digwyddiad hwn ar y dudalen gartref gyhoeddus.',
+        crossPostLabel: 'Traws-bostio i Newyddion',
+        crossPostDesc: 'Creu eitem newyddion yn awtomatig ar gyfer y digwyddiad hwn.',
+        attachmentLabel: 'Atodiad (Dewisol)',
+        attachmentDesc: "Uwchlwythwch PDF neu ddelwedd os oes angen (e.e., slip caniatâd).",
+        uploadComplete: 'Wedi\'i uwchlwytho\'n llwyddiannus!',
+        toastSuccessUpdate: {
+            title: 'Llwyddiant!',
+            description: 'Mae digwyddiad y calendr wedi\'i ddiweddaru.',
+        },
+        toastSuccessAdd: {
+            title: 'Llwyddiant!',
+            description: 'Mae digwyddiad calendr newydd wedi\'i greu.',
+        },
+        toastError: {
+            title: 'Gwall',
+            description: 'Aeth rhywbeth o\'i le. Rhowch gynnig arall arni.',
+        },
+        submitButtonUpdate: 'Diweddaru Digwyddiad',
+        submitButtonCreate: 'Creu Digwyddiad',
+    }
+};
 
 interface CalendarFormProps {
   onSuccess: () => void;
@@ -54,12 +132,14 @@ interface CalendarFormProps {
 }
 
 export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
+  const { language } = useLanguage();
+  const t = content[language];
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
-  const form = useForm<CalendarFormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<ReturnType<typeof formSchema>>>({
+    resolver: zodResolver(formSchema(t.formSchema)),
     defaultValues: {
       title_en: existingEvent?.title_en || '',
       start: existingEvent ? new Date(existingEvent.start) : new Date(),
@@ -72,7 +152,7 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
     },
   });
 
-  const onSubmit = async (values: CalendarFormValues) => {
+  const onSubmit = async (values: z.infer<ReturnType<typeof formSchema>>) => {
     setIsLoading(true);
 
     try {
@@ -109,16 +189,10 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
 
       if (existingEvent) {
         await updateCalendarEvent(existingEvent.id, eventPayload, values.crossPostToNews);
-        toast({
-          title: 'Success!',
-          description: 'Calendar event has been updated.',
-        });
+        toast(t.toastSuccessUpdate);
       } else {
         await addCalendarEvent(eventPayload, values.crossPostToNews);
-        toast({
-          title: 'Success!',
-          description: 'New calendar event has been created.',
-        });
+        toast(t.toastSuccessAdd);
       }
       
       form.reset();
@@ -126,11 +200,7 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
 
     } catch (error) {
       console.error('Error submitting form:', error);
-      toast({
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-        variant: 'destructive',
-      });
+      toast(t.toastError);
     } finally {
       setIsLoading(false);
       setUploadProgress(null);
@@ -145,9 +215,9 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
           name="title_en"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Event Title</FormLabel>
+              <FormLabel>{t.titleLabel}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., School Sports Day" {...field} />
+                <Input placeholder={t.titlePlaceholder} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -159,7 +229,7 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
           name="start"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Date of Event</FormLabel>
+              <FormLabel>{t.dateLabel}</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -173,7 +243,7 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
                       {field.value ? (
                         format(field.value, 'PPP')
                       ) : (
-                        <span>Pick a date</span>
+                        <span>{t.datePlaceholder}</span>
                       )}
                       <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
@@ -198,10 +268,10 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
           name="description_en"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description (Optional)</FormLabel>
+              <FormLabel>{t.descriptionLabel}</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Provide more details about the event..."
+                  placeholder={t.descriptionPlaceholder}
                   className="min-h-[100px]"
                   {...field}
                 />
@@ -217,9 +287,9 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
           render={({ field }) => (
             <FormItem>
               <div className="mb-4">
-                <FormLabel className="text-base">Relevant To</FormLabel>
+                <FormLabel className="text-base">{t.relevantToLabel}</FormLabel>
                 <FormDescription>
-                  Select which year groups this event applies to.
+                  {t.relevantToDesc}
                 </FormDescription>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -279,9 +349,9 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
         <div className="space-y-4">
             <div className="flex items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
-                    <FormLabel>Urgent Alert</FormLabel>
+                    <FormLabel>{t.urgentLabel}</FormLabel>
                     <FormDescription>
-                        Mark this as an urgent announcement.
+                        {t.urgentDesc}
                     </FormDescription>
                 </div>
                 <FormField control={form.control} name="isUrgent" render={({ field }) => (
@@ -290,9 +360,9 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
             </div>
              <div className="flex items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
-                    <FormLabel>Show on Homepage</FormLabel>
+                    <FormLabel>{t.homepageLabel}</FormLabel>
                     <FormDescription>
-                        Display this event on the public homepage.
+                        {t.homepageDesc}
                     </FormDescription>
                 </div>
                 <FormField control={form.control} name="showOnHomepage" render={({ field }) => (
@@ -301,9 +371,9 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
             </div>
              <div className="flex items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
-                    <FormLabel>Cross-post to News</FormLabel>
+                    <FormLabel>{t.crossPostLabel}</FormLabel>
                     <FormDescription>
-                        Automatically create a news item for this event.
+                        {t.crossPostDesc}
                     </FormDescription>
                 </div>
                 <FormField control={form.control} name="crossPostToNews" render={({ field }) => (
@@ -317,7 +387,7 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
           name="attachment"
           render={({ field: { onChange, ...rest } }) => (
             <FormItem>
-              <FormLabel>Attachment (Optional)</FormLabel>
+              <FormLabel>{t.attachmentLabel}</FormLabel>
               <FormControl>
                  <div className="relative">
                     <Input 
@@ -329,7 +399,7 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
                 </div>
               </FormControl>
               <FormDescription>
-                Upload a PDF or image if needed (e.g., a permission slip).
+                {t.attachmentDesc}
               </FormDescription>
               {uploadProgress !== null && uploadProgress < 100 && (
                 <Progress value={uploadProgress} className="w-full mt-2" />
@@ -337,7 +407,7 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
               {uploadProgress === 100 && (
                 <div className="flex items-center text-sm text-green-600 mt-2">
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  <span>Upload complete!</span>
+                  <span>{t.uploadComplete}</span>
                 </div>
               )}
               <FormMessage />
@@ -348,7 +418,7 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
         <div className="flex justify-end">
           <Button type="submit" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {existingEvent ? 'Update Event' : 'Create Event'}
+            {existingEvent ? t.submitButtonUpdate : t.submitButtonCreate}
           </Button>
         </div>
       </form>

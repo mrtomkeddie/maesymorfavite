@@ -24,39 +24,88 @@ import { uploadFile } from '@/lib/firebase/storage';
 import { Progress } from '../ui/progress';
 import { yearGroups as allYearGroups } from './ChildForm';
 import { Checkbox } from '../ui/checkbox';
+import { useLanguage } from '@/app/(public)/LanguageProvider';
 
 const yearGroupOptions = ['All', ...allYearGroups];
 
-const formSchema = z.object({
-  caption: z.string().min(3, { message: 'Caption must be at least 3 characters.' }),
+const formSchema = (t: any) => z.object({
+  caption: z.string().min(3, { message: t.caption_message }),
   image: z.any().refine((file) => file instanceof File, {
-    message: 'An image file is required.',
+    message: t.image_message,
   }),
   yearGroups: z.array(z.string()).refine((value) => value.some(item => item), {
-      message: "You have to select at least one year group.",
+      message: t.yearGroups_message,
   }),
 });
 
-type PhotoFormValues = z.infer<typeof formSchema>;
+const content = {
+    en: {
+        formSchema: {
+            caption_message: 'Caption must be at least 3 characters.',
+            image_message: 'An image file is required.',
+            yearGroups_message: "You have to select at least one year group.",
+        },
+        imageLabel: 'Image File',
+        captionLabel: 'Caption',
+        captionPlaceholder: "e.g., Year 2's trip to the museum",
+        tagLabel: 'Tag Year Groups',
+        tagDesc: 'Select which year groups this photo should be visible to.',
+        uploadComplete: 'Upload complete!',
+        toastSuccess: {
+            title: 'Success!',
+            description: 'Photo has been uploaded successfully.',
+        },
+        toastError: {
+            title: 'Error',
+            description: 'Something went wrong. Please try again.',
+        },
+        submitButton: 'Upload Photo',
+    },
+    cy: {
+        formSchema: {
+            caption_message: 'Rhaid i\'r capsiwn fod o leiaf 3 nod.',
+            image_message: 'Mae angen ffeil delwedd.',
+            yearGroups_message: "Rhaid i chi ddewis o leiaf un grŵp blwyddyn.",
+        },
+        imageLabel: 'Ffeil Delwedd',
+        captionLabel: 'Capsiwn',
+        captionPlaceholder: "e.e., Taith Blwyddyn 2 i'r amgueddfa",
+        tagLabel: 'Tagio Grwpiau Blwyddyn',
+        tagDesc: 'Dewiswch pa grwpiau blwyddyn ddylai\'r llun hwn fod yn weladwy iddynt.',
+        uploadComplete: 'Wedi\'i uwchlwytho\'n llwyddiannus!',
+        toastSuccess: {
+            title: 'Llwyddiant!',
+            description: 'Mae\'r llun wedi\'i uwchlwytho\'n llwyddiannus.',
+        },
+        toastError: {
+            title: 'Gwall',
+            description: 'Aeth rhywbeth o\'i le. Rhowch gynnig arall arni.',
+        },
+        submitButton: 'Uwchlwytho Llun',
+    }
+}
+
 
 interface PhotoFormProps {
   onSuccess: () => void;
 }
 
 export function PhotoForm({ onSuccess }: PhotoFormProps) {
+  const { language } = useLanguage();
+  const t = content[language];
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
-  const form = useForm<PhotoFormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<ReturnType<typeof formSchema>>>({
+    resolver: zodResolver(formSchema(t.formSchema)),
     defaultValues: {
       caption: '',
       yearGroups: [],
     },
   });
 
-  const onSubmit = async (values: PhotoFormValues) => {
+  const onSubmit = async (values: z.infer<ReturnType<typeof formSchema>>) => {
     setIsLoading(true);
 
     try {
@@ -78,21 +127,14 @@ export function PhotoForm({ onSuccess }: PhotoFormProps) {
 
       await addPhoto(photoData);
 
-      toast({
-        title: 'Success!',
-        description: 'Photo has been uploaded successfully.',
-      });
+      toast(t.toastSuccess);
       
       form.reset();
       onSuccess();
 
     } catch (error) {
       console.error('Error submitting form:', error);
-      toast({
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-        variant: 'destructive',
-      });
+      toast(t.toastError);
     } finally {
       setIsLoading(false);
       setUploadProgress(null);
@@ -107,7 +149,7 @@ export function PhotoForm({ onSuccess }: PhotoFormProps) {
           name="image"
           render={({ field: { onChange, ...rest } }) => (
             <FormItem>
-              <FormLabel>Image File</FormLabel>
+              <FormLabel>{t.imageLabel}</FormLabel>
               <FormControl>
                 <Input 
                     type="file" 
@@ -122,7 +164,7 @@ export function PhotoForm({ onSuccess }: PhotoFormProps) {
               {uploadProgress === 100 && (
                 <div className="flex items-center text-sm text-green-600 mt-2">
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  <span>Upload complete!</span>
+                  <span>{t.uploadComplete}</span>
                 </div>
               )}
               <FormMessage />
@@ -134,9 +176,9 @@ export function PhotoForm({ onSuccess }: PhotoFormProps) {
           name="caption"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Caption</FormLabel>
+              <FormLabel>{t.captionLabel}</FormLabel>
               <FormControl>
-                <Textarea placeholder="e.g., Year 2's trip to the museum" {...field} />
+                <Textarea placeholder={t.captionPlaceholder} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -149,9 +191,9 @@ export function PhotoForm({ onSuccess }: PhotoFormProps) {
           render={() => (
             <FormItem>
               <div className="mb-4">
-                <FormLabel className="text-base">Tag Year Groups</FormLabel>
+                <FormLabel className="text-base">{t.tagLabel}</FormLabel>
                 <FormDescription>
-                  Select which year groups this photo should be visible to.
+                  {t.tagDesc}
                 </FormDescription>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -206,7 +248,7 @@ export function PhotoForm({ onSuccess }: PhotoFormProps) {
         <div className="flex justify-end">
           <Button type="submit" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Upload Photo
+            {t.submitButton}
           </Button>
         </div>
       </form>

@@ -23,15 +23,76 @@ import { useToast } from '@/hooks/use-toast';
 import { addNews, updateNews, NewsPostWithId } from '@/lib/firebase/firestore';
 import { uploadFile } from '@/lib/firebase/storage';
 import { Progress } from '../ui/progress';
+import { useLanguage } from '@/app/(public)/LanguageProvider';
 
-const formSchema = z.object({
-  title_en: z.string().min(5, { message: 'Title must be at least 5 characters.' }),
-  body_en: z.string().min(10, { message: 'Body must be at least 10 characters.' }),
+const formSchema = (t: any) => z.object({
+  title_en: z.string().min(5, { message: t.title_message }),
+  body_en: z.string().min(10, { message: t.body_message }),
   isUrgent: z.boolean().default(false),
   attachment: z.any().optional(),
 });
 
-type NewsFormValues = z.infer<typeof formSchema>;
+const content = {
+    en: {
+        formSchema: {
+            title_message: 'Title must be at least 5 characters.',
+            body_message: 'Body must be at least 10 characters.',
+        },
+        titleLabel: 'Title',
+        titlePlaceholder: 'e.g., School Sports Day',
+        bodyLabel: 'Body',
+        bodyPlaceholder: 'Full text of the announcement...',
+        urgentLabel: 'Urgent Alert',
+        urgentDesc: 'Mark this as an urgent announcement (e.g., school closure).',
+        attachmentLabel: 'Attachment (Optional)',
+        attachmentDesc: 'Upload a PDF or image if needed.',
+        uploadComplete: 'Upload complete!',
+        toastSuccessUpdate: {
+            title: 'Success!',
+            description: 'News post has been updated.',
+        },
+        toastSuccessAdd: {
+            title: 'Success!',
+            description: 'New news post has been created.',
+        },
+        toastError: {
+            title: 'Error',
+            description: 'Something went wrong. Please try again.',
+        },
+        submitButtonUpdate: 'Update Post',
+        submitButtonCreate: 'Create Post',
+    },
+    cy: {
+        formSchema: {
+            title_message: 'Rhaid i\'r teitl fod o leiaf 5 nod.',
+            body_message: 'Rhaid i\'r corff fod o leiaf 10 nod.',
+        },
+        titleLabel: 'Teitl',
+        titlePlaceholder: 'e.e., Diwrnod Chwaraeon Ysgol',
+        bodyLabel: 'Corff',
+        bodyPlaceholder: 'Testun llawn y cyhoeddiad...',
+        urgentLabel: 'Hysbysiad Brys',
+        urgentDesc: 'Nodwch hwn fel cyhoeddiad brys (e.e., ysgol ar gau).',
+        attachmentLabel: 'Atodiad (Dewisol)',
+        attachmentDesc: 'Uwchlwythwch PDF neu ddelwedd os oes angen.',
+        uploadComplete: 'Wedi\'i uwchlwytho\'n llwyddiannus!',
+        toastSuccessUpdate: {
+            title: 'Llwyddiant!',
+            description: 'Mae\'r cofnod newyddion wedi\'i ddiweddaru.',
+        },
+        toastSuccessAdd: {
+            title: 'Llwyddiant!',
+            description: 'Mae cofnod newyddion newydd wedi\'i greu.',
+        },
+        toastError: {
+            title: 'Gwall',
+            description: 'Aeth rhywbeth o\'i le. Rhowch gynnig arall arni.',
+        },
+        submitButtonUpdate: 'Diweddaru\'r Cofnod',
+        submitButtonCreate: 'Creu Cofnod',
+    }
+}
+
 
 interface NewsFormProps {
   onSuccess: () => void;
@@ -39,12 +100,14 @@ interface NewsFormProps {
 }
 
 export function NewsForm({ onSuccess, existingNews }: NewsFormProps) {
+  const { language } = useLanguage();
+  const t = content[language];
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
-  const form = useForm<NewsFormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<ReturnType<typeof formSchema>>>({
+    resolver: zodResolver(formSchema(t.formSchema)),
     defaultValues: {
       title_en: existingNews?.title_en || '',
       body_en: existingNews?.body_en || '',
@@ -53,7 +116,7 @@ export function NewsForm({ onSuccess, existingNews }: NewsFormProps) {
     },
   });
 
-  const onSubmit = async (values: NewsFormValues) => {
+  const onSubmit = async (values: z.infer<ReturnType<typeof formSchema>>) => {
     setIsLoading(true);
 
     try {
@@ -86,16 +149,10 @@ export function NewsForm({ onSuccess, existingNews }: NewsFormProps) {
 
       if (existingNews) {
         await updateNews(existingNews.id, newsData);
-        toast({
-          title: 'Success!',
-          description: 'News post has been updated.',
-        });
+        toast(t.toastSuccessUpdate);
       } else {
         await addNews(newsData);
-        toast({
-          title: 'Success!',
-          description: 'New news post has been created.',
-        });
+        toast(t.toastSuccessAdd);
       }
       
       form.reset();
@@ -103,11 +160,7 @@ export function NewsForm({ onSuccess, existingNews }: NewsFormProps) {
 
     } catch (error) {
       console.error('Error submitting form:', error);
-      toast({
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-        variant: 'destructive',
-      });
+      toast(t.toastError);
     } finally {
       setIsLoading(false);
       setUploadProgress(null);
@@ -122,9 +175,9 @@ export function NewsForm({ onSuccess, existingNews }: NewsFormProps) {
           name="title_en"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Title</FormLabel>
+              <FormLabel>{t.titleLabel}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., School Sports Day" {...field} />
+                <Input placeholder={t.titlePlaceholder} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -135,10 +188,10 @@ export function NewsForm({ onSuccess, existingNews }: NewsFormProps) {
           name="body_en"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Body</FormLabel>
+              <FormLabel>{t.bodyLabel}</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Full text of the announcement..."
+                  placeholder={t.bodyPlaceholder}
                   className="min-h-[150px]"
                   {...field}
                 />
@@ -149,9 +202,9 @@ export function NewsForm({ onSuccess, existingNews }: NewsFormProps) {
         />
         <div className="flex items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
-                <FormLabel>Urgent Alert</FormLabel>
+                <FormLabel>{t.urgentLabel}</FormLabel>
                 <FormDescription>
-                    Mark this as an urgent announcement (e.g., school closure).
+                    {t.urgentDesc}
                 </FormDescription>
             </div>
             <FormField
@@ -175,7 +228,7 @@ export function NewsForm({ onSuccess, existingNews }: NewsFormProps) {
           name="attachment"
           render={({ field: { onChange, ...rest } }) => (
             <FormItem>
-              <FormLabel>Attachment (Optional)</FormLabel>
+              <FormLabel>{t.attachmentLabel}</FormLabel>
               <FormControl>
                 <Input 
                     type="file" 
@@ -185,7 +238,7 @@ export function NewsForm({ onSuccess, existingNews }: NewsFormProps) {
                 />
               </FormControl>
               <FormDescription>
-                Upload a PDF or image if needed.
+                {t.attachmentDesc}
               </FormDescription>
               {uploadProgress !== null && uploadProgress < 100 && (
                 <Progress value={uploadProgress} className="w-full mt-2" />
@@ -193,7 +246,7 @@ export function NewsForm({ onSuccess, existingNews }: NewsFormProps) {
               {uploadProgress === 100 && (
                 <div className="flex items-center text-sm text-green-600 mt-2">
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  <span>Upload complete!</span>
+                  <span>{t.uploadComplete}</span>
                 </div>
               )}
               <FormMessage />
@@ -204,7 +257,7 @@ export function NewsForm({ onSuccess, existingNews }: NewsFormProps) {
         <div className="flex justify-end">
           <Button type="submit" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {existingNews ? 'Update Post' : 'Create Post'}
+            {existingNews ? t.submitButtonUpdate : t.submitButtonCreate}
           </Button>
         </div>
       </form>
