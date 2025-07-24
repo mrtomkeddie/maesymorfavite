@@ -75,7 +75,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             <Link href="/dashboard" className="flex items-center gap-2">
               <Image src="/logo.png" alt="Maes Y Morfa logo" width={28} height={28} className="w-7 h-7" />
               <span className="text-lg font-extrabold tracking-tighter text-foreground group-data-[collapsible=icon]:hidden">
-                MorfaConnect
+                Parent Portal
               </span>
             </Link>
           </SidebarHeader>
