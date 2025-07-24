@@ -103,64 +103,37 @@ export default function HomePage() {
       {/* News & Key Info Section */}
        <section className="w-full py-16 md:py-24 bg-secondary/30">
         <div className="container mx-auto max-w-7xl px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-
-            {/* Latest News Column */}
-            <div className="lg:col-span-2">
-              <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground md:text-5xl mb-8">
+           <div className="text-center mb-12">
+              <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground md:text-5xl">
                 {t.latestNews.heading}
               </h2>
-              <div className="space-y-8">
-                 {latestNews.map((post) => {
-                  const plainBody = post[`body_${language}`].replace(/<[^>]*>?/gm, '');
-                  return (
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {latestNews.map((post) => {
+                const plainBody = post[`body_${language}`].replace(/<[^>]*>?/gm, '');
+                return (
                     <Card key={post.id} className="flex flex-col bg-background/70 shadow-lg border-0">
-                      <CardHeader>
+                    <CardHeader>
                         <span className="text-sm text-muted-foreground">{new Date(post.date).toLocaleDateString(language === 'cy' ? 'cy-GB' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                         <CardTitle className="text-xl font-bold">{post[`title_${language}`]}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="flex-grow">
+                    </CardHeader>
+                    <CardContent className="flex-grow">
                         <p className="text-muted-foreground line-clamp-3">{plainBody.substring(0, 150)}...</p>
-                      </CardContent>
-                      <div className="p-6 pt-0">
+                    </CardContent>
+                    <div className="p-6 pt-0">
                         <Button asChild variant="link" className="p-0">
-                          <Link href={`/news/${post.slug}`}>{t.latestNews.readMore} <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                        <Link href={`/news/${post.slug}`}>{t.latestNews.readMore} <ArrowRight className="ml-2 h-4 w-4" /></Link>
                         </Button>
-                      </div>
+                    </div>
                     </Card>
-                  )
+                )
                 })}
-              </div>
-              <div className="mt-8">
+            </div>
+            <div className="text-center mt-12">
                 <Button asChild size="lg" variant="outline">
                     <Link href="/news">{t.latestNews.viewAll}</Link>
                 </Button>
-              </div>
             </div>
-
-            {/* Key Information Column */}
-            <div className="lg:col-span-1">
-               <div className="p-6 rounded-lg bg-background/70 shadow-lg border-0 h-full">
-                 <h2 className="font-headline text-2xl font-extrabold tracking-tighter text-foreground mb-6">
-                    {t.keyInfo.heading}
-                </h2>
-                <div className="space-y-3">
-                    {t.keyInfo.buttons.map((button) => {
-                        const Icon = button.icon;
-                        return (
-                            <Button key={button.label} variant="outline" className="w-full justify-start h-auto py-3" asChild>
-                               <Link href={button.href}>
-                                    <Icon className="mr-3 h-5 w-5 text-primary"/> <span>{button.label}</span>
-                               </Link>
-                            </Button>
-                        )
-                    })}
-                </div>
-                <p className="text-xs text-muted-foreground mt-4">{t.keyInfo.note}</p>
-              </div>
-            </div>
-
-          </div>
         </div>
       </section>
 
@@ -181,4 +154,3 @@ export default function HomePage() {
     </div>
   );
 }
-
