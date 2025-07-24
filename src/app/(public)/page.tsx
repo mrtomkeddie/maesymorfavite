@@ -109,10 +109,10 @@ export default function HomePage() {
       {/* News & Key Info Section */}
        <section className="w-full py-16 md:py-24 bg-secondary/30">
         <div className="container mx-auto max-w-7xl px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
 
             {/* Latest News Column */}
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-2">
               <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground md:text-5xl mb-8">
                 {t.latestNews.heading}
               </h2>
@@ -204,4 +204,5 @@ export default function HomePage() {
     </div>
   );
 }
+
 
