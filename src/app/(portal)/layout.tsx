@@ -34,7 +34,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LanguageProvider, useLanguage } from '../(public)/LanguageProvider';
+import { useLanguage } from '../(public)/LanguageProvider';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 
@@ -95,7 +95,6 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   }
   
   return (
-    <LanguageProvider>
       <SidebarProvider>
         <Sidebar variant="sidebar" collapsible="icon">
           <SidebarHeader className="border-b p-4">
@@ -159,6 +158,5 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           </main>
         </SidebarInset>
       </SidebarProvider>
-    </LanguageProvider>
   );
 }
