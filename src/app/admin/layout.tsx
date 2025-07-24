@@ -50,6 +50,24 @@ import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
 import { getUnreadMessageCount } from '@/lib/firebase/firestore';
+import { useLanguage } from '../(public)/LanguageProvider';
+import { Button } from '@/components/ui/button';
+
+export const AdminLanguageToggle = () => {
+    const { language, setLanguage } = useLanguage();
+    const content = {
+        en: { lang1: 'Cymraeg', lang2: 'English' },
+        cy: { lang1: 'Cymraeg', lang2: 'English' }
+    };
+    const t = content[language];
+    return (
+        <div className="flex items-center gap-1 border rounded-full p-1 text-sm bg-background">
+            <Button variant={language === 'cy' ? 'default' : 'ghost'} size="sm" className={`rounded-full px-3 py-1 h-auto text-xs portal-lang-toggle ${language === 'cy' ? 'bg-accent hover:bg-accent/80 text-accent-foreground' : ''}`} onClick={() => setLanguage('cy')}>{t.lang1}</Button>
+            <div className="w-px h-4 bg-border"></div>
+            <Button variant={language === 'en' ? 'default' : 'ghost'} size="sm" className={`rounded-full px-3 py-1 h-auto text-xs portal-lang-toggle ${language === 'en' ? 'bg-accent hover:bg-accent/80 text-accent-foreground' : ''}`} onClick={() => setLanguage('en')}>{t.lang2}</Button>
+        </div>
+    )
+}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -236,6 +254,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </Sidebar>
         <SidebarInset>
           <main className="p-4 md:p-6 lg:p-8">
+            <div className="flex justify-end mb-4">
+                <AdminLanguageToggle />
+            </div>
             {children}
           </main>
         </SidebarInset>
