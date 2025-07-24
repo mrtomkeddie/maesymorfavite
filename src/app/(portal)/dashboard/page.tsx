@@ -14,23 +14,34 @@ import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { parentChildren } from '@/lib/mockData';
 import { useEffect, useState } from 'react';
-import { getLunchMenu } from '@/lib/firebase/firestore';
-import type { DailyMenu } from '@/lib/types';
+import { getWeeklyMenu } from '@/lib/firebase/firestore';
+import type { DailyMenu, WeeklyMenu } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
+const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
 export default function DashboardPage() {
-  const [menu, setMenu] = useState<DailyMenu | null>(null);
+  const [todayMenu, setTodayMenu] = useState<DailyMenu | null>(null);
+  const [weeklyMenu, setWeeklyMenu] = useState<WeeklyMenu | null>(null);
   const [isLoadingMenu, setIsLoadingMenu] = useState(true);
 
   useEffect(() => {
     const fetchMenu = async () => {
       try {
-        const lunchMenu = await getLunchMenu();
-        setMenu(lunchMenu);
+        const fullMenu = await getWeeklyMenu();
+        if (fullMenu) {
+            setWeeklyMenu(fullMenu);
+            const today = new Date().toLocaleString('en-US', { weekday: 'long' }).toLowerCase();
+            const currentDayMenu = fullMenu[today] || { main: 'Not available today', alt: 'Not available today', dessert: 'Not available today' };
+            setTodayMenu(currentDayMenu);
+        } else {
+             setTodayMenu({ main: 'Not available', alt: 'Not available', dessert: 'Not available' });
+        }
       } catch (error) {
         console.error("Failed to fetch lunch menu", error);
-        // Set a default or empty menu to avoid breaking the UI
-        setMenu({ main: 'Not available', alt: 'Not available', dessert: 'Not available' });
+        setTodayMenu({ main: 'Not available', alt: 'Not available', dessert: 'Not available' });
       } finally {
         setIsLoadingMenu(false);
       }
@@ -114,29 +125,69 @@ export default function DashboardPage() {
                       <Pizza className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
                       <div>
                           <h4 className="font-semibold text-sm">Main</h4>
-                          <p className="text-sm text-muted-foreground">{menu?.main}</p>
+                          <p className="text-sm text-muted-foreground">{todayMenu?.main}</p>
                       </div>
                   </div>
                    <div className="flex items-start gap-3">
                       <Salad className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
                       <div>
                           <h4 className="font-semibold text-sm">Vegetarian / Alt</h4>
-                          <p className="text-sm text-muted-foreground">{menu?.alt}</p>
+                          <p className="text-sm text-muted-foreground">{todayMenu?.alt}</p>
                       </div>
                   </div>
                   <div className="flex items-start gap-3">
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground mt-0.5 shrink-0 h-5 w-5"><path d="M11 15.54c-2.31-1.39-3-4.24-3-6.54C8 5.42 9.79 3 12 3s4 2.42 4 6c0 2.3-1.02 5.15-3 6.54"/><path d="M12 21a6.5 6.5 0 0 0 6.5-6.5H12v6.5Z"/><path d="M12 21a6.5 6.5 0 0 1-6.5-6.5H12v6.5Z"/><path d="M12 3v18"/></svg>
                       <div>
                           <h4 className="font-semibold text-sm">Dessert</h4>
-                          <p className="text-sm text-muted-foreground">{menu?.dessert}</p>
+                          <p className="text-sm text-muted-foreground">{todayMenu?.dessert}</p>
                       </div>
                   </div>
                 </>
               )}
                 <div className="pt-2">
-                     <Button asChild variant="secondary" className="w-full justify-start">
-                        <Link href="/key-info"><Utensils className="mr-2 h-4 w-4" /> View Full Menu</Link>
-                    </Button>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button variant="secondary" className="w-full justify-start">
+                                <Utensils className="mr-2 h-4 w-4" /> View Full Menu
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-3xl">
+                            <DialogHeader>
+                                <DialogTitle>This Week's Lunch Menu</DialogTitle>
+                                <DialogDescription>
+                                    Here's what's on offer for lunch this week at Maes Y Morfa.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="pt-4">
+                                {isLoadingMenu ? (
+                                    <div className="flex justify-center items-center h-48">
+                                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                    </div>
+                                ) : (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead className="w-[100px]">Day</TableHead>
+                                                <TableHead>Main Course</TableHead>
+                                                <TableHead>Vegetarian / Alt</TableHead>
+                                                <TableHead>Dessert</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {days.map(day => (
+                                                <TableRow key={day}>
+                                                    <TableCell className="font-medium capitalize">{day}</TableCell>
+                                                    <TableCell>{weeklyMenu?.[day]?.main || 'N/A'}</TableCell>
+                                                    <TableCell>{weeklyMenu?.[day]?.alt || 'N/A'}</TableCell>
+                                                    <TableCell>{weeklyMenu?.[day]?.dessert || 'N/A'}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </CardContent>
           </Card>

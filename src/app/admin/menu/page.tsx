@@ -17,16 +17,28 @@ import {
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getLunchMenu, updateLunchMenu } from '@/lib/firebase/firestore';
+import { getWeeklyMenu, updateWeeklyMenu } from '@/lib/firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { WeeklyMenu } from '@/lib/types';
 
-const formSchema = z.object({
+const daySchema = z.object({
   main: z.string().min(3, { message: 'Main course must be at least 3 characters.' }),
   alt: z.string().min(3, { message: 'Alternative course must be at least 3 characters.' }),
   dessert: z.string().min(3, { message: 'Dessert must be at least 3 characters.' }),
 });
 
+const formSchema = z.object({
+  monday: daySchema,
+  tuesday: daySchema,
+  wednesday: daySchema,
+  thursday: daySchema,
+  friday: daySchema,
+});
+
 type MenuFormValues = z.infer<typeof formSchema>;
+
+const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
 export default function MenuAdminPage() {
   const { toast } = useToast();
@@ -36,9 +48,11 @@ export default function MenuAdminPage() {
   const form = useForm<MenuFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      main: '',
-      alt: '',
-      dessert: '',
+      monday: { main: '', alt: '', dessert: '' },
+      tuesday: { main: '', alt: '', dessert: '' },
+      wednesday: { main: '', alt: '', dessert: '' },
+      thursday: { main: '', alt: '', dessert: '' },
+      friday: { main: '', alt: '', dessert: '' },
     },
   });
 
@@ -46,12 +60,12 @@ export default function MenuAdminPage() {
     const fetchMenu = async () => {
         setIsFetching(true);
         try {
-            const menu = await getLunchMenu();
+            const menu = await getWeeklyMenu();
             if (menu) {
                 form.reset(menu);
             }
         } catch (error) {
-            console.error("Error fetching lunch menu: ", error);
+            console.error("Error fetching weekly menu: ", error);
             toast({
                 title: "Error",
                 description: "Could not fetch current lunch menu.",
@@ -67,10 +81,10 @@ export default function MenuAdminPage() {
   const onSubmit = async (values: MenuFormValues) => {
     setIsLoading(true);
     try {
-        await updateLunchMenu(values);
+        await updateWeeklyMenu(values);
         toast({
           title: 'Success!',
-          description: 'Lunch menu has been updated successfully.',
+          description: 'The weekly lunch menu has been updated successfully.',
         });
     } catch (error) {
         console.error('Error updating menu:', error);
@@ -87,74 +101,89 @@ export default function MenuAdminPage() {
   return (
     <div className="space-y-6">
        <div>
-            <h1 className="text-3xl font-bold tracking-tight">Lunch Menu</h1>
-            <p className="text-muted-foreground">Manage the "Today's Lunch" card on the parent dashboard.</p>
+            <h1 className="text-3xl font-bold tracking-tight">Weekly Lunch Menu</h1>
+            <p className="text-muted-foreground">Manage the weekly menu for the parent portal.</p>
         </div>
 
         <Card>
-            <CardHeader>
-                <CardTitle>Today's Menu</CardTitle>
-                <CardDescription>
-                    Enter the menu items below. This information is displayed on the parent dashboard.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                {isFetching ? (
-                    <div className="flex justify-center items-center h-48">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+             <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)}>
+                    <Tabs defaultValue="monday">
+                        <CardHeader>
+                            <CardTitle>Edit Weekly Menu</CardTitle>
+                            <CardDescription>
+                                Select a day to edit the menu. The "Today's Lunch" card on the parent dashboard will automatically show the correct day.
+                            </CardDescription>
+                            <TabsList className="grid w-full grid-cols-5 mt-4">
+                                {days.map(day => (
+                                    <TabsTrigger key={day} value={day} className="capitalize">{day}</TabsTrigger>
+                                ))}
+                            </TabsList>
+                        </CardHeader>
+                        <CardContent>
+                            {isFetching ? (
+                                <div className="flex justify-center items-center h-64">
+                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                </div>
+                            ) : (
+                                <>
+                                    {days.map(day => (
+                                        <TabsContent key={day} value={day}>
+                                            <div className="space-y-4 pt-4">
+                                                <FormField
+                                                    control={form.control}
+                                                    name={`${day}.main` as keyof MenuFormValues}
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                        <FormLabel>Main Course</FormLabel>
+                                                        <FormControl>
+                                                            <Input placeholder="e.g., Shepherd's Pie" {...field} />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                <FormField
+                                                    control={form.control}
+                                                    name={`${day}.alt` as keyof MenuFormValues}
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                        <FormLabel>Vegetarian / Alternative</FormLabel>
+                                                        <FormControl>
+                                                            <Input placeholder="e.g., Jacket Potato with Tuna" {...field} />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                <FormField
+                                                    control={form.control}
+                                                    name={`${day}.dessert` as keyof MenuFormValues}
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                        <FormLabel>Dessert</FormLabel>
+                                                        <FormControl>
+                                                            <Input placeholder="e.g., Apple Crumble & Custard" {...field} />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            </div>
+                                        </TabsContent>
+                                    ))}
+                                </>
+                            )}
+                        </CardContent>
+                    </Tabs>
+                    <div className="flex justify-end p-6 border-t">
+                        <Button type="submit" disabled={isLoading || isFetching}>
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save Full Menu
+                        </Button>
                     </div>
-                ) : (
-                    <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                        <FormField
-                            control={form.control}
-                            name="main"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Main Course</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="e.g., Shepherd's Pie" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                         <FormField
-                            control={form.control}
-                            name="alt"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Vegetarian / Alternative</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="e.g., Jacket Potato with Tuna" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                         <FormField
-                            control={form.control}
-                            name="dessert"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Dessert</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="e.g., Apple Crumble & Custard" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <div className="flex justify-end">
-                            <Button type="submit" disabled={isLoading}>
-                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Save Menu
-                            </Button>
-                        </div>
-                    </form>
-                    </Form>
-                )}
-            </CardContent>
+                </form>
+            </Form>
         </Card>
     </div>
   );

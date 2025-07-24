@@ -80,3 +80,7 @@ export type DailyMenu = {
     alt: string;
     dessert: string;
 }
+
+export type WeeklyMenu = {
+    [day: string]: DailyMenu;
+}

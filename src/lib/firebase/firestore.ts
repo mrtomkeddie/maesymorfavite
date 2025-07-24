@@ -3,7 +3,7 @@ import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy,
 import { db } from "./config";
 import type { NewsPost } from "@/lib/mockNews";
 import type { CalendarEvent } from "@/lib/mockCalendar";
-import type { StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, LinkedParent, InboxMessage, InboxMessageWithId, Photo, PhotoWithId, DailyMenu } from "@/lib/types";
+import type { StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, LinkedParent, InboxMessage, InboxMessageWithId, Photo, PhotoWithId, DailyMenu, WeeklyMenu } from "@/lib/types";
 import { yearGroups } from "@/components/admin/ChildForm";
 import { QueryDocumentSnapshot } from "firebase/firestore";
 
@@ -321,22 +321,24 @@ export const updateSiteSettings = async (settings: SiteSettings) => {
 };
 
 // === LUNCH MENU SETTINGS ===
-const menuDocRef = doc(db, "settings", "lunchMenu");
+const menuDocRef = doc(db, "settings", "weeklyMenu");
 
-export const getLunchMenu = async (): Promise<DailyMenu | null> => {
+export const getWeeklyMenu = async (): Promise<WeeklyMenu | null> => {
     const docSnap = await getDoc(menuDocRef);
     if (docSnap.exists()) {
-        return docSnap.data() as DailyMenu;
+        return docSnap.data() as WeeklyMenu;
     } else {
-        return {
-            main: "Shepherd's Pie",
-            alt: "Jacket Potato with Tuna",
-            dessert: "Apple Crumble & Custard"
-        };
+        // Return default empty values if document doesn't exist
+        const defaultMenu: WeeklyMenu = {};
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+        days.forEach(day => {
+            defaultMenu[day] = { main: '', alt: '', dessert: '' };
+        });
+        return defaultMenu;
     }
 }
 
-export const updateLunchMenu = async (menu: DailyMenu) => {
+export const updateWeeklyMenu = async (menu: WeeklyMenu) => {
     await setDoc(menuDocRef, menu, { merge: true });
 };
 
