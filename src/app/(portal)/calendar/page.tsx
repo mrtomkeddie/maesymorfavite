@@ -26,6 +26,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import Link from 'next/link';
 import { parentChildrenYearGroups } from '@/lib/mockData';
+import { LanguageToggle } from '../layout';
 
 const content = {
   en: {
@@ -174,26 +175,28 @@ export default function CalendarPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold font-headline">{t.title}</h1>
           <p className="text-muted-foreground">{t.description}</p>
         </div>
-        <div className="text-right">
-            <Button onClick={handleDownloadICalFeed}>
-              <CalendarPlus className="mr-2 h-4 w-4" />
-              {t.subscribeButton}
-            </Button>
-            <p className="text-xs text-muted-foreground mt-1">{t.subscribeDescription}</p>
-        </div>
+        <LanguageToggle />
       </div>
       
-       <div className="flex items-center justify-end space-x-2 rounded-md border p-3 bg-muted/50">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <Label htmlFor="filter-switch" className="text-sm">
-            {t.filterLabel}
-          </Label>
-          <Switch id="filter-switch" checked={isFiltered} onCheckedChange={setIsFiltered} />
+       <div className="flex items-center justify-between space-x-2 rounded-md border p-3 bg-muted/50">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Label htmlFor="filter-switch" className="text-sm">
+              {t.filterLabel}
+            </Label>
+            <Switch id="filter-switch" checked={isFiltered} onCheckedChange={setIsFiltered} />
+          </div>
+          <div className="text-right">
+              <Button onClick={handleDownloadICalFeed} size="sm">
+                <CalendarPlus className="mr-2 h-4 w-4" />
+                {t.subscribeButton}
+              </Button>
+          </div>
         </div>
 
       <ListView />

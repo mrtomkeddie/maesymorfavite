@@ -33,6 +33,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { addInboxMessage } from '@/lib/firebase/firestore';
 import { parentChildren as mockChildren } from '@/lib/mockData';
+import { LanguageToggle } from '../layout';
 
 const absenceFormSchema = z.object({
   childId: z.string({
@@ -105,130 +106,141 @@ Submitted by: ${parentInfo.name} (${parentInfo.email})
   }
 
   return (
-    <Card className="max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>Report an Absence</CardTitle>
-        <CardDescription>
-          Please complete the form below to report your child's absence.
-          For security, you can only select children linked to your account.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <FormField
-              control={form.control}
-              name="childId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Child's Name</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your child" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {mockChildren.map((child) => (
-                        <SelectItem key={child.id} value={child.id}>
-                          {child.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+    <div className="space-y-6">
+       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold font-headline">Report an Absence</h1>
+          <p className="text-muted-foreground">
+              Please complete the form below to report your child's absence.
+          </p>
+        </div>
+        <LanguageToggle />
+      </div>
 
-            <FormField
-              control={form.control}
-              name="absenceDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Date of Absence</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle>Absence Form</CardTitle>
+          <CardDescription>
+            For security, you can only select children linked to your account.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <FormField
+                control={form.control}
+                name="childId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Child's Name</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <Button
-                          variant={'outline'}
-                          className={cn(
-                            'w-[240px] pl-3 text-left font-normal',
-                            !field.value && 'text-muted-foreground'
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, 'PPP')
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your child" />
+                        </SelectTrigger>
                       </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date('2023-09-01')
-                        }
-                        initialFocus
+                      <SelectContent>
+                        {mockChildren.map((child) => (
+                          <SelectItem key={child.id} value={child.id}>
+                            {child.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="absenceDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Date of Absence</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={'outline'}
+                            className={cn(
+                              'w-[240px] pl-3 text-left font-normal',
+                              !field.value && 'text-muted-foreground'
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, 'PPP')
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date('2023-09-01')
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="reason"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Reason for Absence</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="e.g., Unwell with a cold."
+                        {...field}
                       />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="reason"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Reason for Absence</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="e.g., Unwell with a cold."
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="document"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Upload a Document (Optional)</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                          <Input type="file" className="pl-12" onChange={(e) => field.onChange(e.target.files && e.target.files[0])} />
+                          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                              <Upload className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                      </div>
+                    </FormControl>
+                    <FormDescription>
+                      e.g., a doctor's note or appointment confirmation.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="document"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Upload a Document (Optional)</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                        <Input type="file" className="pl-12" onChange={(e) => field.onChange(e.target.files && e.target.files[0])} />
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <Upload className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    e.g., a doctor's note or appointment confirmation.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button type="submit" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Submit Report
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+              <Button type="submit" disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Submit Report
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

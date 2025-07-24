@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button";
 import { parentChildrenYearGroups } from '@/lib/mockData';
+import { LanguageToggle } from "../layout";
 
 export default function GalleryPage() {
   const [photos, setPhotos] = useState<PhotoWithId[]>([]);
@@ -54,9 +55,12 @@ export default function GalleryPage() {
 
   return (
     <div className="space-y-6">
-       <div>
-        <h1 className="text-3xl font-bold font-headline">Photo Gallery</h1>
-        <p className="text-muted-foreground">Recent photos from your children's classes and school events.</p>
+       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold font-headline">Photo Gallery</h1>
+          <p className="text-muted-foreground">Recent photos from your children's classes and school events.</p>
+        </div>
+        <LanguageToggle />
       </div>
       
       {allParentYearGroups.length > 1 && (

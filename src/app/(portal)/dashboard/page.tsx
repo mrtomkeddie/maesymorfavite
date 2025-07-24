@@ -19,6 +19,7 @@ import type { DailyMenu, WeeklyMenu } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { LanguageToggle } from '../layout';
 
 const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
@@ -51,9 +52,12 @@ export default function DashboardPage() {
  
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold font-headline">Welcome back, Jane!</h1>
-        <p className="text-muted-foreground">Here's what's happening at Maes Y Morfa today.</p>
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold font-headline">Welcome back, Jane!</h1>
+          <p className="text-muted-foreground">Here's what's happening at Maes Y Morfa today.</p>
+        </div>
+        <LanguageToggle />
       </div>
       
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
