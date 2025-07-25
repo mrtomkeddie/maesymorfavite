@@ -136,7 +136,7 @@ export default function AboutPage() {
                         <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground mb-4">{t.dayInLifeTitle}</h2>
                         <p className="text-foreground/80">{t.dayInLifeText}</p>
                     </div>
-                    <Image src="https://i.postimg.cc/J7JTBSnT/aboutus.png" alt="Children learning in a classroom" width={500} height={400} className="rounded-2xl object-contain w-full aspect-video md:aspect-[5/4] shadow-lg" />
+                    <Image src="https://i.postimg.cc/J7JTBSnT/aboutus.png" alt="Children learning in a classroom" width={500} height={400} className="object-contain w-full aspect-video md:aspect-[5/4]" />
                 </div>
 
                 <div>
