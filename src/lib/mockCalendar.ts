@@ -27,6 +27,14 @@ export type CalendarEvent = {
     linkedNewsPostId?: string; // ID of the news post if cross-posted
 };
 
+const getFutureDate = (daysToAdd: number, hour = 0, minute = 0) => {
+    const date = new Date();
+    date.setDate(date.getDate() + daysToAdd);
+    date.setHours(hour, minute, 0, 0);
+    return date.toISOString();
+}
+
+
 const schoolHolidays = [
     {
         title_en: "Autumn Half Term",
@@ -76,7 +84,7 @@ const insetDays = [
     {
         title_en: "INSET Day - Staff Training",
         title_cy: "Diwrnod HMS - Hyfforddiant Staff",
-        start: "2024-09-02",
+        start: getFutureDate(30),
         tag: 'INSET'
     },
     {
@@ -99,8 +107,8 @@ const otherEvents: Omit<CalendarEvent, 'id' | 'published' | 'allDay'>[] = [
         title_cy: "Taith Blwyddyn 6 i'r Big Pit",
         description_en: "Year 6 pupils will be visiting the Big Pit National Coal Museum. Please ensure permission slips are returned by Friday.",
         description_cy: "Bydd disgyblion Blwyddyn 6 yn ymweld ag Amgueddfa Lofaol Genedlaethol Cymru. Sicrhewch fod slipiau caniatâd yn cael eu dychwelyd erbyn dydd Gwener.",
-        start: "2024-10-15T09:00:00",
-        end: "2024-10-15T15:30:00",
+        start: getFutureDate(5, 9, 0),
+        end: getFutureDate(5, 15, 30),
         tags: ['Trip'],
         relevantTo: ['Year 6'],
         attachments: [
@@ -112,8 +120,8 @@ const otherEvents: Omit<CalendarEvent, 'id' | 'published' | 'allDay'>[] = [
         title_cy: "Noson Rieni - Tymor yr Hydref",
         description_en: "Book your appointment online to discuss your child's progress.",
         description_cy: "Archebwch eich apwyntiad ar-lein i drafod cynnydd eich plentyn.",
-        start: "2024-11-12T16:00:00",
-        end: "2024-11-12T19:00:00",
+        start: getFutureDate(12, 16, 0),
+        end: getFutureDate(12, 19, 0),
         tags: ['Parents Evening'],
         relevantTo: ['All'],
         attachments: []
@@ -123,8 +131,8 @@ const otherEvents: Omit<CalendarEvent, 'id' | 'published' | 'allDay'>[] = [
         title_cy: "Cyngerdd Nadolig",
         description_en: "Join us for an evening of festive songs and performances from the children.",
         description_cy: "Ymunwch â ni am noson o ganeuon a pherfformiadau Nadoligaidd gan y plant.",
-        start: "2024-12-18T18:00:00",
-        end: "2024-12-18T19:30:00",
+        start: getFutureDate(22, 18, 0),
+        end: getFutureDate(22, 19, 30),
         tags: ['Event'],
         relevantTo: ['All'],
         attachments: []
