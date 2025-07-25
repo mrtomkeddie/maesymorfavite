@@ -80,8 +80,11 @@ export default function HomePage() {
   const latestNews = mockNews.filter(n => n.published).slice(0, 2);
   const urgentNews: UrgentNewsPost | undefined = mockNews.find(p => p.isUrgent && p.published) as UrgentNewsPost;
   
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const upcomingEvents = calendarEvents
-    .filter(event => new Date(event.start) >= new Date())
+    .filter(event => new Date(event.start) >= today)
     .slice(0, 3);
 
   return (
