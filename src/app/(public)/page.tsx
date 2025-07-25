@@ -92,7 +92,7 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="w-full">
-                <Image src="https://placehold.co/600x400.png" data-ai-hint="happy children school" alt="Happy children learning in a bright school environment" width={600} height={400} className="rounded-2xl object-cover w-full aspect-video lg:aspect-[4/3] shadow-lg" />
+                <Image src="https://i.postimg.cc/xjxDTcsv/ddsf.png" data-ai-hint="happy children school" alt="Happy children learning in a bright school environment" width={600} height={400} className="rounded-2xl object-cover w-full aspect-video lg:aspect-[4/3] shadow-lg" />
               </div>
             </div>
         </div>
