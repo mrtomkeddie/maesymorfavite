@@ -13,7 +13,7 @@ import { news as mockNews, UrgentNewsPost } from '@/lib/mockNews';
 const content = {
   en: {
     hero: {
-      title: 'Welcome to Maes Y Morfa Primary School',
+      title: 'Welcome to Ysgol Maes Y Morfa Primary School',
       subtitle: 'A caring, ambitious school where every child is valued and inspired.',
       button: 'Explore Our School'
     },
