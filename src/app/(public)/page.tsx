@@ -3,12 +3,14 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowRight, BookOpen, HeartHandshake, Sparkles, Newspaper, Calendar, Shirt, Utensils } from 'lucide-react';
+import { ArrowRight, BookOpen, HeartHandshake, Sparkles, Newspaper, Calendar, Shirt, Utensils, Clock } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from './LanguageProvider';
 import { UrgentBanner } from '@/components/ui/UrgentBanner';
 import { news as mockNews, UrgentNewsPost } from '@/lib/mockNews';
+import { calendarEvents } from '@/lib/mockCalendar';
+import { format } from 'date-fns';
 
 const content = {
   en: {
@@ -24,6 +26,10 @@ const content = {
         { icon: Shirt, label: 'Uniform Policy', href: '/key-info', docCategory: 'Uniform' },
         { icon: Utensils, label: 'Lunch Menu', href: '/key-info', docCategory: 'Lunch Menu' }
       ]
+    },
+    upcomingEvents: {
+      heading: 'Upcoming Events',
+      viewAll: 'View Full Calendar'
     },
     latestNews: {
       heading: 'Latest News',
@@ -50,6 +56,10 @@ const content = {
         { icon: Utensils, label: 'Bwydlen Ginio', href: '/key-info', docCategory: 'Lunch Menu' }
       ]
     },
+     upcomingEvents: {
+      heading: 'Digwyddiadau i Ddod',
+      viewAll: 'Gweld y Calendr Llawn'
+    },
     latestNews: {
         heading: 'Newyddion Diweddaraf',
         readMore: 'Darllen Mwy',
@@ -69,6 +79,10 @@ export default function HomePage() {
   const t = content[language];
   const latestNews = mockNews.filter(n => n.published).slice(0, 2);
   const urgentNews: UrgentNewsPost | undefined = mockNews.find(p => p.isUrgent && p.published) as UrgentNewsPost;
+  
+  const upcomingEvents = calendarEvents
+    .filter(event => new Date(event.start) >= new Date())
+    .slice(0, 3);
 
   return (
     <div className="bg-background">
@@ -79,9 +93,8 @@ export default function HomePage() {
         <Image
           src="https://i.postimg.cc/RFZsjTxj/Chat-GPT-Image-Jul-25-2025-08-43-22-AM.png"
           alt="A vibrant classroom with children learning"
-          layout="fill"
-          objectFit="cover"
-          className="absolute inset-0 z-0"
+          fill
+          className="absolute inset-0 z-0 object-cover"
           data-ai-hint="vibrant classroom learning"
         />
         <div className="absolute inset-0 bg-black/50 z-10"></div>
@@ -132,23 +145,57 @@ export default function HomePage() {
                     </div>
                 </div>
 
-                <div className="lg:col-span-1">
-                    <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground mb-8">
-                        {t.keyInfo.heading}
-                    </h2>
-                     <div className="space-y-4">
-                        {t.keyInfo.buttons.map(button => {
-                            const Icon = button.icon;
-                            return (
-                                <Button key={button.label} asChild variant="outline" className="w-full justify-start text-base py-6">
-                                    <Link href={button.href}>
-                                        <Icon className="mr-3 h-5 w-5 text-primary" />
-                                        {button.label}
-                                    </Link>
-                                </Button>
-                            )
-                        })}
+                <div className="lg:col-span-1 space-y-8">
+                    <div>
+                        <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground mb-8">
+                            {t.keyInfo.heading}
+                        </h2>
+                         <div className="space-y-4">
+                            {t.keyInfo.buttons.map(button => {
+                                const Icon = button.icon;
+                                return (
+                                    <Button key={button.label} asChild variant="outline" className="w-full justify-start text-base py-6">
+                                        <Link href={button.href}>
+                                            <Icon className="mr-3 h-5 w-5 text-primary" />
+                                            {button.label}
+                                        </Link>
+                                    </Button>
+                                )
+                            })}
+                        </div>
                     </div>
+                    
+                    <div>
+                        <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground mb-8">
+                            {t.upcomingEvents.heading}
+                        </h2>
+                        <Card className="bg-background/70 shadow-lg border-0">
+                            <CardContent className="p-6 space-y-4">
+                                {upcomingEvents.length > 0 ? (
+                                    upcomingEvents.map(event => (
+                                        <div key={event.id} className="flex items-start gap-4">
+                                            <div className="text-center font-bold text-primary border-r pr-4">
+                                                <div className="text-2xl">{format(new Date(event.start), 'dd')}</div>
+                                                <div className="text-xs uppercase">{format(new Date(event.start), 'MMM')}</div>
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-sm leading-tight">{event[`title_${language}`]}</p>
+                                                {!event.allDay && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1"><Clock className="h-3 w-3" />{format(new Date(event.start), 'p')}</p>}
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-muted-foreground">No upcoming events.</p>
+                                )}
+                                 <div className="pt-4">
+                                    <Button asChild variant="secondary" className="w-full">
+                                        <Link href="/calendar">{t.upcomingEvents.viewAll}</Link>
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -171,3 +218,4 @@ export default function HomePage() {
     </div>
   );
 }
+
