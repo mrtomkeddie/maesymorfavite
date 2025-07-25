@@ -136,7 +136,7 @@ export default function AboutPage() {
                         <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground mb-4">{t.dayInLifeTitle}</h2>
                         <p className="text-foreground/80">{t.dayInLifeText}</p>
                     </div>
-                    <Image src="https://placehold.co/500x400.png" data-ai-hint="classroom children learning" alt="Children learning in a classroom" width={500} height={400} className="rounded-2xl object-cover w-full aspect-video md:aspect-[5/4] shadow-lg" />
+                    <Image src="/aboutus.png" alt="Children learning in a classroom" width={500} height={400} className="rounded-2xl object-cover w-full aspect-video md:aspect-[5/4] shadow-lg" />
                 </div>
 
                 <div>
