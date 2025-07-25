@@ -75,25 +75,27 @@ export default function HomePage() {
       {urgentNews && <UrgentBanner post={urgentNews} />}
 
       {/* Hero Section */}
-      <section className="w-full py-16 md:py-24 lg:py-32">
-        <div className="container mx-auto max-w-7xl px-8">
-            <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
-              <div className="space-y-6 text-center lg:text-left">
-                <h1 className="font-headline text-5xl font-extrabold tracking-tighter text-foreground sm:text-6xl md:text-7xl">
-                  {t.hero.title}
-                </h1>
-                <p className="max-w-xl mx-auto lg:mx-0 text-lg text-foreground/80 md:text-xl">
-                  {t.hero.subtitle}
-                </p>
-                <div className="flex justify-center lg:justify-start">
-                    <Button size="lg" asChild>
-                        <Link href="/about">{t.hero.button}</Link>
-                    </Button>
-                </div>
-              </div>
-              <div className="w-full">
-                <Image src="https://i.postimg.cc/xjxDTcsv/ddsf.png" data-ai-hint="happy children school" alt="Happy children learning in a bright school environment" width={600} height={400} className="rounded-2xl object-cover w-full aspect-video lg:aspect-[4/3] shadow-lg" />
-              </div>
+      <section className="relative w-full h-[60vh] md:h-[70vh] flex items-center justify-center text-center text-white overflow-hidden">
+        <Image
+          src="https://i.postimg.cc/RFZsjTxj/Chat-GPT-Image-Jul-25-2025-08-43-22-AM.png"
+          alt="A vibrant classroom with children learning"
+          layout="fill"
+          objectFit="cover"
+          className="absolute inset-0 z-0"
+          data-ai-hint="vibrant classroom learning"
+        />
+        <div className="absolute inset-0 bg-black/50 z-10"></div>
+        <div className="relative z-20 container mx-auto max-w-4xl px-8">
+            <h1 className="font-headline text-5xl font-extrabold tracking-tighter sm:text-6xl md:text-7xl">
+                {t.hero.title}
+            </h1>
+            <p className="mt-4 max-w-2xl mx-auto text-lg text-white/90 md:text-xl">
+                {t.hero.subtitle}
+            </p>
+            <div className="mt-8">
+                <Button size="lg" asChild>
+                    <Link href="/about">{t.hero.button}</Link>
+                </Button>
             </div>
         </div>
       </section>
