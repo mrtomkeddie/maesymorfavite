@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/components/ui/sheet';
-import { Menu, Home, Info, Newspaper, School, Briefcase, Mail, X, LayoutDashboard } from 'lucide-react';
+import { Menu, Home, Info, Newspaper, School, Briefcase, Mail, X, LayoutDashboard, Gamepad2 } from 'lucide-react';
 import { useLanguage } from '@/app/(public)/LanguageProvider';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
@@ -19,6 +19,7 @@ const content = {
             { href: '/curriculum', label: 'Curriculum', icon: Briefcase },
             { href: '/contact', label: 'Contact', icon: Mail },
         ],
+        kidsCorner: { href: '/kids-corner', label: "Kids' Corner", icon: Gamepad2 },
         portal: 'Parent Portal',
         adminLogin: 'Admin Login',
         dashboard: 'Return to Dashboard',
@@ -35,6 +36,7 @@ const content = {
             { href: '/curriculum', label: 'Cwricwlwm', icon: Briefcase },
             { href: '/contact', label: 'Cysylltu', icon: Mail },
         ],
+        kidsCorner: { href: '/kids-corner', label: "Cornel y Plant", icon: Gamepad2 },
         portal: 'Porth Rieni',
         adminLogin: 'Mewngofnodi Gweinyddwr',
         dashboard: 'Yn ôl i\'r Dangosfwrdd',
@@ -108,6 +110,12 @@ export function PublicHeader() {
                             </SheetClose>
                         )
                     })}
+                     <SheetClose asChild>
+                        <Link href={t.kidsCorner.href} className="flex items-center gap-4 rounded-lg p-3 text-lg font-medium text-white transition-colors bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+                            <t.kidsCorner.icon className="h-6 w-6" />
+                            <span>{t.kidsCorner.label}</span>
+                        </Link>
+                    </SheetClose>
                  </div>
                  <div className="space-y-2 border-t border-border/40 p-6">
                      <SheetClose asChild>
