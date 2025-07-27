@@ -3,6 +3,8 @@ const ctx = canvas.getContext("2d");
 const startButton = document.getElementById("startButton");
 const scoreDisplay = document.getElementById("score");
 const fullscreenButton = document.getElementById("fullscreenButton");
+const gameContainer = document.querySelector(".game-container");
+
 
 const canvasWidth = canvas.width;
 const canvasHeight = canvas.height;
@@ -172,6 +174,16 @@ document.addEventListener("keydown", e => {
       player.canDoubleJump = false;
       playJumpSound();
     }
+  }
+});
+
+fullscreenButton.addEventListener("click", () => {
+  if (!document.fullscreenElement) {
+    gameContainer.requestFullscreen().catch(err => {
+      alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+    });
+  } else {
+    document.exitFullscreen();
   }
 });
 
@@ -547,8 +559,8 @@ function isHighScore(score) {
 }
 
 function drawHighScores() {
-  // Draw full black background covering entire canvas
-  ctx.fillStyle = "#000000";
+  // Draw background
+  ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
   
   // Title
@@ -585,8 +597,8 @@ function drawHighScores() {
 }
 
 function drawNameEntry() {
-  // Draw full black background covering entire canvas
-  ctx.fillStyle = "#000000";
+  // Draw background
+  ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
   
   // Congratulations
@@ -600,8 +612,8 @@ function drawNameEntry() {
   
   // Score
   ctx.font = "bold 28px Arial";
-  ctx.strokeText("Score: " + score, canvasWidth / 2, 170);
-  ctx.fillText("Score: " + score, canvasWidth / 2, 170);
+  ctx.strokeText(`Score: ${score}`, canvasWidth / 2, 170);
+  ctx.fillText(`Score: ${score}`, canvasWidth / 2, 170);
   
   // Name prompt
   ctx.font = "24px Arial";

@@ -1,41 +1,40 @@
-/* Game container styles for embedding */
+/* Base styles to make the game embed correctly */
 html, body {
   margin: 0;
   padding: 0;
+  width: 100%;
   height: 100%;
-  overflow: hidden; /* Prevent scrollbars */
-  background: #333; /* Fallback for container sizing */
+  overflow: hidden; /* Prevent any scrollbars on the iframe itself */
 }
 
+/* Game container styles for embedding */
 .morfa-runner-game {
   width: 100%;
   height: 100%;
-  font-family: Arial, sans-serif;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  font-family: Arial, sans-serif;
+  box-sizing: border-box;
 }
 
 .game-container {
   position: relative;
-  border: 8px solid #e11d48;
+  width: 100%;
+  height: 100%;
   background: #000;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  box-sizing: border-box; /* This is the key fix */
-
-  /* Ensure the container itself respects the aspect ratio */
-  width: 100%;
-  aspect-ratio: 900 / 416; /* Adjust aspect ratio to include border (400 + 8 + 8) */
-  max-width: 900px; 
-  max-height: 100%;
+  border: 8px solid #e11d48;
+  box-sizing: border-box; /* Include border in the element's total width and height */
 }
 
 canvas {
   display: block;
   width: 100%;
   height: 100%;
+  object-fit: contain; /* This will maintain aspect ratio and fit within the container */
 }
 
 #startButton {
@@ -70,11 +69,28 @@ canvas {
   font-weight: bold;
 }
 
+#fullscreenButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 5px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+#fullscreenButton:hover {
+  opacity: 1;
+}
+
+
 /* Responsive design */
 @media (max-width: 768px) {
   .game-container {
     border: 6px solid #e11d48;
-    aspect-ratio: 900 / 412; /* 400 + 6 + 6 */
   }
   
   #startButton {
@@ -92,7 +108,6 @@ canvas {
 @media (max-width: 480px) {
   .game-container {
     border: 4px solid #e11d48;
-    aspect-ratio: 900 / 408; /* 400 + 4 + 4 */
   }
   
   #startButton {
