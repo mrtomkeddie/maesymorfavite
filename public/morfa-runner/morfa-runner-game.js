@@ -2,6 +2,7 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const startButton = document.getElementById("startButton");
 const scoreDisplay = document.getElementById("score");
+const fullscreenButton = document.getElementById("fullscreenButton");
 
 const canvasWidth = canvas.width;
 const canvasHeight = canvas.height;
