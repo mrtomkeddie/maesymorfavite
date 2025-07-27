@@ -9,14 +9,14 @@ const content = {
   en: {
     title: "Kids' Corner",
     intro: "Welcome to the fun zone! Get ready to play some cool games.",
-    comingSoonTitle: "Morfa Runner",
-    comingSoonText: "Our first game is coming soon! Get ready to run, jump, and collect points in this exciting endless runner set right here at Maes Y Morfa.",
+    gameTitle: "Morfa Runner",
+    gameText: "Run, jump, and collect school values certificates in this exciting endless runner set right here at Maes Y Morfa! Use the spacebar to jump and double-jump.",
   },
   cy: {
     title: "Cornel y Plant",
     intro: "Croeso i'r ardal hwyl! Byddwch yn barod i chwarae gemau cŵl.",
-    comingSoonTitle: "Rhedwr Morfa",
-    comingSoonText: "Mae ein gêm gyntaf yn dod yn fuan! Byddwch yn barod i redeg, neidio, a chasglu pwyntiau yn y rhedwr diddiwedd cyffrous hwn sydd wedi'i osod yma ym Maes Y Morfa.",
+    gameTitle: "Rhedwr Morfa",
+    gameText: "Rhedwch, neidiwch, a chasglwch dystysgrifau gwerthoedd yr ysgol yn y rhedwr diddiwedd cyffrous hwn sydd wedi'i osod yma ym Maes Y Morfa! Defnyddiwch y bar gofod i neidio a neidio dwbl.",
   }
 };
 
@@ -45,12 +45,16 @@ export default function KidsCornerPage() {
 
                     <Card className="bg-secondary/30">
                         <CardHeader>
-                            <CardTitle>{t.comingSoonTitle}</CardTitle>
+                            <CardTitle>{t.gameTitle}</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-muted-foreground">{t.comingSoonText}</p>
-                            <div className="mt-6 aspect-video w-full bg-muted rounded-lg flex items-center justify-center">
-                                <p className="text-muted-foreground font-bold">Game coming soon!</p>
+                            <p className="text-muted-foreground mb-6">{t.gameText}</p>
+                            <div className="aspect-[900/400] w-full bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                                <iframe 
+                                    src="/morfa-runner/index.html" 
+                                    className="w-full h-full border-0"
+                                    title="Morfa Runner Game"
+                                ></iframe>
                             </div>
                         </CardContent>
                     </Card>
