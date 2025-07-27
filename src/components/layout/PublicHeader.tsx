@@ -110,14 +110,16 @@ export function PublicHeader() {
                             </SheetClose>
                         )
                     })}
-                     <SheetClose asChild>
-                        <Link href={t.kidsCorner.href} className="flex items-center gap-4 rounded-lg p-3 text-lg font-medium text-white transition-colors bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
-                            <t.kidsCorner.icon className="h-6 w-6" />
-                            <span>{t.kidsCorner.label}</span>
-                        </Link>
-                    </SheetClose>
                  </div>
                  <div className="space-y-2 border-t border-border/40 p-6">
+                     <SheetClose asChild>
+                        <Button asChild className="w-full text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+                           <Link href={t.kidsCorner.href}>
+                                <t.kidsCorner.icon className="mr-2 h-4 w-4" />
+                                {t.kidsCorner.label}
+                           </Link>
+                        </Button>
+                    </SheetClose>
                      <SheetClose asChild>
                          {isParent ? (
                              <Button asChild className="w-full">

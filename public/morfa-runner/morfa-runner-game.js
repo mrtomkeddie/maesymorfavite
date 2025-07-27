@@ -14,6 +14,7 @@ let score = 0;
 let gameSpeed = 1; // multiplier for all speeds
 const maxGameSpeed = 3; // cap at 3x speed
 const speedIncreaseRate = 0.0002; // how fast the game speeds up
+let showingWelcome = true; // Start with welcome screen
 
 // High scores system
 let highScores = [];
@@ -128,14 +129,22 @@ imagesToLoad.forEach(img => {
     imagesLoaded++;
     if (imagesLoaded === imagesToLoad.length) {
       loadHighScores();
-      startButton.style.display = "block";
+      // Don't show start button yet - show welcome screen first
     }
   };
 });
 
+// Start the game loop immediately to show welcome screen
+loop();
+
 // Input
 document.addEventListener("keydown", e => {
-  if (enteringName) {
+  if (showingWelcome) {
+    if (e.code === "Space" || e.key === "Enter") {
+      showingWelcome = false;
+      startButton.style.display = "block";
+    }
+  } else if (enteringName) {
     if (e.key.length === 1 && e.key.match(/[a-zA-Z]/)) {
       if (currentNameInput.length < maxNameLength) {
         currentNameInput += e.key.toUpperCase();
@@ -207,8 +216,17 @@ startButton.addEventListener("click", () => {
   }
 });
 
+// Welcome screen click handler
+canvas.addEventListener("click", () => {
+  if (showingWelcome) {
+    showingWelcome = false;
+    startButton.style.display = "block";
+  }
+});
+
 function startGame() {
   startButton.style.display = "none";
+  showingWelcome = false;
   showingHighScores = false;
   enteringName = false;
   gameRunning = true;
@@ -256,7 +274,7 @@ function startGame() {
 }
 
 function loop() {
-  if (!gameRunning && !showingHighScores && !enteringName) {
+  if (!gameRunning && !showingHighScores && !enteringName && !showingWelcome) {
     // Game is completely stopped - show start button and clear canvas
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     
@@ -448,6 +466,11 @@ function update() {
 function draw() {
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
+  if (showingWelcome) {
+    drawWelcomeScreen();
+    return;
+  }
+
   if (showingHighScores) {
     drawHighScores();
     return;
@@ -631,6 +654,93 @@ function drawNameEntry() {
   ctx.font = "18px Arial";
   ctx.fillStyle = "#FFFFFF";
   ctx.fillText("Type letters, BACKSPACE to delete, ENTER to save", canvasWidth / 2, 320);
+}
+
+function drawWelcomeScreen() {
+  // Draw beautiful gradient background
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+  gradient.addColorStop(0, "#87CEEB"); // Sky blue
+  gradient.addColorStop(0.7, "#98FB98"); // Pale green
+  gradient.addColorStop(1, "#228B22"); // Forest green
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+  // Draw some decorative clouds
+  ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+  ctx.beginPath();
+  ctx.arc(150, 80, 25, 0, Math.PI * 2);
+  ctx.arc(170, 80, 35, 0, Math.PI * 2);
+  ctx.arc(190, 80, 25, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.arc(650, 60, 20, 0, Math.PI * 2);
+  ctx.arc(665, 60, 30, 0, Math.PI * 2);
+  ctx.arc(680, 60, 20, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Draw school building in background if loaded
+  if (imagesLoaded >= imagesToLoad.length) {
+    const backgroundHeight = canvasHeight - groundHeight;
+    ctx.drawImage(background, 0, 0, bgWidth, backgroundHeight);
+    ctx.drawImage(groundImg, 0, canvasHeight - groundHeight, canvasWidth, groundHeight);
+  }
+
+  // Semi-transparent overlay for text readability
+  ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+  // Game Title
+  ctx.fillStyle = "#FFD700";
+  ctx.strokeStyle = "#8B0000";
+  ctx.lineWidth = 4;
+  ctx.font = "bold 48px Arial";
+  ctx.textAlign = "center";
+  ctx.strokeText("MORFA RUNNER", canvasWidth / 2, 100);
+  ctx.fillText("MORFA RUNNER", canvasWidth / 2, 100);
+
+  // School name
+  ctx.fillStyle = "#FFFFFF";
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 2;
+  ctx.font = "24px Arial";
+  ctx.strokeText("Ysgol Maes Y Morfa", canvasWidth / 2, 140);
+  ctx.fillText("Ysgol Maes Y Morfa", canvasWidth / 2, 140);
+
+  // Welcome message
+  ctx.font = "20px Arial";
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillText("Welcome to our school running adventure!", canvasWidth / 2, 180);
+
+  // Instructions box
+  ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+  ctx.fillRect(canvasWidth / 2 - 200, 200, 400, 120);
+  ctx.strokeStyle = "#e11d48";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(canvasWidth / 2 - 200, 200, 400, 120);
+
+  // Instructions text
+  ctx.fillStyle = "#333";
+  ctx.font = "16px Arial";
+  ctx.fillText("🏃‍♂️ Help our student run through the school!", canvasWidth / 2, 230);
+  ctx.fillText("🎯 Collect VALUES certificates for bonus points", canvasWidth / 2, 255);
+  ctx.fillText("⚡ Jump over books, bags, and Mrs Jones", canvasWidth / 2, 280);
+  ctx.fillText("🏆 Beat the high scores and become champion!", canvasWidth / 2, 305);
+
+  // Start prompt
+  ctx.fillStyle = "#FFD700";
+  ctx.strokeStyle = "#8B0000";
+  ctx.lineWidth = 2;
+  ctx.font = "bold 24px Arial";
+  ctx.strokeText("CLICK TO START", canvasWidth / 2, 350);
+  ctx.fillText("CLICK TO START", canvasWidth / 2, 350);
+
+  // Animated prompt indicator - moved up to fit in frame
+  const time = Date.now() * 0.005;
+  const alpha = (Math.sin(time) + 1) / 2;
+  ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
+  ctx.font = "16px Arial";
+  ctx.fillText("Press SPACE or click anywhere to begin", canvasWidth / 2, 375);
 }
 
 // Music functions
