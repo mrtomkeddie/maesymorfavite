@@ -13,7 +13,7 @@ const content = {
     gameTitle: "Morfa Runner",
     howToPlay: "How to Play",
     instructions: "Help our Ysgol Maes Y Morfa student race through the school grounds! Jump over obstacles and collect values for bonus points.",
-    controls: "Press SPACE to jump and see how far you can run!",
+    controls: "Press SPACE to jump, and again in mid-air for a double jump!",
     gameElements: "In the game:",
     elements: [
       { name: 'Jump over the Books', image: 'books.png' },
@@ -28,7 +28,7 @@ const content = {
     gameTitle: "Rhedwr Morfa",
     howToPlay: "Sut i Chwarae",
     instructions: "Helpwch ein myfyriwr o Ysgol Maes Y Morfa i rasio drwy dir yr ysgol! Neidiwch dros rwystrau a chasglu gwerthoedd am bwyntiau bonws.",
-    controls: "Pwyswch SPACE i neidio a gweld pa mor bell y gallwch chi redeg!",
+    controls: "Pwyswch SPACE i neidio, ac eto yn yr awyr am naid ddwbl!",
     gameElements: "Yn y gêm:",
     elements: [
       { name: 'Neidio dros y Llyfrau', image: 'books.png' },
