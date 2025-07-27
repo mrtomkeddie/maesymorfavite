@@ -12,7 +12,7 @@ const content = {
     intro: "Welcome to the fun zone! Get ready to play some cool games.",
     gameTitle: "Morfa Runner",
     howToPlay: "How to Play",
-    instructions: "Help our Ysgol Maes Y Morfa student race through the school grounds! Jump over obstacles and collect values for bonus points.",
+    instructions: "Help our Ysgol Maes Y Morfa student race through the school grounds! Jump over obstacles and collect values for bonus points. The longer you run, the faster it gets!",
     controls: "Press SPACE to jump, and again in mid-air for a double jump!",
     gameElements: "In the game:",
     elements: [
@@ -27,7 +27,7 @@ const content = {
     intro: "Croeso i'r ardal hwyl! Byddwch yn barod i chwarae gemau cŵl.",
     gameTitle: "Rhedwr Morfa",
     howToPlay: "Sut i Chwarae",
-    instructions: "Helpwch ein myfyriwr o Ysgol Maes Y Morfa i rasio drwy dir yr ysgol! Neidiwch dros rwystrau a chasglu gwerthoedd am bwyntiau bonws.",
+    instructions: "Helpwch ein myfyriwr o Ysgol Maes Y Morfa i rasio drwy dir yr ysgol! Neidiwch dros rwystrau a chasglu gwerthoedd am bwyntiau bonws. Po hiraf y byddwch chi'n rhedeg, y cyflymaf y bydd hi'n mynd!",
     controls: "Pwyswch SPACE i neidio, ac eto yn yr awyr am naid ddwbl!",
     gameElements: "Yn y gêm:",
     elements: [
