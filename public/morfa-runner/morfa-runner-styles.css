@@ -1,4 +1,8 @@
 /* Game container styles for embedding */
+body {
+  margin: 0;
+}
+
 .morfa-runner-game {
   width: 100%;
   max-width: 900px;
