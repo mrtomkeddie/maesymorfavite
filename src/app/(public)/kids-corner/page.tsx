@@ -11,36 +11,33 @@ const content = {
     title: "Kids' Corner",
     intro: "Welcome to the fun zone! Get ready to play some cool games.",
     gameTitle: "Morfa Runner",
+    howToPlay: "How to Play",
+    instructions: "Help our Ysgol Maes Y Morfa student race through the school grounds! Jump over obstacles and collect values for bonus points.",
+    controls: "Press SPACE to jump and see how far you can run!",
+    gameElements: "In the game:",
+    elements: [
+      { name: 'Jump over the Books', image: 'books.png' },
+      { name: 'Dodge the School Bag', image: 'bag.png' },
+      { name: 'Avoid Mrs Jones!', image: 'teacher.png' },
+      { name: 'Collect the School Values', image: 'values.png' },
+    ]
   },
   cy: {
     title: "Cornel y Plant",
     intro: "Croeso i'r ardal hwyl! Byddwch yn barod i chwarae gemau cŵl.",
     gameTitle: "Rhedwr Morfa",
+    howToPlay: "Sut i Chwarae",
+    instructions: "Helpwch ein myfyriwr o Ysgol Maes Y Morfa i rasio drwy dir yr ysgol! Neidiwch dros rwystrau a chasglu gwerthoedd am bwyntiau bonws.",
+    controls: "Pwyswch SPACE i neidio a gweld pa mor bell y gallwch chi redeg!",
+    gameElements: "Yn y gêm:",
+    elements: [
+      { name: 'Neidio dros y Llyfrau', image: 'books.png' },
+      { name: 'Osgowch y Bag Ysgol', image: 'bag.png' },
+      { name: 'Osgowch Mrs Jones!', image: 'teacher.png' },
+      { name: 'Casglwch Werthoedd yr Ysgol', image: 'values.png' },
+    ]
   }
 };
-
-const GameDescription = ({ lang }: { lang: 'en' | 'cy' }) => {
-    if (lang === 'cy') {
-        return (
-            <div className="prose prose-sm max-w-none text-muted-foreground mb-6">
-                <h2>Croeso i Redwr Morfa! 🏃‍♂️</h2>
-                <p>
-                    Helpwch ein myfyriwr o Ysgol Maes Y Morfa i rasio drwy dir yr ysgol! Neidiwch dros rwystrau fel llyfrau <Image src="/morfa-runner/images/books.png" alt="Llyfrau" width="24" height="24" className="inline-block align-text-bottom" />, bag ysgol <Image src="/morfa-runner/images/bag.png" alt="Bag Ysgol" width="24" height="24" className="inline-block align-text-bottom" />, a hyd yn oed Mrs Jones <Image src="/morfa-runner/images/teacher.png" alt="Mrs Jones" width="24" height="24" className="inline-block align-text-bottom" /> wrth gasglu gwerthoedd <Image src="/morfa-runner/images/values.png" alt="Gwerthoedd" width="24" height="24" className="inline-block align-text-bottom" /> am bwyntiau bonws!
-                </p>
-                <p><strong>Pwyswch SPACE i neidio a gweld pa mor bell y gallwch chi redeg!</strong></p>
-            </div>
-        )
-    }
-    return (
-       <div className="prose prose-sm max-w-none text-muted-foreground mb-6">
-          <h2>Welcome to Morfa Runner! 🏃‍♂️</h2>
-          <p>
-            Help our Ysgol Maes Y Morfa student race through the school grounds! Jump over obstacles like books <Image src="/morfa-runner/images/books.png" alt="Books" width="24" height="24" className="inline-block align-text-bottom" />, a school bag <Image src="/morfa-runner/images/bag.png" alt="School Bag" width="24" height="24" className="inline-block align-text-bottom" />, and even Mrs Jones <Image src="/morfa-runner/images/teacher.png" alt="Mrs Jones" width="24" height="24" className="inline-block align-text-bottom" /> while collecting values <Image src="/morfa-runner/images/values.png" alt="Values" width="24" height="24" className="inline-block align-text-bottom" /> for bonus points!
-          </p>
-          <p><strong>Press SPACE to jump and see how far you can run!</strong></p>
-        </div>
-    )
-}
 
 export default function KidsCornerPage() {
     const { language } = useLanguage();
@@ -70,7 +67,24 @@ export default function KidsCornerPage() {
                             <CardTitle>{t.gameTitle}</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <GameDescription lang={language} />
+                            <div className="grid md:grid-cols-2 gap-8 mb-6">
+                                <div>
+                                    <h3 className="font-bold text-lg mb-2">{t.howToPlay}</h3>
+                                    <p className="text-muted-foreground">{t.instructions}</p>
+                                    <p className="text-muted-foreground mt-2"><strong>{t.controls}</strong></p>
+                                </div>
+                                <div className="border-t md:border-t-0 md:border-l pl-0 md:pl-8 pt-6 md:pt-0">
+                                    <h3 className="font-bold text-lg mb-3">{t.gameElements}</h3>
+                                    <div className="space-y-3">
+                                        {t.elements.map(item => (
+                                            <div key={item.name} className="flex items-center gap-4">
+                                                <Image src={`/morfa-runner/images/${item.image}`} alt={item.name} width={40} height={40} className="object-contain" />
+                                                <span className="text-muted-foreground font-medium">{item.name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
                             <div className="aspect-[900/400] w-full bg-muted rounded-lg flex items-center justify-center overflow-hidden">
                                 <iframe 
                                     src="/morfa-runner/index.html" 
