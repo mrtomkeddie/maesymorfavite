@@ -546,8 +546,8 @@ function isHighScore(score) {
 }
 
 function drawHighScores() {
-  // Draw background
-  ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+  // Draw full black background covering entire canvas
+  ctx.fillStyle = "#000000";
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
   
   // Title
@@ -584,8 +584,8 @@ function drawHighScores() {
 }
 
 function drawNameEntry() {
-  // Draw background
-  ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+  // Draw full black background covering entire canvas
+  ctx.fillStyle = "#000000";
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
   
   // Congratulations
