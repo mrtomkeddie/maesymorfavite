@@ -26,10 +26,10 @@ const GameDescription = ({ lang }: { lang: 'en' | 'cy' }) => {
                 <h2>Croeso i Redwr Morfa! 🏃‍♂️</h2>
                 <p>
                     Helpwch ein myfyriwr o Ysgol Maes Y Morfa i rasio drwy dir yr ysgol! Neidiwch dros rwystrau fel
-                    <Image src="/morfa-runner/images/books.png" alt="Llyfrau" width="40" height="40" className="inline-block mx-1" />,
-                    <Image src="/morfa-runner/images/bag.png" alt="Bag Ysgol" width="40" height="40" className="inline-block mx-1" />,
+                    <Image src="/morfa-runner/images/books.png" alt="Llyfrau" width="40" height="40" className="inline-block mx-1 align-middle" />,
+                    <Image src="/morfa-runner/images/bag.png" alt="Bag Ysgol" width="40" height="40" className="inline-block mx-1 align-middle" />,
                     a hyd yn oed
-                    <Image src="/morfa-runner/images/teacher.png" alt="Mrs Jones" width="50" height="50" className="inline-block mx-1" /> wrth gasglu <Image src="/morfa-runner/images/values.png" alt="Gwerthoedd" width="40" height="40" className="inline-block mx-1" /> am bwyntiau bonws!
+                    <Image src="/morfa-runner/images/teacher.png" alt="Athro" width="50" height="50" className="inline-block mx-1 align-middle" /> wrth gasglu <Image src="/morfa-runner/images/values.png" alt="Gwerthoedd" width="40" height="40" className="inline-block mx-1 align-middle" /> am bwyntiau bonws!
                 </p>
                 <p><strong>Pwyswch SPACE i neidio a gweld pa mor bell y gallwch chi redeg!</strong></p>
             </div>
@@ -39,11 +39,11 @@ const GameDescription = ({ lang }: { lang: 'en' | 'cy' }) => {
        <div className="prose prose-sm max-w-none text-muted-foreground mb-6">
           <h2>Welcome to Morfa Runner! 🏃‍♂️</h2>
           <p>
-            Help our Ysgol Maes Y Morfa student race through the school grounds! Jump over obstacles like 
-            <Image src="/morfa-runner/images/books.png" alt="Books" width="40" height="40" className="inline-block mx-1" />, 
-            <Image src="/morfa-runner/images/bag.png" alt="School Bag" width="40" height="40" className="inline-block mx-1" />, 
-            and even 
-            <Image src="/morfa-runner/images/teacher.png" alt="Mrs Jones" width="50" height="50" className="inline-block mx-1" /> while collecting <Image src="/morfa-runner/images/values.png" alt="Values" width="40" height="40" className="inline-block mx-1" /> for bonus points!
+            Help our Ysgol Maes Y Morfa student race through the school grounds! Jump over obstacles like
+            <Image src="/morfa-runner/images/books.png" alt="Books" width="40" height="40" className="inline-block mx-1 align-middle" />,
+            <Image src="/morfa-runner/images/bag.png" alt="School Bag" width="40" height="40" className="inline-block mx-1 align-middle" />,
+            and even
+            <Image src="/morfa-runner/images/teacher.png" alt="Teacher" width="50" height="50" className="inline-block mx-1 align-middle" /> while collecting <Image src="/morfa-runner/images/values.png" alt="Values" width="40" height="40" className="inline-block mx-1 align-middle" /> for bonus points!
           </p>
           <p><strong>Press SPACE to jump and see how far you can run!</strong></p>
         </div>
