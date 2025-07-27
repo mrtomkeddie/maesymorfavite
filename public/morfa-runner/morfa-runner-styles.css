@@ -8,6 +8,7 @@ body {
   max-width: 900px;
   margin: 0 auto;
   font-family: Arial, sans-serif;
+  overflow: hidden; /* Prevent scrolling on the game container */
 }
 
 .game-container {
@@ -17,6 +18,7 @@ body {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  max-height: 400px; /* Constrain height */
 }
 
 canvas {
@@ -24,6 +26,8 @@ canvas {
   width: 100%;
   height: auto;
   max-width: 900px;
+  max-height: 400px; /* Prevent canvas from getting too tall */
+  object-fit: contain; /* Maintain aspect ratio */
 }
 
 #startButton {
@@ -42,6 +46,7 @@ canvas {
   font-weight: bold;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   transition: background-color 0.2s;
+  z-index: 10; /* Ensure button appears above canvas */
 }
 
 #startButton:hover {
@@ -56,12 +61,18 @@ canvas {
   color: white;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
   font-weight: bold;
+  z-index: 10; /* Ensure score appears above canvas */
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
   .game-container {
     border: 6px solid #e11d48;
+    max-height: 300px; /* Smaller on mobile */
+  }
+  
+  canvas {
+    max-height: 300px;
   }
   
   #startButton {
@@ -79,6 +90,11 @@ canvas {
 @media (max-width: 480px) {
   .game-container {
     border: 4px solid #e11d48;
+    max-height: 250px; /* Even smaller on very small screens */
+  }
+  
+  canvas {
+    max-height: 250px;
   }
   
   #startButton {

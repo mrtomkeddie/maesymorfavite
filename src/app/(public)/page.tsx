@@ -100,7 +100,7 @@ export default function HomePage() {
           className="absolute inset-0 z-0 object-cover"
           data-ai-hint="vibrant classroom learning"
         />
-        <div className="absolute inset-0 bg-black/50 z-10"></div>
+        <div className="absolute inset-0 bg-black/60 z-10"></div>
         <div className="relative z-20 container mx-auto max-w-4xl px-8">
             <h1 className="font-headline text-5xl font-extrabold tracking-tighter sm:text-6xl md:text-7xl">
                 {t.hero.title}

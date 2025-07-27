@@ -567,8 +567,8 @@ function drawHighScores() {
     
     // Draw rank and name on left
     ctx.textAlign = "left";
-    ctx.strokeText(`${'${rank}'}. ${'${entry.name}'}`, canvasWidth / 2 - 150, y);
-    ctx.fillText(`${'${rank}'}. ${'${entry.name}'}`, canvasWidth / 2 - 150, y);
+    ctx.strokeText(`${rank}. ${entry.name}`, canvasWidth / 2 - 150, y);
+    ctx.fillText(`${rank}. ${entry.name}`, canvasWidth / 2 - 150, y);
     
     // Draw score on right
     ctx.textAlign = "right";
@@ -599,8 +599,8 @@ function drawNameEntry() {
   
   // Score
   ctx.font = "bold 28px Arial";
-  ctx.strokeText(`Score: ${'${score}'}`, canvasWidth / 2, 170);
-  ctx.fillText(`Score: ${'${score}'}`, canvasWidth / 2, 170);
+  ctx.strokeText("Score: " + score, canvasWidth / 2, 170);
+  ctx.fillText("Score: " + score, canvasWidth / 2, 170);
   
   // Name prompt
   ctx.font = "24px Arial";
