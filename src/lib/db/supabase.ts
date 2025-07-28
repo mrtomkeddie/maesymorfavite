@@ -242,7 +242,7 @@ export const updateCalendarEvent = async (id: string, eventData: Partial<Omit<Ca
     let finalEventData = { ...eventData };
     
     if (crossPost) {
-        const newsData = generateNewsDataFromEvent(eventData);
+        const newsData = generateNewsDataFromEvent(eventData as Omit<CalendarEvent, 'id' | 'attachments'>);
         if (finalEventData.linkedNewsPostId) {
             await updateNews(finalEventData.linkedNewsPostId, newsData);
         } else {
@@ -673,19 +673,130 @@ export const getPaginatedChildren = async (limitNum = 20, lastDoc?: any): Promis
 
 
 // === SITE SETTINGS ===
-export const getSiteSettings = async (): Promise<SiteSettings | null> => notImplemented();
-export const updateSiteSettings = async (settings: SiteSettings) => notImplemented();
+export const getSiteSettings = async (): Promise<SiteSettings | null> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return null;
+    const { data, error } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'site')
+        .single();
+    
+    if (error && error.code !== 'PGRST116') { // PGRST116 = 'exact one row not found'
+        console.error("Error fetching site settings from Supabase:", error);
+        throw error;
+    }
+    return data ? data.value as SiteSettings : null;
+};
+
+export const updateSiteSettings = async (settings: SiteSettings) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+
+    const { error } = await supabase
+        .from('settings')
+        .upsert({ key: 'site', value: settings });
+
+    if (error) {
+        console.error("Error updating site settings in Supabase:", error);
+        throw error;
+    }
+};
 
 // === LUNCH MENU SETTINGS ===
-export const getWeeklyMenu = async (): Promise<WeeklyMenu | null> => notImplemented();
-export const updateWeeklyMenu = async (menu: WeeklyMenu) => notImplemented();
+export const getWeeklyMenu = async (): Promise<WeeklyMenu | null> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return null;
+    const { data, error } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'weeklyMenu')
+        .single();
+
+    if (error && error.code !== 'PGRST116') {
+        console.error("Error fetching weekly menu from Supabase:", error);
+        throw error;
+    }
+    return data ? data.value as WeeklyMenu : null;
+};
+
+export const updateWeeklyMenu = async (menu: WeeklyMenu) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+
+    const { error } = await supabase
+        .from('settings')
+        .upsert({ key: 'weeklyMenu', value: menu });
+
+    if (error) {
+        console.error("Error updating weekly menu in Supabase:", error);
+        throw error;
+    }
+};
 
 // === INBOX ===
-export const addInboxMessage = async (messageData: InboxMessage) => notImplemented();
-export const getInboxMessages = async (): Promise<InboxMessageWithId[]> => notImplemented();
-export const updateInboxMessage = async (id: string, data: Partial<InboxMessage>) => notImplemented();
-export const deleteInboxMessage = async (id: string) => notImplemented();
-export const getUnreadMessageCount = async (): Promise<number> => notImplemented();
+const fromSupabaseInboxMessage = (message: any): InboxMessageWithId => {
+    return {
+        id: message.id,
+        type: message.type,
+        subject: message.subject,
+        body: message.body,
+        sender: message.sender,
+        isRead: message.is_read,
+        createdAt: message.created_at,
+    };
+};
+
+const toSupabaseInboxMessage = (message: Partial<InboxMessage>) => {
+    return {
+        type: message.type,
+        subject: message.subject,
+        body: message.body,
+        sender: message.sender,
+        is_read: message.isRead,
+        created_at: message.createdAt,
+    };
+};
+
+export const addInboxMessage = async (messageData: InboxMessage) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+    const { error } = await supabase.from('inbox').insert([toSupabaseInboxMessage(messageData)]);
+    if (error) throw error;
+};
+
+export const getInboxMessages = async (): Promise<InboxMessageWithId[]> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return [];
+    const { data, error } = await supabase.from('inbox').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    return data.map(fromSupabaseInboxMessage);
+};
+
+export const updateInboxMessage = async (id: string, data: Partial<InboxMessage>) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+    const { error } = await supabase.from('inbox').update(toSupabaseInboxMessage(data)).eq('id', id);
+    if (error) throw error;
+};
+
+export const deleteInboxMessage = async (id: string) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+    const { error } = await supabase.from('inbox').delete().eq('id', id);
+    if (error) throw error;
+};
+
+export const getUnreadMessageCount = async (): Promise<number> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return 0;
+    const { count, error } = await supabase
+        .from('inbox')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_read', false);
+    if (error) throw error;
+    return count || 0;
+};
 
 // === GALLERY ===
 const fromSupabasePhoto = (photo: any): PhotoWithId => {
