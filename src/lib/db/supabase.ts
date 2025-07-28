@@ -1,6 +1,5 @@
 
 
-
 // This file will contain the Supabase implementations of all data functions.
 // Note: This is a placeholder implementation. A real implementation would require a
 // Supabase project with tables matching the data structures in src/lib/types.ts.
@@ -9,6 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { NewsPost, NewsPostWithId, CalendarEvent, CalendarEventWithId, StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, InboxMessage, InboxMessageWithId, Photo, PhotoWithId, WeeklyMenu } from '@/lib/types';
 import { QueryDocumentSnapshot } from "firebase/firestore"; // This type is Firebase-specific and should eventually be removed.
 import { news as mockNews } from '@/lib/mockNews';
+import { yearGroups } from '@/components/admin/ChildForm';
 
 // Only create a client if the environment variables are set.
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -45,19 +45,15 @@ const fromSupabaseNews = (news: any): NewsPostWithId => {
         isUrgent: news.isUrgent,
         createdBy: news.createdBy,
         lastEdited: news.lastEdited,
+        date: news.date,
     };
 };
 
 const toSupabaseNews = (news: Partial<NewsPost>) => {
-    const { attachmentUrl, attachmentName, isUrgent, createdBy, lastEdited, ...rest } = news;
-    return {
-        ...rest,
-        attachmentUrl: attachmentUrl,
-        attachmentName: attachmentName,
-        isUrgent: isUrgent,
-        createdBy: createdBy,
-        lastEdited: lastEdited,
-    };
+    // Supabase client handles JSON conversion, so we can pass objects directly.
+    // The key is to map our camelCase fields to snake_case columns if needed.
+    // For this schema, we used quoted camelCase, so no mapping is needed.
+    return news;
 };
 
 
@@ -365,21 +361,193 @@ export const getPaginatedDocuments = async (limitNum = 20, lastDoc?: any): Promi
 };
 
 // === PARENTS ===
-export const getParents = async (): Promise<ParentWithId[]> => notImplemented();
-export const addParent = async (parentData: Parent): Promise<string> => notImplemented();
-export const updateParent = async (id: string, parentData: Partial<Parent>) => notImplemented();
-export const deleteParent = async (id: string) => notImplemented();
-export const getPaginatedParents = async (limitNum = 20, lastDoc?: QueryDocumentSnapshot): Promise<{ data: ParentWithId[], lastDoc?: any }> => notImplemented();
+const fromSupabaseParent = (parent: any): ParentWithId => {
+    if (!parent) return parent;
+    return {
+        ...parent,
+        createdAt: parent.created_at,
+    };
+};
+
+const toSupabaseParent = (parent: Partial<Parent>) => {
+    const { ...rest } = parent;
+    return rest;
+};
+
+export const getParents = async (): Promise<ParentWithId[]> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return [];
+    const { data, error } = await supabase.from('parents').select('*').order('name', { ascending: true });
+    if (error) throw error;
+    return data.map(fromSupabaseParent);
+};
+
+export const addParent = async (parentData: Parent): Promise<string> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+    const { data, error } = await supabase.from('parents').insert([toSupabaseParent(parentData)]).select('id').single();
+    if (error) throw error;
+    return data.id;
+};
+
+export const updateParent = async (id: string, parentData: Partial<Parent>) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+    const { error } = await supabase.from('parents').update(toSupabaseParent(parentData)).eq('id', id);
+    if (error) throw error;
+};
+
+export const deleteParent = async (id: string) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+    
+    // First, find all children linked to this parent
+    const { data: linkedChildren, error: fetchError } = await supabase
+        .from('children')
+        .select('id, linked_parents')
+        .contains('linked_parents', `[{"parentId":"${id}"}]`);
+
+    if (fetchError) throw fetchError;
+
+    // For each child, remove the parent from their linked_parents array
+    for (const child of linkedChildren) {
+        const updatedLinks = (child.linked_parents as any[]).filter(lp => lp.parentId !== id);
+        const { error: updateError } = await supabase
+            .from('children')
+            .update({ linked_parents: updatedLinks })
+            .eq('id', child.id);
+        if (updateError) throw updateError;
+    }
+
+    // Now, delete the parent
+    const { error: deleteError } = await supabase.from('parents').delete().eq('id', id);
+    if (deleteError) throw deleteError;
+};
+
+export const getPaginatedParents = async (limitNum = 20, lastDoc?: any): Promise<{ data: ParentWithId[], lastDoc?: any }> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return { data: [], lastDoc: undefined };
+    const page = lastDoc ? lastDoc.page + 1 : 0;
+    const from = page * limitNum;
+    const to = from + limitNum - 1;
+
+    const { data, error } = await supabase.from('parents').select('*').order('name', { ascending: true }).range(from, to);
+    if (error) throw error;
+    
+    const nextLastDoc = data && data.length === limitNum ? { page } : undefined;
+    return { data: data.map(fromSupabaseParent), lastDoc: nextLastDoc };
+};
+
 
 // === CHILDREN ===
-export const getChildren = async (): Promise<ChildWithId[]> => notImplemented();
-export const addChild = async (childData: Child) => notImplemented();
-export const bulkAddChildren = async (childrenData: Child[]) => notImplemented();
-export const updateChild = async (id: string, childData: Partial<Child>) => notImplemented();
-export const deleteChild = async (id: string) => notImplemented();
-export const promoteAllChildren = async (): Promise<void> => notImplemented();
-export const bulkUpdateChildren = async (ids: string[], data: Partial<Child>) => notImplemented();
-export const getPaginatedChildren = async (limitNum = 20, lastDoc?: QueryDocumentSnapshot): Promise<{ data: ChildWithId[], lastDoc?: any }> => notImplemented();
+const fromSupabaseChild = (child: any): ChildWithId => {
+    if (!child) return child;
+    return {
+        id: child.id,
+        name: child.name,
+        yearGroup: child.year_group,
+        dob: child.dob,
+        linkedParents: child.linked_parents,
+    };
+};
+
+const toSupabaseChild = (child: Partial<Child>) => {
+    return {
+        name: child.name,
+        year_group: child.yearGroup,
+        dob: child.dob,
+        linked_parents: child.linkedParents,
+    };
+};
+
+export const getChildren = async (): Promise<ChildWithId[]> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return [];
+    const { data, error } = await supabase.from('children').select('*').order('name', { ascending: true });
+    if (error) throw error;
+    return data.map(fromSupabaseChild);
+};
+
+export const addChild = async (childData: Child) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+    const { error } = await supabase.from('children').insert([toSupabaseChild(childData)]);
+    if (error) throw error;
+};
+
+export const bulkAddChildren = async (childrenData: Child[]) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+    const supabaseData = childrenData.map(toSupabaseChild);
+    const { error } = await supabase.from('children').insert(supabaseData);
+    if (error) throw error;
+}
+
+export const updateChild = async (id: string, childData: Partial<Child>) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+    const { error } = await supabase.from('children').update(toSupabaseChild(childData)).eq('id', id);
+    if (error) throw error;
+};
+
+export const deleteChild = async (id: string) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+    const { error } = await supabase.from('children').delete().eq('id', id);
+    if (error) throw error;
+};
+
+export const promoteAllChildren = async (): Promise<void> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+    const { data: children, error } = await supabase.from('children').select('*');
+    if (error) throw error;
+
+    const leaversYear = new Date().getFullYear() + 1;
+    const archiveLabel = `Archived/Leavers ${leaversYear}`;
+
+    for (const child of children) {
+        const currentYearIndex = yearGroups.indexOf(child.year_group);
+        let nextYearGroup: string;
+
+        if (child.year_group === yearGroups[yearGroups.length - 1]) {
+            nextYearGroup = archiveLabel;
+        } else if (currentYearIndex > -1) {
+            nextYearGroup = yearGroups[currentYearIndex + 1];
+        } else {
+            continue; // Skip if not in a standard year group
+        }
+
+        const { error: updateError } = await supabase
+            .from('children')
+            .update({ year_group: nextYearGroup })
+            .eq('id', child.id);
+        
+        if (updateError) console.error(`Failed to promote child ${child.id}:`, updateError);
+    }
+};
+
+export const bulkUpdateChildren = async (ids: string[], data: Partial<Child>) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+    const { error } = await supabase.from('children').update(toSupabaseChild(data)).in('id', ids);
+    if (error) throw error;
+};
+
+export const getPaginatedChildren = async (limitNum = 20, lastDoc?: any): Promise<{ data: ChildWithId[], lastDoc?: any }> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return { data: [], lastDoc: undefined };
+    const page = lastDoc ? lastDoc.page + 1 : 0;
+    const from = page * limitNum;
+    const to = from + limitNum - 1;
+
+    const { data, error } = await supabase.from('children').select('*').order('name', { ascending: true }).range(from, to);
+    if (error) throw error;
+    
+    const nextLastDoc = data && data.length === limitNum ? { page } : undefined;
+    return { data: data.map(fromSupabaseChild), lastDoc: nextLastDoc };
+};
+
 export const getPhotosForYearGroups = async (yearGroups: string[]): Promise<PhotoWithId[]> => notImplemented();
 
 
