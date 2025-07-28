@@ -9,24 +9,14 @@ export const parentChildren = [
         name: 'Charlie K.', 
         yearGroup: 'Year 2', 
         attendance: '98%', 
-        teacher: 'Mr. Evans',
-        avatar: {
-            src: 'https://placehold.co/100x100.png',
-            fallback: 'CK',
-            aiHint: 'child portrait'
-        }
+        teacher: 'Mr. Evans'
     },
     { 
         id: 'child_2', 
         name: 'Sophie K.', 
         yearGroup: 'Year 5', 
         attendance: '99%', 
-        teacher: 'Ms. Hughes',
-        avatar: {
-            src: 'https://placehold.co/100x100.png',
-            fallback: 'SK',
-            aiHint: 'child portrait smiling'
-        }
+        teacher: 'Ms. Hughes'
     },
 ];
 

@@ -70,10 +70,6 @@ export default function DashboardPage() {
                 <CardContent className="space-y-4">
                     {parentChildren.map(child => (
                         <div key={child.id} className="flex items-center gap-4 rounded-lg border p-4">
-                            <Avatar className="h-16 w-16">
-                                <AvatarImage src={child.avatar.src} data-ai-hint={child.avatar.aiHint} />
-                                <AvatarFallback>{child.avatar.fallback}</AvatarFallback>
-                            </Avatar>
                             <div className="flex-grow grid grid-cols-2 gap-4">
                                 <div>
                                     <h3 className="font-bold text-lg">{child.name}</h3>
