@@ -90,6 +90,7 @@ export default function KidsCornerPage() {
                                     src="/morfa-runner/index.html" 
                                     className="w-full h-full border-0"
                                     title="Morfa Runner Game"
+                                    allow="fullscreen"
                                 ></iframe>
                             </div>
                         </CardContent>
