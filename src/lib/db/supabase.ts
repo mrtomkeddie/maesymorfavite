@@ -2,13 +2,13 @@
 
 
 
+
 // This file will contain the Supabase implementations of all data functions.
 // Note: This is a placeholder implementation. A real implementation would require a
 // Supabase project with tables matching the data structures in src/lib/types.ts.
 
 import { createClient } from '@supabase/supabase-js';
 import type { NewsPost, NewsPostWithId, CalendarEvent, CalendarEventWithId, StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, InboxMessage, InboxMessageWithId, Photo, PhotoWithId, WeeklyMenu } from '@/lib/types';
-import { QueryDocumentSnapshot } from "firebase/firestore"; // This type is Firebase-specific and should eventually be removed.
 import { news as mockNews } from '@/lib/mockNews';
 import { yearGroups } from '@/components/admin/ChildForm';
 
