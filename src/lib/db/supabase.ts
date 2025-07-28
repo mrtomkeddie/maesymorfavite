@@ -1,13 +1,34 @@
 
 
+
 // This file will contain the Supabase implementations of all data functions.
 // Note: This is a placeholder implementation. A real implementation would require a
 // Supabase project with tables matching the data structures in src/lib/types.ts.
 
-import { getSupabaseClient } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import type { NewsPost, NewsPostWithId, CalendarEvent, CalendarEventWithId, StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, InboxMessage, InboxMessageWithId, Photo, PhotoWithId, WeeklyMenu } from '@/lib/types';
 import { QueryDocumentSnapshot } from "firebase/firestore"; // This type is Firebase-specific and should eventually be removed.
 import { news as mockNews } from '@/lib/mockNews';
+
+// Only create a client if the environment variables are set.
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+let supabase: ReturnType<typeof createClient> | null = null;
+if (supabaseUrl && supabaseAnonKey) {
+    supabase = createClient(supabaseUrl, supabaseAnonKey);
+}
+
+// Helper function to ensure Supabase is configured before use.
+function getSupabaseClient() {
+    if (!supabase) {
+        // This check is important for when the app runs in an environment
+        // where Supabase credentials are not provided (like Firebase Studio).
+        // Returning null allows the db/index.ts to fall back to Firebase.
+        return null;
+    }
+    return supabase;
+}
+
 
 // Placeholder error for unimplemented functions
 const notImplemented = () => {
@@ -15,6 +36,31 @@ const notImplemented = () => {
 }
 
 // === NEWS ===
+const fromSupabaseNews = (news: any): NewsPostWithId => {
+    if (!news) return news;
+    return {
+        ...news,
+        attachmentUrl: news.attachmentUrl,
+        attachmentName: news.attachmentName,
+        isUrgent: news.isUrgent,
+        createdBy: news.createdBy,
+        lastEdited: news.lastEdited,
+    };
+};
+
+const toSupabaseNews = (news: Partial<NewsPost>) => {
+    const { attachmentUrl, attachmentName, isUrgent, createdBy, lastEdited, ...rest } = news;
+    return {
+        ...rest,
+        attachmentUrl: attachmentUrl,
+        attachmentName: attachmentName,
+        isUrgent: isUrgent,
+        createdBy: createdBy,
+        lastEdited: lastEdited,
+    };
+};
+
+
 export const getNews = async (): Promise<NewsPostWithId[]> => {
     const supabase = getSupabaseClient();
     if (!supabase) return [];
@@ -27,7 +73,7 @@ export const getNews = async (): Promise<NewsPostWithId[]> => {
         console.error("Error fetching news from Supabase:", error);
         throw error;
     }
-    return data || [];
+    return (data || []).map(fromSupabaseNews);
 };
 
 export const addNews = async (newsData: Omit<NewsPost, 'id' | 'attachments' | 'slug'>): Promise<string> => {
@@ -35,7 +81,7 @@ export const addNews = async (newsData: Omit<NewsPost, 'id' | 'attachments' | 's
     if (!supabase) throw new Error("Supabase not configured");
     const slug = newsData.title_en.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
 
-    const finalNewsData = { ...newsData, slug };
+    const finalNewsData = toSupabaseNews({ ...newsData, slug });
 
      if (finalNewsData.isUrgent) {
         await supabase.from('news').update({ isUrgent: false }).eq('isUrgent', true);
@@ -62,7 +108,7 @@ export const updateNews = async (id: string, newsData: Partial<Omit<NewsPost, 'i
     }
     const { error } = await supabase
         .from('news')
-        .update(newsData)
+        .update(toSupabaseNews(newsData))
         .eq('id', id);
     
     if (error) {
@@ -105,7 +151,7 @@ export const getPaginatedNews = async (limitNum = 20, lastDoc?: any): Promise<{ 
 
     const nextLastDoc = data && data.length === limitNum ? { page } : undefined;
 
-    return { data: data || [], lastDoc: nextLastDoc };
+    return { data: (data || []).map(fromSupabaseNews), lastDoc: nextLastDoc };
 };
 
 
@@ -217,11 +263,106 @@ export const getPaginatedStaff = async (limitNum = 20, lastDoc?: any): Promise<{
 };
 
 // === DOCUMENTS ===
-export const getDocuments = async (): Promise<DocumentWithId[]> => notImplemented();
-export const addDocument = async (docData: Document) => notImplemented();
-export const updateDocument = async (id: string, docData: Partial<Document>) => notImplemented();
-export const deleteDocument = async (id: string) => notImplemented();
-export const getPaginatedDocuments = async (limitNum = 20, lastDoc?: QueryDocumentSnapshot): Promise<{ data: DocumentWithId[], lastDoc?: any }> => notImplemented();
+const fromSupabaseDocument = (doc: any): DocumentWithId => {
+    if (!doc) return doc;
+    return {
+        ...doc,
+        fileUrl: doc.file_url,
+        uploadedAt: doc.uploaded_at,
+    };
+};
+
+const toSupabaseDocument = (doc: Partial<Document>) => {
+    const { fileUrl, uploadedAt, ...rest } = doc;
+    return {
+        ...rest,
+        file_url: fileUrl,
+        uploaded_at: uploadedAt,
+    };
+};
+
+export const getDocuments = async (): Promise<DocumentWithId[]> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return [];
+    const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .order('uploaded_at', { ascending: false });
+
+    if (error) {
+        console.error("Error fetching documents from Supabase:", error);
+        throw error;
+    }
+    return (data || []).map(fromSupabaseDocument);
+};
+
+export const addDocument = async (docData: Document) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+
+    const { error } = await supabase
+        .from('documents')
+        .insert([toSupabaseDocument(docData)]);
+
+    if (error) {
+        console.error("Error adding document to Supabase:", error);
+        throw error;
+    }
+};
+
+export const updateDocument = async (id: string, docData: Partial<Document>) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+
+    const { error } = await supabase
+        .from('documents')
+        .update(toSupabaseDocument(docData))
+        .eq('id', id);
+
+    if (error) {
+        console.error("Error updating document in Supabase:", error);
+        throw error;
+    }
+};
+
+export const deleteDocument = async (id: string) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+
+    const { error } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        console.error("Error deleting document from Supabase:", error);
+        throw error;
+    }
+};
+
+export const getPaginatedDocuments = async (limitNum = 20, lastDoc?: any): Promise<{ data: DocumentWithId[], lastDoc?: any }> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return { data: [], lastDoc: undefined };
+
+    const page = lastDoc ? lastDoc.page + 1 : 0;
+    const from = page * limitNum;
+    const to = from + limitNum - 1;
+
+    const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .order('uploaded_at', { ascending: false })
+        .range(from, to);
+
+    if (error) {
+        console.error("Error fetching paginated documents from Supabase:", error);
+        throw error;
+    }
+
+    const nextLastDoc = data && data.length === limitNum ? { page } : undefined;
+
+    return { data: (data || []).map(fromSupabaseDocument), lastDoc: nextLastDoc };
+};
 
 // === PARENTS ===
 export const getParents = async (): Promise<ParentWithId[]> => notImplemented();
