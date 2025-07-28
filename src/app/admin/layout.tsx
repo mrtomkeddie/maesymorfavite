@@ -49,7 +49,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
-import { getUnreadMessageCount } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
 import { useLanguage } from '../(public)/LanguageProvider';
 import { Button } from '@/components/ui/button';
 
@@ -157,7 +157,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (isAuth) {
-        getUnreadMessageCount().then(setUnreadCount).catch(console.error);
+        db.getUnreadMessageCount().then(setUnreadCount).catch(console.error);
     }
   }, [isAuth, pathname]); // Refetch on path change to update badge
 

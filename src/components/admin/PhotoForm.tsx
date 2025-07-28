@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addPhoto } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
 import { uploadFile } from '@/lib/firebase/storage';
 import { Progress } from '../ui/progress';
 import { yearGroups as allYearGroups } from './ChildForm';
@@ -125,7 +125,7 @@ export function PhotoForm({ onSuccess }: PhotoFormProps) {
         uploadedBy: 'admin@example.com' // Replace with actual admin user later
       };
 
-      await addPhoto(photoData);
+      await db.addPhoto(photoData);
 
       toast(t.toastSuccess);
       

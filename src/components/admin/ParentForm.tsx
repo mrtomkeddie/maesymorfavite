@@ -19,8 +19,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addParent, updateParent, bulkUpdateChildren, updateChild } from '@/lib/firebase/firestore';
-import { ParentWithId, ChildWithId, Child, LinkedParent } from '@/lib/types';
+import { db } from '@/lib/db';
+import type { ParentWithId, ChildWithId, LinkedParent } from '@/lib/types';
 import { Checkbox } from '../ui/checkbox';
 import { Separator } from '../ui/separator';
 import { ScrollArea } from '../ui/scroll-area';
@@ -168,9 +168,9 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
       
       if (existingParent) {
         parentId = existingParent.id;
-        await updateParent(parentId, parentData);
+        await db.updateParent(parentId, parentData);
       } else {
-        parentId = await addParent(parentData);
+        parentId = await db.addParent(parentData);
       }
       
       const newLinks = new Map(values.linkedChildren.map(lc => [lc.childId, lc.relationship]));
@@ -187,13 +187,13 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
           // Case 1: Child was linked, but now shouldn't be.
           if (wasLinked && !shouldBeLinked) {
               const updatedLinks = child.linkedParents?.filter(lp => lp.parentId !== parentId);
-              await updateChild(child.id, { linkedParents: updatedLinks });
+              await db.updateChild(child.id, { linkedParents: updatedLinks });
           }
           // Case 2: Child was not linked, but now should be.
           else if (!wasLinked && shouldBeLinked) {
               const newLink: LinkedParent = { parentId, relationship: newLinks.get(child.id)! };
               const updatedLinks = [...(child.linkedParents || []), newLink];
-              await updateChild(child.id, { linkedParents: updatedLinks });
+              await db.updateChild(child.id, { linkedParents: updatedLinks });
           }
           // Case 3: Child was and still is linked, check if relationship changed.
           else if (wasLinked && shouldBeLinked) {
@@ -203,7 +203,7 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
                   const updatedLinks = child.linkedParents?.map(lp => 
                     lp.parentId === parentId ? { ...lp, relationship: newRelationship! } : lp
                   );
-                  await updateChild(child.id, { linkedParents: updatedLinks });
+                  await db.updateChild(child.id, { linkedParents: updatedLinks });
               }
           }
       }

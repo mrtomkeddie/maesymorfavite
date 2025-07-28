@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, FileText, ExternalLink, Search, ArrowUp, ArrowDown } from 'lucide-react';
-import { getCalendarEvents, deleteCalendarEvent, CalendarEventWithId, getPaginatedCalendarEvents } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
+import type { CalendarEventWithId } from '@/lib/types';
 import { deleteFile } from '@/lib/firebase/storage';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -55,11 +56,11 @@ export default function CalendarAdminPage() {
     
     try {
       // Check if Firebase is properly configured
-      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-        throw new Error('Firebase not configured');
+      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        throw new Error('No DB configured');
       }
       
-      const { data, lastDoc: newLastDoc } = await getPaginatedCalendarEvents(20, initial ? undefined : lastDoc);
+      const { data, lastDoc: newLastDoc } = await db.getPaginatedCalendarEvents(20, initial ? undefined : lastDoc);
       if (initial) {
         setEvents(data);
       } else {
@@ -68,7 +69,7 @@ export default function CalendarAdminPage() {
       setLastDoc(newLastDoc);
       setHasMore(!!newLastDoc && data.length === 20);
     } catch (error) {
-      console.log('Firebase not configured, using mock data');
+      console.log('DB not configured, using mock data');
       // Use mock data if Firebase fails
       const mockEvents = calendarEvents.map((event, index) => ({
         ...event,
@@ -135,7 +136,7 @@ export default function CalendarAdminPage() {
       if (!eventToDelete) return;
 
       try {
-        await deleteCalendarEvent(eventToDelete.id);
+        await db.deleteCalendarEvent(eventToDelete.id);
 
         if (eventToDelete.attachmentUrl) {
            await deleteFile(eventToDelete.attachmentUrl);

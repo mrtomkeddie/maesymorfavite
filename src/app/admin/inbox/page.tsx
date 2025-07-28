@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Trash2, Loader2, Eye, Mail, ClipboardCheck, ArrowUp, ArrowDown, Search } from 'lucide-react';
-import { getInboxMessages, updateInboxMessage, deleteInboxMessage, InboxMessageWithId } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
+import type { InboxMessageWithId } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -45,15 +46,15 @@ export default function InboxAdminPage() {
   const fetchMessages = async () => {
     setIsLoading(true);
     try {
-      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-        console.log('Firebase not configured. Using mock data.');
+      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        console.log('No DB configured. Using mock data.');
         setMessages([
             { id: '1', type: 'absence', subject: 'Absence Report for Charlie K.', body: 'Charlie is unwell today.', sender: { name: 'Jane Doe', email: 'parent@example.com' }, isRead: false, createdAt: new Date().toISOString() },
             { id: '2', type: 'contact', subject: 'Question about school trip', body: 'When is the payment due?', sender: { name: 'John Smith', email: 'john@example.com' }, isRead: true, createdAt: new Date(Date.now() - 86400000).toISOString() },
         ]);
         return;
       }
-      const allMessages = await getInboxMessages();
+      const allMessages = await db.getInboxMessages();
       setMessages(allMessages);
     } catch (error) {
       console.error("Failed to fetch inbox messages:", error);
@@ -121,7 +122,7 @@ export default function InboxAdminPage() {
     if (!messageToDelete) return;
 
     try {
-      await deleteInboxMessage(messageToDelete.id);
+      await db.deleteInboxMessage(messageToDelete.id);
       toast({
         title: "Success",
         description: "Message deleted successfully.",
@@ -145,7 +146,7 @@ export default function InboxAdminPage() {
     setIsViewDialogOpen(true);
     if (!message.isRead) {
         try {
-            await updateInboxMessage(message.id, { isRead: true });
+            await db.updateInboxMessage(message.id, { isRead: true });
             // Optimistically update UI
             setMessages(prev => prev.map(m => m.id === message.id ? {...m, isRead: true} : m));
         } catch (error) {

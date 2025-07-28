@@ -7,7 +7,8 @@ import { Loader2, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { getSiteSettings, SiteSettings } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
+import type { SiteSettings } from '@/lib/types';
 
 const content = {
     en: {
@@ -75,7 +76,7 @@ export function PublicFooter() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
-    getSiteSettings().then(setSettings).catch(console.error);
+    db.getSiteSettings().then(setSettings).catch(console.error);
   }, []);
   
   const footerLinkGroups = [

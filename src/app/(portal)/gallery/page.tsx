@@ -4,7 +4,8 @@
 import { Card } from "@/components/ui/card";
 import { Camera, Loader2 } from "lucide-react";
 import { useState, useEffect, useMemo } from 'react';
-import { PhotoWithId, getPhotosForYearGroups } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
+import type { PhotoWithId } from '@/lib/types';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,7 @@ export default function GalleryPage() {
           return;
         }
         // Fetch all photos relevant to any of the parent's children
-        const relevantPhotos = await getPhotosForYearGroups(parentChildrenYearGroups);
+        const relevantPhotos = await db.getPhotosForYearGroups(parentChildrenYearGroups);
         setPhotos(relevantPhotos);
       } catch (error) {
         console.error("Failed to fetch photos:", error);

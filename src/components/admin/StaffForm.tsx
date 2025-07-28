@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addStaffMember, updateStaffMember } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
 import { uploadFile, deleteFile } from '@/lib/firebase/storage';
 import { StaffMemberWithId } from '@/lib/types';
 import {
@@ -167,10 +167,10 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
       };
 
       if (existingStaff) {
-        await updateStaffMember(existingStaff.id, staffData);
+        await db.updateStaffMember(existingStaff.id, staffData);
         toast(t.toastSuccess.update);
       } else {
-        await addStaffMember(staffData);
+        await db.addStaffMember(staffData);
         toast(t.toastSuccess.add);
       }
       

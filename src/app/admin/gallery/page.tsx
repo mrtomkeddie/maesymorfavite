@@ -16,7 +16,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { PlusCircle, Loader2, Trash2 } from 'lucide-react';
-import { getPaginatedPhotos, deletePhoto, PhotoWithId } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
+import type { PhotoWithId } from '@/lib/types';
 import { deleteFile } from '@/lib/firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { QueryDocumentSnapshot } from 'firebase/firestore';
@@ -48,8 +49,8 @@ export default function GalleryAdminPage() {
     }
     
     try {
-      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) throw new Error("Firebase not configured");
-      const { data, lastDoc: newLastDoc } = await getPaginatedPhotos(12, initial ? undefined : lastDoc);
+      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !process.env.NEXT_PUBLIC_SUPABASE_URL) throw new Error("No DB configured");
+      const { data, lastDoc: newLastDoc } = await db.getPaginatedPhotos(12, initial ? undefined : lastDoc);
       
       if (initial) {
         setPhotos(data);
@@ -60,7 +61,7 @@ export default function GalleryAdminPage() {
       setHasMore(!!newLastDoc && data.length === 12);
 
     } catch (error) {
-      console.log('Firebase not configured, using mock data for photo gallery');
+      console.log('DB not configured, using mock data for photo gallery');
       setPhotos([]);
       setHasMore(false);
     }
@@ -90,7 +91,7 @@ export default function GalleryAdminPage() {
 
       try {
         await deleteFile(photoToDelete.imageUrl);
-        await deletePhoto(photoToDelete.id);
+        await db.deletePhoto(photoToDelete.id);
 
         toast({
             title: "Success",

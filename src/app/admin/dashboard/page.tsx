@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from 'framer-motion';
-import { getCollectionCount } from "@/lib/firebase/firestore";
+import { db } from "@/lib/db";
 import { useLanguage } from "@/app/(public)/LanguageProvider";
 
 const content = {
@@ -220,9 +220,9 @@ export default function AdminDashboardPage() {
         const fetchStats = async () => {
             try {
                 const [pupilCount, parentCount, documentCount] = await Promise.all([
-                    getCollectionCount('children'),
-                    getCollectionCount('parents'),
-                    getCollectionCount('documents'),
+                    db.getCollectionCount('children'),
+                    db.getCollectionCount('parents'),
+                    db.getCollectionCount('documents'),
                 ]);
                 setStats([
                     { label: t.stats.pupils, value: pupilCount, icon: BookUser },

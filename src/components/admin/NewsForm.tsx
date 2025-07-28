@@ -20,7 +20,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Loader2, Upload, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addNews, updateNews, NewsPostWithId } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
+import type { NewsPostWithId } from '@/lib/types';
 import { uploadFile } from '@/lib/firebase/storage';
 import { Progress } from '../ui/progress';
 import { useLanguage } from '@/app/(public)/LanguageProvider';
@@ -148,10 +149,10 @@ export function NewsForm({ onSuccess, existingNews }: NewsFormProps) {
       };
 
       if (existingNews) {
-        await updateNews(existingNews.id, newsData);
+        await db.updateNews(existingNews.id, newsData);
         toast(t.toastSuccessUpdate);
       } else {
-        await addNews(newsData);
+        await db.addNews(newsData);
         toast(t.toastSuccessAdd);
       }
       

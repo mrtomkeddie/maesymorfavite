@@ -20,7 +20,8 @@ import { Input } from '@/components/ui/input';
 
 import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, FileText, Search } from 'lucide-react';
 import { NewsForm } from '@/components/admin/NewsForm';
-import { getNews, deleteNews, NewsPostWithId, getPaginatedNews } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
+import type { NewsPostWithId } from '@/lib/types';
 import { deleteFile } from '@/lib/firebase/storage';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -57,11 +58,11 @@ export default function NewsAdminPage() {
     
     try {
       // Check if Firebase is properly configured
-      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-        throw new Error('Firebase not configured');
+      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        throw new Error('No DB configured');
       }
       
-      const { data, lastDoc: newLastDoc } = await getPaginatedNews(20, initial ? undefined : lastDoc);
+      const { data, lastDoc: newLastDoc } = await db.getPaginatedNews(20, initial ? undefined : lastDoc);
       if (initial) {
         setNews(data);
       } else {
@@ -70,7 +71,7 @@ export default function NewsAdminPage() {
       setLastDoc(newLastDoc);
       setHasMore(!!newLastDoc && data.length === 20);
     } catch (error) {
-      console.log('Firebase not configured, using mock data');
+      console.log('DB not configured, using mock data');
       // Use mock data if Firebase fails
       const mockData = mockNewsData.map((post, index) => ({
         ...post,
@@ -126,7 +127,7 @@ export default function NewsAdminPage() {
       if (!newsToDelete) return;
 
       try {
-        await deleteNews(newsToDelete.id);
+        await db.deleteNews(newsToDelete.id);
 
         if (newsToDelete.attachmentUrl) {
            await deleteFile(newsToDelete.attachmentUrl);

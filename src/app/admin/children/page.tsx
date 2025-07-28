@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, ChevronsUp, UploadCloud, Eye, ArrowUpAZ, ArrowDownZA, Search } from 'lucide-react';
-import { getChildren, deleteChild, getParents, promoteAllChildren, getPaginatedChildren } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
 import type { ChildWithId, ParentWithId, LinkedParent } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { ChildForm, yearGroups } from '@/components/admin/ChildForm';
@@ -66,12 +66,12 @@ export default function ChildrenAdminPage() {
     }
 
     try {
-        if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-            throw new Error('Firebase not configured');
+        if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+            throw new Error('No DB configured');
         }
         
-        const childrenResult = await getPaginatedChildren(100, initial ? undefined : lastDoc); // Fetch more to allow for client-side filtering
-        const parentsData = await getParents();
+        const childrenResult = await db.getPaginatedChildren(100, initial ? undefined : lastDoc); // Fetch more to allow for client-side filtering
+        const parentsData = await db.getParents();
 
         if (initial) {
             setChildren(childrenResult.data);
@@ -83,7 +83,7 @@ export default function ChildrenAdminPage() {
         setHasMore(!!childrenResult.lastDoc && childrenResult.data.length === 100);
 
     } catch (error) {
-        console.log('Firebase not configured, using mock data for children and parents');
+        console.log('DB not configured, using mock data for children and parents');
         const { mockParents, mockChildren } = generateMockData();
         if (initial) {
             setChildren(mockChildren);
@@ -132,7 +132,7 @@ export default function ChildrenAdminPage() {
       if (!childToDelete) return;
 
       try {
-        await deleteChild(childToDelete.id);
+        await db.deleteChild(childToDelete.id);
         toast({
             title: "Success",
             description: "Child record deleted successfully.",
@@ -154,7 +154,7 @@ export default function ChildrenAdminPage() {
   const handlePromote = async () => {
     setIsProcessing(true);
     try {
-        await promoteAllChildren();
+        await db.promoteAllChildren();
         toast({
             title: "Success!",
             description: "All children have been promoted, and Year 6 leavers have been archived."

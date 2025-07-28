@@ -16,7 +16,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { addInboxMessage } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
 
 
 const content = {
@@ -70,7 +70,7 @@ const ContactAdminSection = ({ articleTitle, t }: { articleTitle: string, t: typ
         const parentInfo = { name: "Jane Doe", email: "parent@example.com" }; // Mocked parent
 
         try {
-            await addInboxMessage({
+            await db.addInboxMessage({
                 type: 'contact',
                 subject: `Question re: "${articleTitle}"`,
                 body: values.message,

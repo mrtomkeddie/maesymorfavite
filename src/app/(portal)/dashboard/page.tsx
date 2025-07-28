@@ -14,7 +14,7 @@ import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { parentChildren } from '@/lib/mockData';
 import { useEffect, useState } from 'react';
-import { getWeeklyMenu } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
 import type { DailyMenu, WeeklyMenu } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -31,7 +31,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchMenu = async () => {
       try {
-        const fullMenu = await getWeeklyMenu();
+        const fullMenu = await db.getWeeklyMenu();
         if (fullMenu) {
             setWeeklyMenu(fullMenu);
             const today = new Date().toLocaleString('en-US', { weekday: 'long' }).toLowerCase();

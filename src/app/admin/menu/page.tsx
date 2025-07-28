@@ -17,7 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getWeeklyMenu, updateWeeklyMenu } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WeeklyMenu } from '@/lib/types';
@@ -60,7 +60,7 @@ export default function MenuAdminPage() {
     const fetchMenu = async () => {
         setIsFetching(true);
         try {
-            const menu = await getWeeklyMenu();
+            const menu = await db.getWeeklyMenu();
             if (menu) {
                 form.reset(menu);
             }
@@ -81,7 +81,7 @@ export default function MenuAdminPage() {
   const onSubmit = async (values: MenuFormValues) => {
     setIsLoading(true);
     try {
-        await updateWeeklyMenu(values);
+        await db.updateWeeklyMenu(values);
         toast({
           title: 'Success!',
           description: 'The weekly lunch menu has been updated successfully.',

@@ -20,7 +20,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Loader2, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addCalendarEvent, updateCalendarEvent, CalendarEventWithId } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
+import type { CalendarEventWithId } from '@/lib/types';
 import { uploadFile } from '@/lib/firebase/storage';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { cn } from '@/lib/utils';
@@ -188,10 +189,10 @@ export function CalendarForm({ onSuccess, existingEvent }: CalendarFormProps) {
 
 
       if (existingEvent) {
-        await updateCalendarEvent(existingEvent.id, eventPayload, values.crossPostToNews);
+        await db.updateCalendarEvent(existingEvent.id, eventPayload, values.crossPostToNews);
         toast(t.toastSuccessUpdate);
       } else {
-        await addCalendarEvent(eventPayload, values.crossPostToNews);
+        await db.addCalendarEvent(eventPayload, values.crossPostToNews);
         toast(t.toastSuccessAdd);
       }
       

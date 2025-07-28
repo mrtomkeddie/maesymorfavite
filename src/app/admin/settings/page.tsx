@@ -19,7 +19,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getSiteSettings, updateSiteSettings, SiteSettings } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
+import type { SiteSettings } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
@@ -60,7 +61,7 @@ export default function SettingsAdminPage() {
     const fetchSettings = async () => {
         setIsFetching(true);
         try {
-            const settings = await getSiteSettings();
+            const settings = await db.getSiteSettings();
             if (settings) {
                 form.reset(settings);
             }
@@ -81,7 +82,7 @@ export default function SettingsAdminPage() {
   const onSubmit = async (values: SettingsFormValues) => {
     setIsLoading(true);
     try {
-        await updateSiteSettings(values);
+        await db.updateSiteSettings(values);
         toast({
           title: 'Success!',
           description: 'Site settings have been updated successfully.',

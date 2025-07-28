@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, ExternalLink, Calendar, Shirt, Utensils, ShieldCheck, Loader2 } from "lucide-react";
 import { useEffect, useState } from 'react';
-import { getDocuments, DocumentWithId } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
+import type { DocumentWithId } from '@/lib/types';
 
 const content = {
   en: {
@@ -85,7 +86,7 @@ export default function KeyInfoPage() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        getDocuments().then((data) => {
+        db.getDocuments().then((data) => {
             setDocs(data);
             setIsLoading(false);
         }).catch(err => {

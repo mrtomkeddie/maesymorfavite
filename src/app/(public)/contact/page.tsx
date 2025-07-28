@@ -14,7 +14,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { getSiteSettings, SiteSettings, addInboxMessage } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
+import type { SiteSettings } from '@/lib/types';
 
 const content = {
   en: {
@@ -71,7 +72,7 @@ export default function ContactPage() {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const siteSettings = await getSiteSettings();
+                const siteSettings = await db.getSiteSettings();
                 setSettings(siteSettings);
             } catch (error) {
                 console.error("Failed to fetch site settings:", error);
@@ -95,7 +96,7 @@ export default function ContactPage() {
     async function onSubmit(values: z.infer<ReturnType<typeof formSchema>>) {
         setIsLoading(true);
         try {
-             await addInboxMessage({
+             await db.addInboxMessage({
                 type: 'contact',
                 subject: `Contact Form: Inquiry from ${values.name}`,
                 body: values.message,

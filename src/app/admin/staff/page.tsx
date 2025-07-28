@@ -42,7 +42,7 @@ import {
   User,
   Search,
 } from 'lucide-react';
-import { getPaginatedStaff, deleteStaffMember } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
 import { QueryDocumentSnapshot } from 'firebase/firestore';
 import type { StaffMemberWithId } from '@/lib/types';
 import { deleteFile } from '@/lib/firebase/storage';
@@ -50,7 +50,6 @@ import { useToast } from '@/hooks/use-toast';
 import { StaffForm } from '@/components/admin/StaffForm';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { db } from '@/lib/firebase/config';
 import { Input } from '@/components/ui/input';
 
 // Re-using the structure from the public about page for consistency
@@ -150,11 +149,11 @@ export default function StaffAdminPage() {
     }
     
     try {
-      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-        throw new Error('Firebase not configured');
+      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        throw new Error('No DB configured');
       }
       
-      const { data, lastDoc: newLastDoc } = await getPaginatedStaff(50, initial ? undefined : lastDoc); // Fetch more to allow grouping
+      const { data, lastDoc: newLastDoc } = await db.getPaginatedStaff(50, initial ? undefined : lastDoc); // Fetch more to allow grouping
       let newStaffList: StaffMemberWithId[] = [];
       if (initial) {
         setStaff(data);
@@ -170,7 +169,7 @@ export default function StaffAdminPage() {
       setLastDoc(newLastDoc);
       setHasMore(!!newLastDoc && data.length === 50);
     } catch (error) {
-      console.log('Firebase not configured, using mock data');
+      console.log('DB not configured, using mock data');
       const mockStaffData = generateMockStaff();
       
       if (initial) {
@@ -209,7 +208,7 @@ export default function StaffAdminPage() {
     if (!staffToDelete) return;
 
     try {
-      await deleteStaffMember(staffToDelete.id);
+      await db.deleteStaffMember(staffToDelete.id);
 
       if (staffToDelete.photoUrl) {
         await deleteFile(staffToDelete.photoUrl);

@@ -19,8 +19,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Loader2, PlusCircle, Trash2, XCircle, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addParent, updateChild, addChild, ParentWithId } from '@/lib/firebase/firestore';
-import { ChildWithId, Child, Parent, LinkedParent } from '@/lib/types';
+import { db } from '@/lib/db';
+import type { ParentWithId, ChildWithId, Child, Parent, LinkedParent } from '@/lib/types';
 import {
   Select,
   SelectContent,
@@ -216,7 +216,7 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
         // 1. Create any new parents
         for (const newParent of values.newParents) {
             const { relationship, ...parentData } = newParent;
-            const parentId = await addParent(parentData);
+            const parentId = await db.addParent(parentData as Parent);
             finalLinkedParents.push({ parentId, relationship });
         }
         
@@ -228,10 +228,10 @@ export function ChildForm({ onSuccess, existingChild, allParents }: ChildFormPro
         };
         
         if (existingChild) {
-            await updateChild(existingChild.id, childData);
+            await db.updateChild(existingChild.id, childData);
              toast(t.toastSuccess.update);
         } else {
-            await addChild(childData);
+            await db.addChild(childData);
             toast(t.toastSuccess.add);
         }
         

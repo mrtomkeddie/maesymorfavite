@@ -18,7 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Loader2, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addDocument, updateDocument } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
 import { uploadFile, deleteFile } from '@/lib/firebase/storage';
 import { DocumentWithId } from '@/lib/types';
 import {
@@ -159,10 +159,10 @@ export function DocumentForm({ onSuccess, existingDocument }: DocumentFormProps)
       };
 
       if (existingDocument) {
-        await updateDocument(existingDocument.id, documentData);
+        await db.updateDocument(existingDocument.id, documentData);
         toast(t.toast.updateSuccess);
       } else {
-        await addDocument(documentData);
+        await db.addDocument(documentData);
         toast(t.toast.addSuccess);
       }
       

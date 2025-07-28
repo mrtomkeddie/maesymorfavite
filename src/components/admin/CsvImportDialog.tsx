@@ -10,7 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, FileUp, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { bulkAddChildren, getParents, ParentWithId } from '@/lib/firebase/firestore'; 
+import { db } from '@/lib/db';
+import type { ParentWithId } from '@/lib/firebase/firestore'; 
 import { Child } from '@/lib/types';
 import { yearGroups } from './ChildForm';
 import { Input } from '../ui/input';
@@ -113,7 +114,7 @@ export function CsvImportDialog<T extends object>({ onSuccess, requiredFields, t
     setValidatedData([]);
 
     // This part is specific to children and might need generalization
-    const parents = await getParents();
+    const parents = await db.getParents();
 
     Papa.parse<T>(file, {
       header: true,
@@ -172,7 +173,7 @@ export function CsvImportDialog<T extends object>({ onSuccess, requiredFields, t
 
     try {
         // This is specific to children, needs generalization for other types
-        await bulkAddChildren(validRows as Child[]);
+        await db.bulkAddChildren(validRows as Child[]);
         toast({
             title: t.toastSuccess.title,
             description: t.toastSuccess.description.replace('{validCount}', String(validRows.length)),

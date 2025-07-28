@@ -31,7 +31,7 @@ import { cn } from '@/lib/utils';
 import { CalendarIcon, Loader2, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { addInboxMessage } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
 import { parentChildren as mockChildren } from '@/lib/mockData';
 import { LanguageToggle } from '../layout';
 import { useLanguage } from '@/app/(public)/LanguageProvider';
@@ -145,7 +145,7 @@ Submitted by: ${parentInfo.name} (${parentInfo.email})
     `;
     
     try {
-        await addInboxMessage({
+        await db.addInboxMessage({
             type: 'absence',
             subject: `Absence Report for ${childName}`,
             body: messageBody,

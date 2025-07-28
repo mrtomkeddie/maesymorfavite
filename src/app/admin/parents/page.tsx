@@ -19,9 +19,9 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, UserPlus, Eye, Search } from 'lucide-react';
-import { getParents, deleteParent, getPaginatedParents, getChildren, ChildWithId } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
 import { QueryDocumentSnapshot } from 'firebase/firestore';
-import type { ParentWithId } from '@/lib/types';
+import type { ParentWithId, ChildWithId } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { ParentForm } from '@/components/admin/ParentForm';
 import { Label } from '@/components/ui/label';
@@ -56,12 +56,12 @@ export default function ParentsAdminPage() {
     }
 
     try {
-        if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-            throw new Error('Firebase not configured');
+        if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+            throw new Error('No DB configured');
         }
 
-        const parentsResult = await getPaginatedParents(20, initial ? undefined : lastDoc);
-        const childrenData = await getChildren(); // Fetch all children for linking
+        const parentsResult = await db.getPaginatedParents(20, initial ? undefined : lastDoc);
+        const childrenData = await db.getChildren(); // Fetch all children for linking
 
         if (initial) {
             setParents(parentsResult.data);
@@ -73,7 +73,7 @@ export default function ParentsAdminPage() {
         setHasMore(!!parentsResult.lastDoc && parentsResult.data.length === 20);
 
     } catch (error) {
-        console.log('Firebase not configured, using mock data for parents and children');
+        console.log('DB not configured, using mock data for parents and children');
         const { mockParents, mockChildren } = generateMockData();
         if (initial) {
             setParents(mockParents);
@@ -117,7 +117,7 @@ export default function ParentsAdminPage() {
       if (!parentToDelete) return;
 
       try {
-        await deleteParent(parentToDelete.id);
+        await db.deleteParent(parentToDelete.id);
         toast({
             title: "Success",
             description: "Parent account deleted successfully.",

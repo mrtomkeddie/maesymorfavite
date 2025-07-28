@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PlusCircle, MoreHorizontal, Pencil, Trash2, Loader2, Link as LinkIcon, Search } from 'lucide-react';
-import { getDocuments, deleteDocument, getPaginatedDocuments } from '@/lib/firebase/firestore';
+import { db } from '@/lib/db';
 import type { DocumentWithId } from '@/lib/types';
 import { deleteFile } from '@/lib/firebase/storage';
 import { useToast } from '@/hooks/use-toast';
@@ -70,11 +70,11 @@ export default function DocumentsAdminPage() {
     
     try {
       // Check if Firebase is properly configured
-      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-        throw new Error('Firebase not configured');
+      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        throw new Error('No DB configured');
       }
       
-      const { data, lastDoc: newLastDoc } = await getPaginatedDocuments(20, initial ? undefined : lastDoc);
+      const { data, lastDoc: newLastDoc } = await db.getPaginatedDocuments(20, initial ? undefined : lastDoc);
       if (initial) {
         setDocuments(data);
       } else {
@@ -83,7 +83,7 @@ export default function DocumentsAdminPage() {
       setLastDoc(newLastDoc);
       setHasMore(!!newLastDoc && data.length === 20);
     } catch (error) {
-      console.log('Firebase not configured, using mock data');
+      console.log('DB not configured, using mock data');
       // Use mock data if Firebase fails
       const mockDocsData = generateMockDocuments();
       
@@ -138,7 +138,7 @@ export default function DocumentsAdminPage() {
         // First, delete the file from storage
         await deleteFile(documentToDelete.fileUrl);
         // Then, delete the document from Firestore
-        await deleteDocument(documentToDelete.id);
+        await db.deleteDocument(documentToDelete.id);
 
         toast({
             title: "Success",
