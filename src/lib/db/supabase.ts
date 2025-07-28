@@ -1,6 +1,7 @@
 
 
 
+
 // This file will contain the Supabase implementations of all data functions.
 // Note: This is a placeholder implementation. A real implementation would require a
 // Supabase project with tables matching the data structures in src/lib/types.ts.
@@ -30,11 +31,6 @@ function getSupabaseClient() {
     return supabase;
 }
 
-
-// Placeholder error for unimplemented functions
-const notImplemented = () => {
-    return Promise.reject(new Error("This function is not yet implemented for the Supabase provider."));
-}
 
 // === NEWS ===
 const fromSupabaseNews = (news: any): NewsPostWithId => {
