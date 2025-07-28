@@ -9,7 +9,7 @@ import Image from 'next/image';
 const content = {
   en: {
     title: "Kids' Corner",
-    intro: "Welcome to the fun zone! Get ready to play some cool games.",
+    intro: "Welcome to the fun zone! More cool games coming soon...",
     gameTitle: "Morfa Runner",
     howToPlay: "How to Play",
     instructions: "Help our Ysgol Maes Y Morfa student race through the school grounds! Jump over obstacles and collect values for bonus points. The longer you run, the faster it gets!",
@@ -24,7 +24,7 @@ const content = {
   },
   cy: {
     title: "Cornel y Plant",
-    intro: "Croeso i'r ardal hwyl! Byddwch yn barod i chwarae gemau cŵl.",
+    intro: "Croeso i'r ardal hwyl! Mwy o gemau cŵl yn dod yn fuan...",
     gameTitle: "Rhedwr Morfa",
     howToPlay: "Sut i Chwarae",
     instructions: "Helpwch ein myfyriwr o Ysgol Maes Y Morfa i rasio drwy dir yr ysgol! Neidiwch dros rwystrau a chasglu gwerthoedd am bwyntiau bonws. Po hiraf y byddwch chi'n rhedeg, y cyflymaf y bydd hi'n mynd!",
