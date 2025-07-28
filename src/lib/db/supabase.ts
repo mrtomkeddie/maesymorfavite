@@ -17,6 +17,7 @@ const notImplemented = () => {
 // === NEWS ===
 export const getNews = async (): Promise<NewsPostWithId[]> => {
     const supabase = getSupabaseClient();
+    if (!supabase) return [];
     const { data, error } = await supabase
         .from('news')
         .select('*')
@@ -31,6 +32,7 @@ export const getNews = async (): Promise<NewsPostWithId[]> => {
 
 export const addNews = async (newsData: Omit<NewsPost, 'id' | 'attachments' | 'slug'>): Promise<string> => {
     const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
     const slug = newsData.title_en.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
 
     const finalNewsData = { ...newsData, slug };
@@ -54,6 +56,7 @@ export const addNews = async (newsData: Omit<NewsPost, 'id' | 'attachments' | 's
 
 export const updateNews = async (id: string, newsData: Partial<Omit<NewsPost, 'id' | 'attachments'>>) => {
     const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
      if (newsData.isUrgent) {
         await supabase.from('news').update({ isUrgent: false }).neq('id', id);
     }
@@ -70,6 +73,7 @@ export const updateNews = async (id: string, newsData: Partial<Omit<NewsPost, 'i
 
 export const deleteNews = async (id: string) => {
     const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
     const { error } = await supabase
         .from('news')
         .delete()
@@ -83,6 +87,7 @@ export const deleteNews = async (id: string) => {
 
 export const getPaginatedNews = async (limitNum = 20, lastDoc?: any): Promise<{ data: NewsPostWithId[], lastDoc?: any }> => {
     const supabase = getSupabaseClient();
+    if (!supabase) return { data: [], lastDoc: undefined };
     const page = lastDoc ? lastDoc.page + 1 : 0;
     const from = page * limitNum;
     const to = from + limitNum - 1;
@@ -112,11 +117,104 @@ export const deleteCalendarEvent = async (id: string) => notImplemented();
 export const getPaginatedCalendarEvents = async (limitNum = 20, lastDoc?: QueryDocumentSnapshot): Promise<{ data: CalendarEventWithId[], lastDoc?: any }> => notImplemented();
 
 // === STAFF ===
-export const getStaff = async (): Promise<StaffMemberWithId[]> => notImplemented();
-export const addStaffMember = async (staffData: StaffMember) => notImplemented();
-export const updateStaffMember = async (id: string, staffData: Partial<StaffMember>) => notImplemented();
-export const deleteStaffMember = async (id: string) => notImplemented();
-export const getPaginatedStaff = async (limitNum = 20, lastDoc?: QueryDocumentSnapshot): Promise<{ data: StaffMemberWithId[], lastDoc?: any }> => notImplemented();
+const fromSupabaseStaff = (staff: any): StaffMemberWithId => {
+    if (!staff) return staff;
+    return {
+        ...staff,
+        photoUrl: staff.photo_url,
+    };
+};
+
+const toSupabaseStaff = (staff: Partial<StaffMember>) => {
+    const { photoUrl, ...rest } = staff;
+    return {
+        ...rest,
+        photo_url: photoUrl,
+    };
+};
+
+export const getStaff = async (): Promise<StaffMemberWithId[]> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return [];
+    const { data, error } = await supabase
+        .from('staff')
+        .select('*')
+        .order('name', { ascending: true });
+
+    if (error) {
+        console.error("Error fetching staff from Supabase:", error);
+        throw error;
+    }
+    return (data || []).map(fromSupabaseStaff);
+};
+
+export const addStaffMember = async (staffData: StaffMember) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+
+    const { error } = await supabase
+        .from('staff')
+        .insert([toSupabaseStaff(staffData)]);
+
+    if (error) {
+        console.error("Error adding staff member to Supabase:", error);
+        throw error;
+    }
+};
+
+export const updateStaffMember = async (id: string, staffData: Partial<StaffMember>) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+
+    const { error } = await supabase
+        .from('staff')
+        .update(toSupabaseStaff(staffData))
+        .eq('id', id);
+
+    if (error) {
+        console.error("Error updating staff member in Supabase:", error);
+        throw error;
+    }
+};
+
+export const deleteStaffMember = async (id: string) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+
+    const { error } = await supabase
+        .from('staff')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        console.error("Error deleting staff member from Supabase:", error);
+        throw error;
+    }
+};
+
+export const getPaginatedStaff = async (limitNum = 20, lastDoc?: any): Promise<{ data: StaffMemberWithId[], lastDoc?: any }> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return { data: [], lastDoc: undefined };
+
+    const page = lastDoc ? lastDoc.page + 1 : 0;
+    const from = page * limitNum;
+    const to = from + limitNum - 1;
+
+    const { data, error } = await supabase
+        .from('staff')
+        .select('*')
+        .order('name', { ascending: true })
+        .range(from, to);
+
+    if (error) {
+        console.error("Error fetching paginated staff from Supabase:", error);
+        throw error;
+    }
+
+    const nextLastDoc = data && data.length === limitNum ? { page } : undefined;
+
+    return { data: (data || []).map(fromSupabaseStaff), lastDoc: nextLastDoc };
+};
 
 // === DOCUMENTS ===
 export const getDocuments = async (): Promise<DocumentWithId[]> => notImplemented();
@@ -167,6 +265,7 @@ export const getPaginatedPhotos = async (limitNum = 20, lastDoc?: any): Promise<
 // === UTILITIES ===
 export const getCollectionCount = async (collectionName: string): Promise<number> => {
     const supabase = getSupabaseClient();
+    if (!supabase) return 0;
     const { count, error } = await supabase
         .from(collectionName)
         .select('*', { count: 'exact', head: true });
