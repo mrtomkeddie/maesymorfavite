@@ -1,4 +1,5 @@
 
+
 // This file will contain the Supabase implementations of all data functions.
 // Note: This is a placeholder implementation. A real implementation would require a
 // Supabase project with tables matching the data structures in src/lib/types.ts.
@@ -23,11 +24,6 @@ export const getNews = async (): Promise<NewsPostWithId[]> => {
 
     if (error) {
         console.error("Error fetching news from Supabase:", error);
-        // Fallback to mock data during development if the table doesn't exist
-        if (error.code === '42P01' && process.env.NODE_ENV !== 'production') {
-            console.warn('"news" table not found in Supabase. Falling back to mock data.');
-            return mockNews;
-        }
         throw error;
     }
     return data || [];
@@ -40,7 +36,6 @@ export const addNews = async (newsData: Omit<NewsPost, 'id' | 'attachments' | 's
     const finalNewsData = { ...newsData, slug };
 
      if (finalNewsData.isUrgent) {
-        // Unset urgent flag on all other posts
         await supabase.from('news').update({ isUrgent: false }).eq('isUrgent', true);
     }
 
@@ -60,7 +55,6 @@ export const addNews = async (newsData: Omit<NewsPost, 'id' | 'attachments' | 's
 export const updateNews = async (id: string, newsData: Partial<Omit<NewsPost, 'id' | 'attachments'>>) => {
     const supabase = getSupabaseClient();
      if (newsData.isUrgent) {
-        // Unset urgent flag on all other posts
         await supabase.from('news').update({ isUrgent: false }).neq('id', id);
     }
     const { error } = await supabase
@@ -89,8 +83,6 @@ export const deleteNews = async (id: string) => {
 
 export const getPaginatedNews = async (limitNum = 20, lastDoc?: any): Promise<{ data: NewsPostWithId[], lastDoc?: any }> => {
     const supabase = getSupabaseClient();
-    // Supabase pagination uses ranges, not lastDoc. We'll simulate this for now.
-    // A more robust implementation would use page numbers.
     const page = lastDoc ? lastDoc.page + 1 : 0;
     const from = page * limitNum;
     const to = from + limitNum - 1;
