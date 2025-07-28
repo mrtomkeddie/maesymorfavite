@@ -152,11 +152,129 @@ export const getPaginatedNews = async (limitNum = 20, lastDoc?: any): Promise<{ 
 
 
 // === CALENDAR ===
-export const getCalendarEvents = async (): Promise<CalendarEventWithId[]> => notImplemented();
-export const addCalendarEvent = async (eventData: Omit<CalendarEvent, 'id' | 'attachments'>, crossPost: boolean) => notImplemented();
-export const updateCalendarEvent = async (id: string, eventData: Partial<Omit<CalendarEvent, 'id' | 'attachments'>>, crossPost: boolean) => notImplemented();
-export const deleteCalendarEvent = async (id: string) => notImplemented();
-export const getPaginatedCalendarEvents = async (limitNum = 20, lastDoc?: QueryDocumentSnapshot): Promise<{ data: CalendarEventWithId[], lastDoc?: any }> => notImplemented();
+const fromSupabaseCalendarEvent = (event: any): CalendarEventWithId => {
+    if (!event) return event;
+    return {
+        id: event.id,
+        title_en: event.title_en,
+        title_cy: event.title_cy,
+        description_en: event.description_en,
+        description_cy: event.description_cy,
+        start: event.start_time,
+        end: event.end_time,
+        allDay: event.all_day,
+        tags: event.tags || [],
+        relevantTo: event.relevant_to || [],
+        attachmentUrl: event.attachment_url,
+        attachmentName: event.attachment_name,
+        attachments: [], // Deprecated field
+        isUrgent: event.is_urgent,
+        showOnHomepage: event.show_on_homepage,
+        published: event.published,
+        linkedNewsPostId: event.linked_news_post_id,
+    };
+};
+
+const toSupabaseCalendarEvent = (event: Partial<Omit<CalendarEvent, 'id' | 'attachments'>>) => {
+    const {
+        start, end, allDay, relevantTo, attachmentUrl, attachmentName, isUrgent, showOnHomepage, linkedNewsPostId,
+        ...rest
+    } = event;
+
+    return {
+        ...rest,
+        start_time: start,
+        end_time: end,
+        all_day: allDay,
+        relevant_to: relevantTo,
+        attachment_url: attachmentUrl,
+        attachment_name: attachmentName,
+        is_urgent: isUrgent,
+        show_on_homepage: showOnHomepage,
+        linked_news_post_id: linkedNewsPostId,
+    };
+};
+
+const generateNewsDataFromEvent = (eventData: Partial<Omit<CalendarEvent, 'id' | 'attachments'>>): Omit<NewsPost, 'id' | 'slug' | 'attachments'> => {
+    return {
+        title_en: `${eventData.title_en} (Event)`,
+        title_cy: `${eventData.title_cy} (Digwyddiad)`,
+        body_en: eventData.description_en || '',
+        body_cy: eventData.description_cy || '',
+        date: eventData.start!,
+        category: 'Event',
+        isUrgent: eventData.isUrgent || false,
+        attachmentUrl: eventData.attachmentUrl,
+        attachmentName: eventData.attachmentName,
+        published: true,
+        createdBy: 'admin@example.com',
+        lastEdited: new Date().toISOString(),
+    };
+};
+
+export const getCalendarEvents = async (): Promise<CalendarEventWithId[]> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return [];
+    const { data, error } = await supabase.from('calendar_events').select('*').order('start_time', { ascending: true });
+    if (error) throw error;
+    return data.map(fromSupabaseCalendarEvent);
+};
+
+export const addCalendarEvent = async (eventData: Omit<CalendarEvent, 'id' | 'attachments'>, crossPost: boolean) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+    let finalEventData: Partial<CalendarEvent> = { ...eventData };
+
+    if (crossPost) {
+        const newsData = generateNewsDataFromEvent(eventData);
+        const newsId = await addNews(newsData);
+        finalEventData.linkedNewsPostId = newsId;
+    }
+    
+    const { error } = await supabase.from('calendar_events').insert([toSupabaseCalendarEvent(finalEventData)]);
+    if (error) throw error;
+};
+
+export const updateCalendarEvent = async (id: string, eventData: Partial<Omit<CalendarEvent, 'id' | 'attachments'>>, crossPost: boolean) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+    let finalEventData = { ...eventData };
+    
+    if (crossPost) {
+        const newsData = generateNewsDataFromEvent(eventData);
+        if (finalEventData.linkedNewsPostId) {
+            await updateNews(finalEventData.linkedNewsPostId, newsData);
+        } else {
+            const newsId = await addNews(newsData);
+            finalEventData.linkedNewsPostId = newsId;
+        }
+    }
+    
+    const { error } = await supabase.from('calendar_events').update(toSupabaseCalendarEvent(finalEventData)).eq('id', id);
+    if (error) throw error;
+};
+
+export const deleteCalendarEvent = async (id: string) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+    // TODO: Add logic to optionally delete linked news post
+    const { error } = await supabase.from('calendar_events').delete().eq('id', id);
+    if (error) throw error;
+};
+
+export const getPaginatedCalendarEvents = async (limitNum = 20, lastDoc?: any): Promise<{ data: CalendarEventWithId[], lastDoc?: any }> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return { data: [], lastDoc: undefined };
+    const page = lastDoc ? lastDoc.page + 1 : 0;
+    const from = page * limitNum;
+    const to = from + limitNum - 1;
+
+    const { data, error } = await supabase.from('calendar_events').select('*').order('start_time', { ascending: true }).range(from, to);
+    if (error) throw error;
+    
+    const nextLastDoc = data && data.length === limitNum ? { page } : undefined;
+    return { data: data.map(fromSupabaseCalendarEvent), lastDoc: nextLastDoc };
+};
 
 // === STAFF ===
 const fromSupabaseStaff = (staff: any): StaffMemberWithId => {
@@ -410,13 +528,15 @@ export const deleteParent = async (id: string) => {
     if (fetchError) throw fetchError;
 
     // For each child, remove the parent from their linked_parents array
-    for (const child of linkedChildren) {
-        const updatedLinks = (child.linked_parents as any[]).filter(lp => lp.parentId !== id);
-        const { error: updateError } = await supabase
-            .from('children')
-            .update({ linked_parents: updatedLinks })
-            .eq('id', child.id);
-        if (updateError) throw updateError;
+    if (linkedChildren) {
+        for (const child of linkedChildren) {
+            const updatedLinks = (child.linked_parents as any[]).filter(lp => lp.parentId !== id);
+            const { error: updateError } = await supabase
+                .from('children')
+                .update({ linked_parents: updatedLinks })
+                .eq('id', child.id);
+            if (updateError) throw updateError;
+        }
     }
 
     // Now, delete the parent
@@ -589,3 +709,5 @@ export const getCollectionCount = async (collectionName: string): Promise<number
     }
     return count || 0;
 };
+
+    
