@@ -1,5 +1,6 @@
 
 
+
 // This file will contain the Supabase implementations of all data functions.
 // Note: This is a placeholder implementation. A real implementation would require a
 // Supabase project with tables matching the data structures in src/lib/types.ts.
@@ -668,7 +669,7 @@ export const getPaginatedChildren = async (limitNum = 20, lastDoc?: any): Promis
     return { data: data.map(fromSupabaseChild), lastDoc: nextLastDoc };
 };
 
-export const getPhotosForYearGroups = async (yearGroups: string[]): Promise<PhotoWithId[]> => notImplemented();
+
 
 
 // === SITE SETTINGS ===
@@ -687,9 +688,74 @@ export const deleteInboxMessage = async (id: string) => notImplemented();
 export const getUnreadMessageCount = async (): Promise<number> => notImplemented();
 
 // === GALLERY ===
-export const addPhoto = async (photoData: Photo): Promise<string> => notImplemented();
-export const deletePhoto = async (id: string) => notImplemented();
-export const getPaginatedPhotos = async (limitNum = 20, lastDoc?: any): Promise<{ data: PhotoWithId[], lastDoc?: any }> => notImplemented();
+const fromSupabasePhoto = (photo: any): PhotoWithId => {
+    if (!photo) return photo;
+    return {
+        id: photo.id,
+        caption: photo.caption,
+        imageUrl: photo.image_url,
+        yearGroups: photo.year_groups || [],
+        uploadedAt: photo.uploaded_at,
+        uploadedBy: photo.uploaded_by,
+    };
+};
+
+const toSupabasePhoto = (photo: Partial<Photo>) => {
+    return {
+        caption: photo.caption,
+        image_url: photo.imageUrl,
+        year_groups: photo.yearGroups,
+        uploaded_at: photo.uploadedAt,
+        uploaded_by: photo.uploadedBy,
+    };
+};
+
+export const addPhoto = async (photoData: Photo): Promise<string> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+    const { data, error } = await supabase.from('photos').insert([toSupabasePhoto(photoData)]).select('id').single();
+    if (error) throw error;
+    return data.id;
+};
+
+export const deletePhoto = async (id: string) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+    const { error } = await supabase.from('photos').delete().eq('id', id);
+    if (error) throw error;
+};
+
+export const getPaginatedPhotos = async (limitNum = 20, lastDoc?: any): Promise<{ data: PhotoWithId[], lastDoc?: any }> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return { data: [], lastDoc: undefined };
+    const page = lastDoc ? lastDoc.page + 1 : 0;
+    const from = page * limitNum;
+    const to = from + limitNum - 1;
+
+    const { data, error } = await supabase.from('photos').select('*').order('uploaded_at', { ascending: false }).range(from, to);
+    if (error) throw error;
+    
+    const nextLastDoc = data && data.length === limitNum ? { page } : undefined;
+    return { data: data.map(fromSupabasePhoto), lastDoc: nextLastDoc };
+};
+
+export const getPhotosForYearGroups = async (yearGroups: string[]): Promise<PhotoWithId[]> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return [];
+    const allGroups = ['All', ...yearGroups];
+    const { data, error } = await supabase
+        .from('photos')
+        .select('*')
+        .overlaps('year_groups', allGroups)
+        .order('uploaded_at', { ascending: false });
+
+    if (error) {
+        console.error("Error fetching photos by year group from Supabase:", error);
+        throw error;
+    }
+    return (data || []).map(fromSupabasePhoto);
+};
+
 
 // === UTILITIES ===
 export const getCollectionCount = async (collectionName: string): Promise<number> => {
@@ -709,5 +775,3 @@ export const getCollectionCount = async (collectionName: string): Promise<number
     }
     return count || 0;
 };
-
-    
