@@ -19,7 +19,7 @@ const content = {
       { name: 'Jump over the Books', image: 'books.png' },
       { name: 'Dodge the School Bag', image: 'bag.png' },
       { name: 'Avoid Mrs Jones!', image: 'teacher.png' },
-      { name: 'Collect the School Values', image: 'values.png' },
+      { name: 'Collect the School Values for bonus points', image: 'values.png' },
     ]
   },
   cy: {
@@ -34,7 +34,7 @@ const content = {
       { name: 'Neidio dros y Llyfrau', image: 'books.png' },
       { name: 'Osgowch y Bag Ysgol', image: 'bag.png' },
       { name: 'Osgowch Mrs Jones!', image: 'teacher.png' },
-      { name: 'Casglwch Werthoedd yr Ysgol', image: 'values.png' },
+      { name: 'Casglwch Werthoedd yr Ysgol am bwyntiau bonws', image: 'values.png' },
     ]
   }
 };
