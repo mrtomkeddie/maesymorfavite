@@ -52,7 +52,7 @@ import Image from 'next/image';
 import { db } from '@/lib/db';
 import { useLanguage } from '../(public)/LanguageProvider';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabase';
+import { supabase, getUserRole } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 
 export const AdminLanguageToggle = () => {
@@ -150,21 +150,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
 
   useEffect(() => {
-    const getSession = async () => {
+    const getSessionAndRole = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
+      if (session) {
+        const role = await getUserRole(session.user.id);
+        if (role === 'admin') {
+          setSession(session);
+        } else {
+          // If the user is logged in but not an admin, deny access.
+          router.replace('/login'); // Or a dedicated 'access-denied' page
+        }
+      } else if (pathname !== '/admin/login') {
+        router.replace('/admin/login');
+      }
       setIsLoading(false);
-       if (!session && pathname !== '/admin/login') {
-         router.replace('/admin/login');
-       }
     };
-    getSession();
+
+    getSessionAndRole();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
+      (event, newSession) => {
         if (event === 'SIGNED_OUT') {
-            router.replace('/admin/login');
+          router.replace('/admin/login');
+        } else if (newSession) {
+           getSessionAndRole();
         }
       }
     );
@@ -212,16 +221,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return <>{children}</>;
   }
   
-  if (isLoading) {
+  if (isLoading || !session) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
-  }
-
-  if (!session) {
-    return null;
   }
   
   return (

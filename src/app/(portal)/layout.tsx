@@ -37,7 +37,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useLanguage } from '../(public)/LanguageProvider';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabase';
+import { supabase, getUserRole } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 
 export const LanguageToggle = () => {
@@ -98,21 +98,26 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
 
   useEffect(() => {
-    const getSession = async () => {
+    const getSessionAndRole = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
+      if (session) {
+        // We can add role checking here later if needed to ensure only 'parent' roles can access.
+        // For now, any logged-in user can see the parent portal for demonstration.
+        setSession(session);
+      } else {
+        router.replace('/login');
+      }
       setIsLoading(false);
-       if (!session) {
-         router.replace('/login');
-       }
     };
-    getSession();
+
+    getSessionAndRole();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setSession(session);
-         if (event === 'SIGNED_OUT') {
+        if (event === 'SIGNED_OUT') {
           router.replace('/login');
+        } else {
+          setSession(session);
         }
       }
     );
@@ -133,16 +138,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     { href: '/absence', label: t.menu.absence, icon: ClipboardCheck },
   ];
   
-  if (isLoading) {
+  if (isLoading || !session) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
-  }
-
-  if (!session) {
-    return null;
   }
   
   return (
