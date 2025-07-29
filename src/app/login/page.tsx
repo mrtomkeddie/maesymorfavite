@@ -1,10 +1,29 @@
 
+'use client';
+
 import { LoginForm } from "@/components/auth/LoginForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import Image from 'next/image';
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        // Here you would also check the user's role
+        // For now, we assume if they have a session, they go to the parent dashboard.
+        router.push('/dashboard');
+      }
+    };
+    checkSession();
+  }, [router]);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="absolute top-4 left-4">

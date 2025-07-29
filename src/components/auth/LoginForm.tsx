@@ -5,13 +5,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
-
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import Link from "next/link";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -24,7 +26,9 @@ interface LoginFormProps {
 
 export function LoginForm({ userRole }: LoginFormProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -36,43 +40,36 @@ export function LoginForm({ userRole }: LoginFormProps) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    // Mock authentication
-    console.log(`Attempting login for ${userRole} with email: ${values.email}`);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    setError(null);
     
-    // In a real app, you would verify credentials against a backend (e.g., Firebase Auth)
-    // and check the user's role.
-    
-    localStorage.setItem('isAuthenticated', 'true');
-    localStorage.setItem('userRole', userRole);
+    const { error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+    });
 
-    if (userRole === 'admin') {
-      router.push('/admin/dashboard');
-    } else {
-      router.push('/dashboard');
-    }
-    router.refresh();
-  }
-  
-  async function socialLogin(provider: 'google' | 'apple') {
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // This logic would also need to handle roles
-    if (userRole === 'parent') {
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('userRole', 'parent');
-      router.push('/dashboard');
-      router.refresh();
-    } else {
-        // Handle admin social login if necessary, or disable it.
-        console.error("Admin social login not configured.");
+    if (error) {
+        setError(error.message);
         setIsLoading(false);
+        return;
     }
+
+    toast({
+        title: "Login Successful",
+        description: "Welcome back!",
+    });
+    
+    // The redirect will be handled by the layout's auth listener
+    router.refresh();
   }
 
   return (
     <div className="space-y-6">
+       {error && (
+        <Alert variant="destructive">
+          <AlertTitle>Login Failed</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
@@ -97,7 +94,7 @@ export function LoginForm({ userRole }: LoginFormProps) {
                 <FormControl>
                   <Input type="password" placeholder="••••••••" {...field} />
                 </FormControl>
-                <FormMessage />
+                 <FormMessage />
               </FormItem>
             )}
           />
@@ -107,6 +104,16 @@ export function LoginForm({ userRole }: LoginFormProps) {
           </Button>
         </form>
       </Form>
+       <div className="text-center text-sm text-muted-foreground">
+        {userRole === 'parent' ? (
+          <>
+            <p>Don't have an account? <Link href="/signup" className="underline">Sign up</Link></p>
+            <p>Forgot your password? <Link href="/signup" className="underline">Reset it</Link></p>
+          </>
+        ) : (
+             <p>Contact your system administrator for access.</p>
+        )}
+      </div>
     </div>
   );
 }

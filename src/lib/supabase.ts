@@ -1,21 +1,18 @@
 
-import { createClient } from '@supabase/supabase-js';
+import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs';
+import { Session, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// This is the client-side Supabase client
+export const supabase = createPagesBrowserClient();
 
-// Only create a client if the environment variables are set.
-const supabase = (supabaseUrl && supabaseAnonKey) 
-    ? createClient(supabaseUrl, supabaseAnonKey) 
-    : null;
-
-// Helper function to ensure Supabase is configured before use.
-function getSupabaseClient() {
-    if (!supabase) {
-        throw new Error("Supabase client is not initialized. Make sure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in your environment.");
-    }
-    return supabase;
+// A helper function to get the current user session
+export async function getSession(): Promise<Session | null> {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session;
 }
 
-
-export { getSupabaseClient };
+// A helper function to get the Supabase client.
+// This is used in the database implementation files.
+export function getSupabaseClient(): SupabaseClient {
+    return supabase;
+}

@@ -52,6 +52,8 @@ import Image from 'next/image';
 import { db } from '@/lib/db';
 import { useLanguage } from '../(public)/LanguageProvider';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabase';
+import { Session } from '@supabase/supabase-js';
 
 export const AdminLanguageToggle = () => {
     const { language, setLanguage } = useLanguage();
@@ -140,31 +142,46 @@ const content = {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isAuth, setIsAuth] = useState<boolean | undefined>(undefined);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const { language } = useLanguage();
   const t = content[language];
 
 
   useEffect(() => {
-    // We check for 'admin_auth' specifically for this layout.
-    const authStatus = localStorage.getItem('isAuthenticated') === 'true' && localStorage.getItem('userRole') === 'admin';
-    setIsAuth(authStatus);
-    if (!authStatus && pathname !== '/admin/login') {
-      router.replace('/admin/login');
-    }
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      setIsLoading(false);
+       if (!session && pathname !== '/admin/login') {
+         router.replace('/admin/login');
+       }
+    };
+    getSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        if (event === 'SIGNED_OUT') {
+            router.replace('/admin/login');
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, [router, pathname]);
 
   useEffect(() => {
-    if (isAuth) {
+    if (session) {
         db.getUnreadMessageCount().then(setUnreadCount).catch(console.error);
     }
-  }, [isAuth, pathname]); // Refetch on path change to update badge
+  }, [session, pathname]); // Refetch on path change to update badge
 
-  const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userRole');
-    router.push('/admin/login');
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
   };
 
   const menuItems = [
@@ -195,7 +212,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return <>{children}</>;
   }
   
-  if (isAuth === undefined) {
+  if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -203,7 +220,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!isAuth) {
+  if (!session) {
     return null;
   }
   
@@ -306,7 +323,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <AvatarFallback>A</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col text-sm group-data-[collapsible=icon]:hidden flex-grow">
-                        <span className="font-semibold">Admin User</span>
+                        <span className="font-semibold">{session.user.email}</span>
                         <span className="text-muted-foreground">{t.account.role}</span>
                     </div>
                      <ChevronUp className="h-4 w-4 text-muted-foreground group-data-[collapsible=icon]:hidden" />

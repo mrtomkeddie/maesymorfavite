@@ -37,6 +37,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useLanguage } from '../(public)/LanguageProvider';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabase';
+import { Session } from '@supabase/supabase-js';
 
 export const LanguageToggle = () => {
     const { language, setLanguage } = useLanguage();
@@ -89,24 +91,39 @@ const content = {
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isAuth, setIsAuth] = useState<boolean | undefined>(undefined);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { language } = useLanguage();
   const t = content[language];
 
 
   useEffect(() => {
-    // We check for 'parent_auth' specifically for this layout.
-    const authStatus = localStorage.getItem('isAuthenticated') === 'true' && localStorage.getItem('userRole') === 'parent';
-    setIsAuth(authStatus);
-    if (!authStatus) {
-      router.replace('/login');
-    }
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      setIsLoading(false);
+       if (!session) {
+         router.replace('/login');
+       }
+    };
+    getSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+         if (event === 'SIGNED_OUT') {
+          router.replace('/login');
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, [router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userRole');
-    router.push('/login');
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
   };
 
   const menuItems = [
@@ -116,7 +133,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     { href: '/absence', label: t.menu.absence, icon: ClipboardCheck },
   ];
   
-  if (isAuth === undefined) {
+  if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -124,7 +141,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     );
   }
 
-  if (!isAuth) {
+  if (!session) {
     return null;
   }
   
@@ -166,7 +183,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                         <AvatarFallback>JD</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col text-sm group-data-[collapsible=icon]:hidden flex-grow">
-                        <span className="font-semibold">Jane Doe</span>
+                        <span className="font-semibold">{session.user.email}</span>
                         <span className="text-muted-foreground">{t.account.role}</span>
                     </div>
                      <ChevronUp className="h-4 w-4 text-muted-foreground group-data-[collapsible=icon]:hidden" />
