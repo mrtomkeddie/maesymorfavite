@@ -149,7 +149,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [unreadCount, setUnreadCount] = useState(0);
   const { language } = useLanguage();
   const t = content[language];
-  const isSupabaseConfigured = !!supabase.auth;
+  const isSupabaseConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 
   useEffect(() => {
@@ -188,15 +188,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
 
     return () => {
-      authListener.subscription.unsubscribe();
+      authListener?.subscription.unsubscribe();
     };
   }, [router, pathname, isSupabaseConfigured]);
 
   useEffect(() => {
-    if (session) {
+    if (session && isSupabaseConfigured) {
         db.getUnreadMessageCount().then(setUnreadCount).catch(console.error);
     }
-  }, [session, pathname]); // Refetch on path change to update badge
+  }, [session, pathname, isSupabaseConfigured]); // Refetch on path change to update badge
 
   const handleLogout = async () => {
     if (isSupabaseConfigured) {
