@@ -149,9 +149,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [unreadCount, setUnreadCount] = useState(0);
   const { language } = useLanguage();
   const t = content[language];
+  const isSupabaseConfigured = !!supabase.auth;
 
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+        setIsLoading(false);
+        setSession({} as Session); // Mock session for dev
+        return;
+    }
+
     const getSessionAndRole = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -183,7 +190,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [router, pathname]);
+  }, [router, pathname, isSupabaseConfigured]);
 
   useEffect(() => {
     if (session) {
@@ -192,7 +199,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [session, pathname]); // Refetch on path change to update badge
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    if (isSupabaseConfigured) {
+        await supabase.auth.signOut();
+    }
+    router.push('/admin/login');
   };
 
   const menuItems = [
@@ -331,7 +341,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <AvatarFallback>A</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col text-sm group-data-[collapsible=icon]:hidden flex-grow">
-                        <span className="font-semibold">{session.user.email}</span>
+                        <span className="font-semibold">{session.user?.email || 'Admin'}</span>
                         <span className="text-muted-foreground">{t.account.role}</span>
                     </div>
                      <ChevronUp className="h-4 w-4 text-muted-foreground group-data-[collapsible=icon]:hidden" />
