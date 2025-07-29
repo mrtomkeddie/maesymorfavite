@@ -84,3 +84,12 @@ export type DailyMenu = {
 export type WeeklyMenu = {
     [day: string]: DailyMenu;
 }
+
+export type UserRole = 'admin' | 'parent';
+
+export type UserWithRole = {
+    id: string;
+    email: string | undefined;
+    role: UserRole;
+    created_at: string;
+};

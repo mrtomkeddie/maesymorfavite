@@ -1,14 +1,11 @@
 
 
-
-
-
 // This file will contain the Supabase implementations of all data functions.
 // Note: This is a placeholder implementation. A real implementation would require a
 // Supabase project with tables matching the data structures in src/lib/types.ts.
 
 import { createClient } from '@supabase/supabase-js';
-import type { NewsPost, NewsPostWithId, CalendarEvent, CalendarEventWithId, StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, InboxMessage, InboxMessageWithId, Photo, PhotoWithId, WeeklyMenu } from '@/lib/types';
+import type { NewsPost, NewsPostWithId, CalendarEvent, CalendarEventWithId, StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, InboxMessage, InboxMessageWithId, Photo, PhotoWithId, WeeklyMenu, UserWithRole, UserRole } from '@/lib/types';
 import { news as mockNews } from '@/lib/mockNews';
 import { yearGroups } from '@/components/admin/ChildForm';
 
@@ -861,6 +858,33 @@ export const getPhotosForYearGroups = async (yearGroups: string[]): Promise<Phot
         throw error;
     }
     return (data || []).map(fromSupabasePhoto);
+};
+
+
+// === USER MANAGEMENT ===
+export const getUsersWithRoles = async (): Promise<UserWithRole[]> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return [];
+    const { data, error } = await supabase.from('users_with_roles').select('*');
+    if (error) {
+        console.error("Error fetching users with roles:", error);
+        throw error;
+    }
+    return data || [];
+};
+
+export const updateUserRole = async (userId: string, role: UserRole) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("Supabase not configured");
+
+    const { error } = await supabase
+        .from('user_roles')
+        .upsert({ id: userId, role: role });
+
+    if (error) {
+        console.error("Error updating user role:", error);
+        throw error;
+    }
 };
 
 

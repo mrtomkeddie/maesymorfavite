@@ -94,6 +94,7 @@ const content = {
     userManagement: {
       parents: 'Parents',
       children: 'Children',
+      allUsers: 'All Users'
     },
     settings: {
       site: 'Site Settings',
@@ -126,6 +127,7 @@ const content = {
     userManagement: {
       parents: 'Rhieni',
       children: 'Plant',
+      allUsers: 'Holl Ddefnyddwyr'
     },
     settings: {
       site: 'Gosodiadau Gwefan',
@@ -210,6 +212,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const userManagementItems = [
       { href: '/admin/parents', label: t.userManagement.parents, icon: Users2 },
       { href: '/admin/children', label: t.userManagement.children, icon: BookUser },
+      { href: '/admin/users', label: t.userManagement.allUsers, icon: Users },
   ];
   
   const settingsItems = [
