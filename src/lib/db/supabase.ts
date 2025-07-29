@@ -4,7 +4,7 @@
 // Note: This is a placeholder implementation. A real implementation would require a
 // Supabase project with tables matching the data structures in src/lib/types.ts.
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { NewsPost, NewsPostWithId, CalendarEvent, CalendarEventWithId, StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, InboxMessage, InboxMessageWithId, Photo, PhotoWithId, WeeklyMenu, UserWithRole, UserRole } from '@/lib/types';
 import { news as mockNews } from '@/lib/mockNews';
 import { yearGroups } from '@/components/admin/ChildForm';
@@ -12,18 +12,18 @@ import { yearGroups } from '@/components/admin/ChildForm';
 // Only create a client if the environment variables are set.
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-let supabase: ReturnType<typeof createClient> | null = null;
+
+let supabase: SupabaseClient | null = null;
 if (supabaseUrl && supabaseAnonKey) {
     supabase = createClient(supabaseUrl, supabaseAnonKey);
 }
 
 // Helper function to ensure Supabase is configured before use.
-function getSupabaseClient() {
+function getSupabaseClient(): SupabaseClient {
     if (!supabase) {
         // This check is important for when the app runs in an environment
         // where Supabase credentials are not provided (like Firebase Studio).
-        // Returning null allows the db/index.ts to fall back to Firebase.
-        return null;
+        throw new Error("Supabase is not configured. Please provide NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.");
     }
     return supabase;
 }
