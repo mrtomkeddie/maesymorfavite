@@ -208,12 +208,21 @@ export const getPhotosForYearGroups = async (yearGroups: string[]): Promise<Phot
 };
 
 // === USER MANAGEMENT ===
-const mockUsers: UserWithRole[] = [
-    { id: 'mock-admin-id', email: 'admin@example.com', role: 'admin', created_at: new Date().toISOString() },
-    { id: 'mock-parent-id', email: 'parent@example.com', role: 'parent', created_at: new Date().toISOString() },
+// This is now a mutable, in-memory store to simulate role changes for demos.
+let mockUsers: UserWithRole[] = [
+    { id: 'mock-admin-id-1', email: 'main.admin@example.com', role: 'admin', created_at: new Date(Date.now() - 86400000 * 5).toISOString() },
+    { id: 'mock-parent-id-1', email: 'parent.one@example.com', role: 'parent', created_at: new Date(Date.now() - 86400000 * 3).toISOString() },
+    { id: 'mock-parent-id-2', email: 'parent.two@example.com', role: 'parent', created_at: new Date(Date.now() - 86400000 * 2).toISOString() },
+    { id: 'mock-parent-id-3', email: 'another.parent@example.com', role: 'parent', created_at: new Date(Date.now() - 86400000 * 1).toISOString() },
 ];
 export const getUsersWithRoles = async (): Promise<UserWithRole[]> => Promise.resolve(mockUsers);
-export const updateUserRole = async (userId: string, role: UserRole): Promise<void> => console.log("Mock updateUserRole", userId, role);
+export const updateUserRole = async (userId: string, role: UserRole): Promise<void> => {
+    console.log("Mock updateUserRole", userId, role);
+    const userIndex = mockUsers.findIndex(u => u.id === userId);
+    if (userIndex !== -1) {
+        mockUsers[userIndex].role = role;
+    }
+};
 
 // === UTILITIES ===
 export const getCollectionCount = async (collectionName: string): Promise<number> => {
