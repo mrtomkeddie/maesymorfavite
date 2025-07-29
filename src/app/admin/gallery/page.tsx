@@ -49,7 +49,6 @@ export default function GalleryAdminPage() {
     }
     
     try {
-      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !process.env.NEXT_PUBLIC_SUPABASE_URL) throw new Error("No DB configured");
       const { data, lastDoc: newLastDoc } = await db.getPaginatedPhotos(12, initial ? undefined : lastDoc);
       
       if (initial) {
@@ -57,13 +56,16 @@ export default function GalleryAdminPage() {
       } else {
         setPhotos(prev => [...prev, ...data]);
       }
-      setLastDoc(newLastDoc);
-      setHasMore(!!newLastDoc && data.length === 12);
+      setLastDoc(newLastDoc as QueryDocumentSnapshot);
+      setHasMore(!!newLastDoc);
 
     } catch (error) {
-      console.log('DB not configured, using mock data for photo gallery');
-      setPhotos([]);
-      setHasMore(false);
+      console.error("Failed to fetch photos:", error);
+      toast({
+          title: "Error",
+          description: "Could not fetch photo gallery.",
+          variant: "destructive",
+      });
     }
     
     setIsLoading(false);

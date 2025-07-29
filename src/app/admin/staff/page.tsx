@@ -52,25 +52,6 @@ import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 
-// Re-using the structure from the public about page for consistency
-const mockStaffFromAboutPage = [
-    { team: "Leadership Team", name: "Jane Morgan", role: "Headteacher" },
-    { team: "Leadership Team", name: "Alex Evans", role: "Deputy Head" },
-    { team: "Leadership Team", name: "Ceri Lloyd", role: "SENCo" },
-    { team: "Nursery & Reception", name: "David Williams", role: "Teacher" },
-    { team: "Year 1", name: "Sarah Davies", role: "Teacher" },
-    { team: "Year 2", name: "Tomos Jones", role: "Teacher" },
-    { team: "Year 3", name: "Emily Roberts", role: "Teacher" },
-    { team: "Year 4", name: "Megan Phillips", role: "Teacher" },
-    { team: "Year 5", name: "Owain Thomas", role: "Teacher" },
-    { team: "Year 6", name: "Ffion Hughes", role: "Teacher" },
-    { team: "Support Staff", name: "Mark Phillips", role: "Office Manager" },
-    { team: "Support Staff", name: "Rhiannon Price", role: "Teaching Assistant" },
-    { team: "Support Staff", name: "Gareth Bale", role: "Teaching Assistant" },
-    { team: "Support Staff", name: "Sian Williams", role: "Librarian" },
-];
-
-
 export default function StaffAdminPage() {
   const [staff, setStaff] = useState<StaffMemberWithId[]>([]);
   const [groupedStaff, setGroupedStaff] = useState<Record<string, StaffMemberWithId[]>>({});
@@ -130,15 +111,6 @@ export default function StaffAdminPage() {
   }, [searchQuery, staff]);
 
 
-  const generateMockStaff = () => {
-    return mockStaffFromAboutPage.map((member, i) => ({
-      ...member,
-      id: `mock_staff_${i}`,
-      bio: `This is a short bio for ${member.name}.`,
-      photoUrl: undefined,
-    }));
-  };
-
   const fetchStaff = async (initial = false) => {
     if (initial) {
       setIsLoading(true);
@@ -149,10 +121,6 @@ export default function StaffAdminPage() {
     }
     
     try {
-      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-        throw new Error('No DB configured');
-      }
-      
       const { data, lastDoc: newLastDoc } = await db.getPaginatedStaff(50, initial ? undefined : lastDoc); // Fetch more to allow grouping
       let newStaffList: StaffMemberWithId[] = [];
       if (initial) {
@@ -166,17 +134,15 @@ export default function StaffAdminPage() {
         });
       }
       setGroupedStaff(groupStaff(newStaffList));
-      setLastDoc(newLastDoc);
-      setHasMore(!!newLastDoc && data.length === 50);
+      setLastDoc(newLastDoc as QueryDocumentSnapshot);
+      setHasMore(!!newLastDoc);
     } catch (error) {
-      console.log('DB not configured, using mock data');
-      const mockStaffData = generateMockStaff();
-      
-      if (initial) {
-        setStaff(mockStaffData);
-        setGroupedStaff(groupStaff(mockStaffData));
-      }
-      setHasMore(false); // No more mock data to load
+       console.error("Failed to fetch staff:", error);
+       toast({
+           title: "Error",
+           description: "Could not fetch staff data.",
+           variant: "destructive",
+       });
     }
     
     setIsLoading(false);

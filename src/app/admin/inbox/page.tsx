@@ -46,14 +46,6 @@ export default function InboxAdminPage() {
   const fetchMessages = async () => {
     setIsLoading(true);
     try {
-      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-        console.log('No DB configured. Using mock data.');
-        setMessages([
-            { id: '1', type: 'absence', subject: 'Absence Report for Charlie K.', body: 'Charlie is unwell today.', sender: { name: 'Jane Doe', email: 'parent@example.com' }, isRead: false, createdAt: new Date().toISOString() },
-            { id: '2', type: 'contact', subject: 'Question about school trip', body: 'When is the payment due?', sender: { name: 'John Smith', email: 'john@example.com' }, isRead: true, createdAt: new Date(Date.now() - 86400000).toISOString() },
-        ]);
-        return;
-      }
       const allMessages = await db.getInboxMessages();
       setMessages(allMessages);
     } catch (error) {
@@ -70,6 +62,7 @@ export default function InboxAdminPage() {
 
   useEffect(() => {
     fetchMessages();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   const processedMessages = useMemo(() => {

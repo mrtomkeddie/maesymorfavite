@@ -28,7 +28,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { QueryDocumentSnapshot } from 'firebase/firestore';
-import { news as mockNewsData } from '@/lib/mockNews';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 
@@ -57,34 +56,21 @@ export default function NewsAdminPage() {
     }
     
     try {
-      // Check if Firebase is properly configured
-      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-        throw new Error('No DB configured');
-      }
-      
       const { data, lastDoc: newLastDoc } = await db.getPaginatedNews(20, initial ? undefined : lastDoc);
       if (initial) {
         setNews(data);
       } else {
         setNews(prev => [...prev, ...data]);
       }
-      setLastDoc(newLastDoc);
-      setHasMore(!!newLastDoc && data.length === 20);
+      setLastDoc(newLastDoc as QueryDocumentSnapshot);
+      setHasMore(!!newLastDoc);
     } catch (error) {
-      console.log('DB not configured, using mock data');
-      // Use mock data if Firebase fails
-      const mockData = mockNewsData.map((post, index) => ({
-        ...post,
-        id: `mock_${index}`,
-        date: post.date || new Date().toISOString(),
-      }));
-      
-      if (initial) {
-        setNews(mockData);
-      } else {
-        setNews(prev => [...prev, ...mockData]);
-      }
-      setHasMore(false); // No more mock data to load
+       console.error("Failed to fetch news:", error);
+       toast({
+           title: "Error",
+           description: "Could not fetch news posts.",
+           variant: "destructive",
+       });
     }
     
     setIsLoading(false);
@@ -138,7 +124,7 @@ export default function NewsAdminPage() {
             description: "News post deleted successfully.",
             variant: "default",
         });
-        fetchNews();
+        fetchNews(true);
       } catch (error) {
         console.error("Error deleting news post:", error);
         toast({

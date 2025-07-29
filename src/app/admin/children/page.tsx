@@ -27,7 +27,6 @@ import { CsvImportDialog } from '@/components/admin/CsvImportDialog';
 import { Child } from '@/lib/types';
 import { QueryDocumentSnapshot } from 'firebase/firestore';
 import { Label } from '@/components/ui/label';
-import { generateMockData } from '@/lib/mockData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -66,10 +65,6 @@ export default function ChildrenAdminPage() {
     }
 
     try {
-        if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-            throw new Error('No DB configured');
-        }
-        
         const childrenResult = await db.getPaginatedChildren(100, initial ? undefined : lastDoc); // Fetch more to allow for client-side filtering
         const parentsData = await db.getParents();
 
@@ -79,17 +74,16 @@ export default function ChildrenAdminPage() {
         } else {
             setChildren(prev => [...prev, ...childrenResult.data]);
         }
-        setLastDoc(childrenResult.lastDoc);
-        setHasMore(!!childrenResult.lastDoc && childrenResult.data.length === 100);
+        setLastDoc(childrenResult.lastDoc as QueryDocumentSnapshot);
+        setHasMore(!!childrenResult.lastDoc);
 
     } catch (error) {
-        console.log('DB not configured, using mock data for children and parents');
-        const { mockParents, mockChildren } = generateMockData();
-        if (initial) {
-            setChildren(mockChildren);
-            setParents(mockParents);
-        }
-        setHasMore(false);
+        console.error("Failed to fetch data:", error);
+        toast({
+            title: "Error",
+            description: "Could not fetch children or parent data.",
+            variant: "destructive"
+        });
     } finally {
         setIsLoading(false);
         setIsLoadingMore(false);
@@ -99,6 +93,7 @@ export default function ChildrenAdminPage() {
 
   useEffect(() => {
     fetchChildrenAndParents(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleFormSuccess = () => {

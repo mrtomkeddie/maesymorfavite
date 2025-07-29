@@ -26,7 +26,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { CalendarForm } from '@/components/admin/CalendarForm';
 import { QueryDocumentSnapshot } from 'firebase/firestore';
-import { calendarEvents } from '@/lib/mockCalendar';
 import { Input } from '@/components/ui/input';
 
 export default function CalendarAdminPage() {
@@ -55,33 +54,21 @@ export default function CalendarAdminPage() {
     }
     
     try {
-      // Check if Firebase is properly configured
-      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-        throw new Error('No DB configured');
-      }
-      
       const { data, lastDoc: newLastDoc } = await db.getPaginatedCalendarEvents(20, initial ? undefined : lastDoc);
       if (initial) {
         setEvents(data);
       } else {
         setEvents(prev => [...prev, ...data]);
       }
-      setLastDoc(newLastDoc);
-      setHasMore(!!newLastDoc && data.length === 20);
+      setLastDoc(newLastDoc as QueryDocumentSnapshot);
+      setHasMore(!!newLastDoc);
     } catch (error) {
-      console.log('DB not configured, using mock data');
-      // Use mock data if Firebase fails
-      const mockEvents = calendarEvents.map((event, index) => ({
-        ...event,
-        id: `mock_${index}`
-      }));
-      
-      if (initial) {
-        setEvents(mockEvents);
-      } else {
-        setEvents(prev => [...prev, ...mockEvents]);
-      }
-      setHasMore(false); // No more mock data to load
+       console.error("Failed to fetch events:", error);
+       toast({
+           title: "Error",
+           description: "Could not fetch calendar events.",
+           variant: "destructive",
+       });
     }
     
     setIsLoading(false);
@@ -147,7 +134,7 @@ export default function CalendarAdminPage() {
             description: "Calendar event deleted successfully.",
             variant: "default",
         });
-        fetchEvents();
+        fetchEvents(true);
       } catch (error) {
         console.error("Error deleting event:", error);
         toast({

@@ -43,22 +43,6 @@ export default function DocumentsAdminPage() {
 
   const { toast } = useToast();
 
-  const generateMockDocuments = () => {
-    const categories = ['Policy', 'Form', 'Newsletter'];
-    const mockDocs: DocumentWithId[] = [];
-    
-    for (let i = 1; i <= 30; i++) {
-      mockDocs.push({
-        id: `mock_doc_${i}`,
-        title: `Document ${i}`,
-        category: categories[i % categories.length],
-        fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        uploadedAt: new Date(Date.now() - i * 86400000).toISOString(),
-      });
-    }
-    return mockDocs;
-  };
-
   const fetchDocuments = async (initial = false) => {
     if (initial) {
       setIsLoading(true);
@@ -69,30 +53,21 @@ export default function DocumentsAdminPage() {
     }
     
     try {
-      // Check if Firebase is properly configured
-      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-        throw new Error('No DB configured');
-      }
-      
       const { data, lastDoc: newLastDoc } = await db.getPaginatedDocuments(20, initial ? undefined : lastDoc);
       if (initial) {
         setDocuments(data);
       } else {
         setDocuments(prev => [...prev, ...data]);
       }
-      setLastDoc(newLastDoc);
-      setHasMore(!!newLastDoc && data.length === 20);
+      setLastDoc(newLastDoc as QueryDocumentSnapshot);
+      setHasMore(!!newLastDoc);
     } catch (error) {
-      console.log('DB not configured, using mock data');
-      // Use mock data if Firebase fails
-      const mockDocsData = generateMockDocuments();
-      
-      if (initial) {
-        setDocuments(mockDocsData);
-      } else {
-        setDocuments(prev => [...prev, ...mockDocsData]);
-      }
-      setHasMore(false); // No more mock data to load
+       console.error("Failed to fetch documents:", error);
+       toast({
+           title: "Error",
+           description: "Could not fetch documents.",
+           variant: "destructive",
+       });
     }
     
     setIsLoading(false);

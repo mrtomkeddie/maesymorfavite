@@ -43,11 +43,6 @@ export default function GalleryPage() {
     const fetchAndSetPhotos = async () => {
       setIsLoading(true);
       try {
-        if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-          console.log("Firebase not configured, gallery will be empty.");
-          setPhotos([]);
-          return;
-        }
         // Fetch all photos relevant to any of the parent's children
         const relevantPhotos = await db.getPhotosForYearGroups(parentChildrenYearGroups);
         setPhotos(relevantPhotos);

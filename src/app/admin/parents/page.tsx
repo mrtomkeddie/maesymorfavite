@@ -25,7 +25,6 @@ import type { ParentWithId, ChildWithId } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { ParentForm } from '@/components/admin/ParentForm';
 import { Label } from '@/components/ui/label';
-import { generateMockData } from '@/lib/mockData';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -56,10 +55,6 @@ export default function ParentsAdminPage() {
     }
 
     try {
-        if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-            throw new Error('No DB configured');
-        }
-
         const parentsResult = await db.getPaginatedParents(20, initial ? undefined : lastDoc);
         const childrenData = await db.getChildren(); // Fetch all children for linking
 
@@ -69,17 +64,16 @@ export default function ParentsAdminPage() {
         } else {
             setParents(prev => [...prev, ...parentsResult.data]);
         }
-        setLastDoc(parentsResult.lastDoc);
-        setHasMore(!!parentsResult.lastDoc && parentsResult.data.length === 20);
+        setLastDoc(parentsResult.lastDoc as QueryDocumentSnapshot);
+        setHasMore(!!parentsResult.lastDoc);
 
     } catch (error) {
-        console.log('DB not configured, using mock data for parents and children');
-        const { mockParents, mockChildren } = generateMockData();
-        if (initial) {
-            setParents(mockParents);
-            setChildren(mockChildren);
-        }
-        setHasMore(false);
+        console.error("Failed to fetch data:", error);
+        toast({
+            title: "Error",
+            description: "Could not fetch parent or child data.",
+            variant: "destructive"
+        });
     } finally {
         setIsLoading(false);
         setIsLoadingMore(false);
@@ -89,6 +83,7 @@ export default function ParentsAdminPage() {
 
   useEffect(() => {
     fetchParentsAndChildren(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleFormSuccess = () => {
