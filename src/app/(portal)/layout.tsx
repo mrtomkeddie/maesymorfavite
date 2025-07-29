@@ -95,13 +95,20 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const [isLoading, setIsLoading] = useState(true);
   const { language } = useLanguage();
   const t = content[language];
-  const isSupabaseConfigured = !!supabase.auth;
+  const isSupabaseConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
+        const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+        const userRole = localStorage.getItem('userRole');
+
+        if (isAuthenticated && userRole === 'parent') {
+            setSession({} as Session); // Mock session for dev
+        } else {
+             router.replace('/login');
+        }
         setIsLoading(false);
-        setSession({} as Session); // Mock session for dev
         return;
     }
     
@@ -138,7 +145,11 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     if (isSupabaseConfigured) {
         await supabase.auth.signOut();
     }
+    // For both Supabase and mock, clear local storage and redirect
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('userRole');
     router.push('/login');
+    router.refresh();
   };
 
   const menuItems = [

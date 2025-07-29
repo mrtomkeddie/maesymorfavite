@@ -154,8 +154,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
+        const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+        const userRole = localStorage.getItem('userRole');
+
+        if (isAuthenticated && userRole === 'admin') {
+            setSession({} as Session); // Mock session for dev
+        } else {
+            router.replace('/admin/login');
+        }
         setIsLoading(false);
-        setSession({} as Session); // Mock session for dev
         return;
     }
 
@@ -193,16 +200,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [router, pathname, isSupabaseConfigured]);
 
   useEffect(() => {
-    if (session && isSupabaseConfigured) {
-        db.getUnreadMessageCount().then(setUnreadCount).catch(console.error);
+    if (session) {
+      db.getUnreadMessageCount().then(setUnreadCount).catch(console.error);
     }
-  }, [session, pathname, isSupabaseConfigured]); // Refetch on path change to update badge
+  }, [session, pathname]); // Refetch on path change to update badge
 
   const handleLogout = async () => {
     if (isSupabaseConfigured) {
         await supabase.auth.signOut();
     }
+    // For both Supabase and mock, clear local storage and redirect
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('userRole');
     router.push('/admin/login');
+    router.refresh();
   };
 
   const menuItems = [

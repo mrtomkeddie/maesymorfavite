@@ -29,6 +29,8 @@ export function LoginForm({ userRole }: LoginFormProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isSupabaseConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -42,23 +44,31 @@ export function LoginForm({ userRole }: LoginFormProps) {
     setIsLoading(true);
     setError(null);
     
-    const { error } = await supabase.auth.signInWithPassword({
-        email: values.email,
-        password: values.password,
-    });
+    if (isSupabaseConfigured) {
+        const { error } = await supabase.auth.signInWithPassword({
+            email: values.email,
+            password: values.password,
+        });
 
-    if (error) {
-        setError(error.message);
-        setIsLoading(false);
-        return;
+        if (error) {
+            setError(error.message);
+            setIsLoading(false);
+            return;
+        }
+    } else {
+        // Mock login for Firebase/dev environment
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('userRole', userRole);
     }
+
 
     toast({
         title: "Login Successful",
         description: "Welcome back!",
     });
     
-    // The redirect will be handled by the layout's auth listener
+    const destination = userRole === 'admin' ? '/admin/dashboard' : '/dashboard';
+    router.push(destination);
     router.refresh();
   }
 
@@ -100,7 +110,7 @@ export function LoginForm({ userRole }: LoginFormProps) {
           />
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Sign In with Email
+            Sign In
           </Button>
         </form>
       </Form>
