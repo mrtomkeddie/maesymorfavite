@@ -15,7 +15,11 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 let supabase: SupabaseClient | null = null;
 if (supabaseUrl && supabaseAnonKey) {
-    supabase = createClient(supabaseUrl, supabaseAnonKey);
+    try {
+        supabase = createClient(supabaseUrl, supabaseAnonKey);
+    } catch (error) {
+        console.error("Error initializing Supabase client:", error);
+    }
 }
 
 // Helper function to ensure Supabase is configured before use.
@@ -53,7 +57,6 @@ const toSupabaseNews = (news: Partial<NewsPost>) => {
 
 export const getNews = async (): Promise<NewsPostWithId[]> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return [];
     const { data, error } = await supabase
         .from('news')
         .select('*')
@@ -68,7 +71,6 @@ export const getNews = async (): Promise<NewsPostWithId[]> => {
 
 export const addNews = async (newsData: Omit<NewsPost, 'id' | 'attachments' | 'slug'>): Promise<string> => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     const slug = newsData.title_en.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
 
     const finalNewsData = toSupabaseNews({ ...newsData, slug });
@@ -92,7 +94,6 @@ export const addNews = async (newsData: Omit<NewsPost, 'id' | 'attachments' | 's
 
 export const updateNews = async (id: string, newsData: Partial<Omit<NewsPost, 'id' | 'attachments'>>) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
      if (newsData.isUrgent) {
         await supabase.from('news').update({ isUrgent: false }).neq('id', id);
     }
@@ -109,7 +110,6 @@ export const updateNews = async (id: string, newsData: Partial<Omit<NewsPost, 'i
 
 export const deleteNews = async (id: string) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     const { error } = await supabase
         .from('news')
         .delete()
@@ -123,7 +123,6 @@ export const deleteNews = async (id: string) => {
 
 export const getPaginatedNews = async (limitNum = 20, lastDoc?: any): Promise<{ data: NewsPostWithId[], lastDoc?: any }> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return { data: [], lastDoc: undefined };
     const page = lastDoc ? lastDoc.page + 1 : 0;
     const from = page * limitNum;
     const to = from + limitNum - 1;
@@ -208,7 +207,6 @@ const generateNewsDataFromEvent = (eventData: Partial<Omit<CalendarEvent, 'id' |
 
 export const getCalendarEvents = async (): Promise<CalendarEventWithId[]> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return [];
     const { data, error } = await supabase.from('calendar_events').select('*').order('start_time', { ascending: true });
     if (error) throw error;
     return data.map(fromSupabaseCalendarEvent);
@@ -216,7 +214,6 @@ export const getCalendarEvents = async (): Promise<CalendarEventWithId[]> => {
 
 export const addCalendarEvent = async (eventData: Omit<CalendarEvent, 'id' | 'attachments'>, crossPost: boolean) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     let finalEventData: Partial<CalendarEvent> = { ...eventData };
 
     if (crossPost) {
@@ -231,7 +228,6 @@ export const addCalendarEvent = async (eventData: Omit<CalendarEvent, 'id' | 'at
 
 export const updateCalendarEvent = async (id: string, eventData: Partial<Omit<CalendarEvent, 'id' | 'attachments'>>, crossPost: boolean) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     let finalEventData = { ...eventData };
     
     if (crossPost) {
@@ -250,7 +246,6 @@ export const updateCalendarEvent = async (id: string, eventData: Partial<Omit<Ca
 
 export const deleteCalendarEvent = async (id: string) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     // TODO: Add logic to optionally delete linked news post
     const { error } = await supabase.from('calendar_events').delete().eq('id', id);
     if (error) throw error;
@@ -258,7 +253,6 @@ export const deleteCalendarEvent = async (id: string) => {
 
 export const getPaginatedCalendarEvents = async (limitNum = 20, lastDoc?: any): Promise<{ data: CalendarEventWithId[], lastDoc?: any }> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return { data: [], lastDoc: undefined };
     const page = lastDoc ? lastDoc.page + 1 : 0;
     const from = page * limitNum;
     const to = from + limitNum - 1;
@@ -289,7 +283,6 @@ const toSupabaseStaff = (staff: Partial<StaffMember>) => {
 
 export const getStaff = async (): Promise<StaffMemberWithId[]> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return [];
     const { data, error } = await supabase
         .from('staff')
         .select('*')
@@ -304,7 +297,6 @@ export const getStaff = async (): Promise<StaffMemberWithId[]> => {
 
 export const addStaffMember = async (staffData: StaffMember) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
 
     const { error } = await supabase
         .from('staff')
@@ -318,7 +310,6 @@ export const addStaffMember = async (staffData: StaffMember) => {
 
 export const updateStaffMember = async (id: string, staffData: Partial<StaffMember>) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
 
     const { error } = await supabase
         .from('staff')
@@ -333,7 +324,6 @@ export const updateStaffMember = async (id: string, staffData: Partial<StaffMemb
 
 export const deleteStaffMember = async (id: string) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
 
     const { error } = await supabase
         .from('staff')
@@ -348,7 +338,6 @@ export const deleteStaffMember = async (id: string) => {
 
 export const getPaginatedStaff = async (limitNum = 20, lastDoc?: any): Promise<{ data: StaffMemberWithId[], lastDoc?: any }> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return { data: [], lastDoc: undefined };
 
     const page = lastDoc ? lastDoc.page + 1 : 0;
     const from = page * limitNum;
@@ -391,7 +380,6 @@ const toSupabaseDocument = (doc: Partial<Document>) => {
 
 export const getDocuments = async (): Promise<DocumentWithId[]> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return [];
     const { data, error } = await supabase
         .from('documents')
         .select('*')
@@ -406,7 +394,6 @@ export const getDocuments = async (): Promise<DocumentWithId[]> => {
 
 export const addDocument = async (docData: Document) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
 
     const { error } = await supabase
         .from('documents')
@@ -420,7 +407,6 @@ export const addDocument = async (docData: Document) => {
 
 export const updateDocument = async (id: string, docData: Partial<Document>) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
 
     const { error } = await supabase
         .from('documents')
@@ -435,7 +421,6 @@ export const updateDocument = async (id: string, docData: Partial<Document>) => 
 
 export const deleteDocument = async (id: string) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
 
     const { error } = await supabase
         .from('documents')
@@ -450,7 +435,6 @@ export const deleteDocument = async (id: string) => {
 
 export const getPaginatedDocuments = async (limitNum = 20, lastDoc?: any): Promise<{ data: DocumentWithId[], lastDoc?: any }> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return { data: [], lastDoc: undefined };
 
     const page = lastDoc ? lastDoc.page + 1 : 0;
     const from = page * limitNum;
@@ -488,7 +472,6 @@ const toSupabaseParent = (parent: Partial<Parent>) => {
 
 export const getParents = async (): Promise<ParentWithId[]> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return [];
     const { data, error } = await supabase.from('parents').select('*').order('name', { ascending: true });
     if (error) throw error;
     return data.map(fromSupabaseParent);
@@ -496,7 +479,6 @@ export const getParents = async (): Promise<ParentWithId[]> => {
 
 export const addParent = async (parentData: Parent): Promise<string> => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     const { data, error } = await supabase.from('parents').insert([toSupabaseParent(parentData)]).select('id').single();
     if (error) throw error;
     return data.id;
@@ -504,14 +486,12 @@ export const addParent = async (parentData: Parent): Promise<string> => {
 
 export const updateParent = async (id: string, parentData: Partial<Parent>) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     const { error } = await supabase.from('parents').update(toSupabaseParent(parentData)).eq('id', id);
     if (error) throw error;
 };
 
 export const deleteParent = async (id: string) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     
     // First, find all children linked to this parent
     const { data: linkedChildren, error: fetchError } = await supabase
@@ -540,7 +520,6 @@ export const deleteParent = async (id: string) => {
 
 export const getPaginatedParents = async (limitNum = 20, lastDoc?: any): Promise<{ data: ParentWithId[], lastDoc?: any }> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return { data: [], lastDoc: undefined };
     const page = lastDoc ? lastDoc.page + 1 : 0;
     const from = page * limitNum;
     const to = from + limitNum - 1;
@@ -576,7 +555,6 @@ const toSupabaseChild = (child: Partial<Child>) => {
 
 export const getChildren = async (): Promise<ChildWithId[]> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return [];
     const { data, error } = await supabase.from('children').select('*').order('name', { ascending: true });
     if (error) throw error;
     return data.map(fromSupabaseChild);
@@ -584,14 +562,12 @@ export const getChildren = async (): Promise<ChildWithId[]> => {
 
 export const addChild = async (childData: Child) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     const { error } = await supabase.from('children').insert([toSupabaseChild(childData)]);
     if (error) throw error;
 };
 
 export const bulkAddChildren = async (childrenData: Child[]) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     const supabaseData = childrenData.map(toSupabaseChild);
     const { error } = await supabase.from('children').insert(supabaseData);
     if (error) throw error;
@@ -599,21 +575,18 @@ export const bulkAddChildren = async (childrenData: Child[]) => {
 
 export const updateChild = async (id: string, childData: Partial<Child>) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     const { error } = await supabase.from('children').update(toSupabaseChild(childData)).eq('id', id);
     if (error) throw error;
 };
 
 export const deleteChild = async (id: string) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     const { error } = await supabase.from('children').delete().eq('id', id);
     if (error) throw error;
 };
 
 export const promoteAllChildren = async (): Promise<void> => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     const { data: children, error } = await supabase.from('children').select('*');
     if (error) throw error;
 
@@ -643,14 +616,12 @@ export const promoteAllChildren = async (): Promise<void> => {
 
 export const bulkUpdateChildren = async (ids: string[], data: Partial<Child>) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     const { error } = await supabase.from('children').update(toSupabaseChild(data)).in('id', ids);
     if (error) throw error;
 };
 
 export const getPaginatedChildren = async (limitNum = 20, lastDoc?: any): Promise<{ data: ChildWithId[], lastDoc?: any }> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return { data: [], lastDoc: undefined };
     const page = lastDoc ? lastDoc.page + 1 : 0;
     const from = page * limitNum;
     const to = from + limitNum - 1;
@@ -668,7 +639,6 @@ export const getPaginatedChildren = async (limitNum = 20, lastDoc?: any): Promis
 // === SITE SETTINGS ===
 export const getSiteSettings = async (): Promise<SiteSettings | null> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return null;
     const { data, error } = await supabase
         .from('settings')
         .select('value')
@@ -684,7 +654,6 @@ export const getSiteSettings = async (): Promise<SiteSettings | null> => {
 
 export const updateSiteSettings = async (settings: SiteSettings) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
 
     const { error } = await supabase
         .from('settings')
@@ -699,7 +668,6 @@ export const updateSiteSettings = async (settings: SiteSettings) => {
 // === LUNCH MENU SETTINGS ===
 export const getWeeklyMenu = async (): Promise<WeeklyMenu | null> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return null;
     const { data, error } = await supabase
         .from('settings')
         .select('value')
@@ -715,7 +683,6 @@ export const getWeeklyMenu = async (): Promise<WeeklyMenu | null> => {
 
 export const updateWeeklyMenu = async (menu: WeeklyMenu) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
 
     const { error } = await supabase
         .from('settings')
@@ -753,14 +720,12 @@ const toSupabaseInboxMessage = (message: Partial<InboxMessage>) => {
 
 export const addInboxMessage = async (messageData: InboxMessage) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     const { error } = await supabase.from('inbox').insert([toSupabaseInboxMessage(messageData)]);
     if (error) throw error;
 };
 
 export const getInboxMessages = async (): Promise<InboxMessageWithId[]> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return [];
     const { data, error } = await supabase.from('inbox').select('*').order('created_at', { ascending: false });
     if (error) throw error;
     return data.map(fromSupabaseInboxMessage);
@@ -768,21 +733,18 @@ export const getInboxMessages = async (): Promise<InboxMessageWithId[]> => {
 
 export const updateInboxMessage = async (id: string, data: Partial<InboxMessage>) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     const { error } = await supabase.from('inbox').update(toSupabaseInboxMessage(data)).eq('id', id);
     if (error) throw error;
 };
 
 export const deleteInboxMessage = async (id: string) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     const { error } = await supabase.from('inbox').delete().eq('id', id);
     if (error) throw error;
 };
 
 export const getUnreadMessageCount = async (): Promise<number> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return 0;
     const { count, error } = await supabase
         .from('inbox')
         .select('*', { count: 'exact', head: true })
@@ -816,7 +778,6 @@ const toSupabasePhoto = (photo: Partial<Photo>) => {
 
 export const addPhoto = async (photoData: Photo): Promise<string> => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     const { data, error } = await supabase.from('photos').insert([toSupabasePhoto(photoData)]).select('id').single();
     if (error) throw error;
     return data.id;
@@ -824,14 +785,12 @@ export const addPhoto = async (photoData: Photo): Promise<string> => {
 
 export const deletePhoto = async (id: string) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
     const { error } = await supabase.from('photos').delete().eq('id', id);
     if (error) throw error;
 };
 
 export const getPaginatedPhotos = async (limitNum = 20, lastDoc?: any): Promise<{ data: PhotoWithId[], lastDoc?: any }> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return { data: [], lastDoc: undefined };
     const page = lastDoc ? lastDoc.page + 1 : 0;
     const from = page * limitNum;
     const to = from + limitNum - 1;
@@ -845,7 +804,6 @@ export const getPaginatedPhotos = async (limitNum = 20, lastDoc?: any): Promise<
 
 export const getPhotosForYearGroups = async (yearGroups: string[]): Promise<PhotoWithId[]> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return [];
     const allGroups = ['All', ...yearGroups];
     const { data, error } = await supabase
         .from('photos')
@@ -864,7 +822,6 @@ export const getPhotosForYearGroups = async (yearGroups: string[]): Promise<Phot
 // === USER MANAGEMENT ===
 export const getUsersWithRoles = async (): Promise<UserWithRole[]> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return [];
     const { data, error } = await supabase.from('users_with_roles').select('*');
     if (error) {
         console.error("Error fetching users with roles:", error);
@@ -875,7 +832,6 @@ export const getUsersWithRoles = async (): Promise<UserWithRole[]> => {
 
 export const updateUserRole = async (userId: string, role: UserRole) => {
     const supabase = getSupabaseClient();
-    if (!supabase) throw new Error("Supabase not configured");
 
     const { error } = await supabase
         .from('user_roles')
@@ -891,7 +847,6 @@ export const updateUserRole = async (userId: string, role: UserRole) => {
 // === UTILITIES ===
 export const getCollectionCount = async (collectionName: string): Promise<number> => {
     const supabase = getSupabaseClient();
-    if (!supabase) return 0;
     const { count, error } = await supabase
         .from(collectionName)
         .select('*', { count: 'exact', head: true });

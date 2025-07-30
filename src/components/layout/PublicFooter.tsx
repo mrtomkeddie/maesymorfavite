@@ -75,7 +75,6 @@ export function PublicFooter() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
-    // db.getSiteSettings will correctly use the mock provider in this environment
     db.getSiteSettings().then(setSettings).catch(console.error);
   }, []);
   
