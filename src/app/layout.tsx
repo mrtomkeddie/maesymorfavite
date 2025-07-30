@@ -17,6 +17,9 @@ const ptSans = PT_Sans({
 export const metadata: Metadata = {
   title: 'Parent Portal | Maes Y Morfa School',
   description: 'Public website and parent portal for Maes Y Morfa school.',
+  icons: {
+    icon: '/icon.png',
+  },
 };
 
 export default function RootLayout({
