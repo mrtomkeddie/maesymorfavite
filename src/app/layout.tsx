@@ -19,7 +19,8 @@ export const metadata: Metadata = {
   title: 'Parent Portal | Maes Y Morfa School',
   description: 'Public website and parent portal for Maes Y Morfa school.',
   icons: {
-    icon: '/mobile-icon.png',
+    icon: '/icon.png',
+    apple: '/mobile-icon.png',
   },
 };
 
