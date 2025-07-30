@@ -122,7 +122,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     const getSessionAndRole = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        setSession(session);
+        const role = await getUserRole(session.user.id);
+        if (role === 'parent') {
+          setSession(session);
+        } else {
+          router.replace('/login');
+        }
       } else {
         router.replace('/login');
       }
@@ -135,8 +140,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       (event, session) => {
         if (event === 'SIGNED_OUT') {
           router.replace('/login');
-        } else {
-          setSession(session);
+        } else if (session) {
+          getSessionAndRole();
         }
       }
     );

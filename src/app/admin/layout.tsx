@@ -159,8 +159,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (role === 'admin') {
           setSession(session);
         } else {
-          // If the user is logged in but not an admin, deny access.
-          router.replace('/login'); // Or a dedicated 'access-denied' page
+          router.replace('/login');
         }
       } else if (pathname !== '/admin/login') {
         router.replace('/admin/login');
