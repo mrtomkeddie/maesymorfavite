@@ -29,6 +29,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format, startOfWeek } from 'date-fns';
 import { useLanguage } from '@/app/(public)/LanguageProvider';
+import { cy, enGB } from 'date-fns/locale';
 
 const valuesAwardFormSchema = (t: any) => z.object({
   childIds: z.array(z.string()).refine((value) => value.length > 0, {
@@ -92,13 +93,13 @@ export default function ValuesAwardPage() {
 
   const today = new Date();
   const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday
-  const locale = language === 'cy' ? require('date-fns/locale/cy') : require('date-fns/locale/en-GB');
+  const locale = language === 'cy' ? cy : enGB;
   
   const weekString = `w/c ${format(weekStart, 'do MMMM yyyy', { locale })}`;
 
   const defaultMessageTemplate = language === 'cy' 
     ? `Annwyl Riant/Gwarcheidwad,\n\nRydym yn falch iawn o'ch hysbysu, am wythnos ${format(weekStart, 'do MMM', { locale })}, bod [ENW_MYFYRIWR] wedi derbyn gwobr gwerthoedd yr ysgol am ddangos caredigrwydd a pharch eithriadol. Rydym yn falch iawn!\n\nDa iawn,\n[ENW_ATHRO]`
-    : `Dear Parent/Guardian,\n\nWe are delighted to inform you that for the week of ${format(weekStart, 'do MMM')}, [STUDENT_NAME] has received a school values award for demonstrating exceptional kindness and respect. We are very proud!\n\nWell done,\n[TEACHER_NAME]`;
+    : `Dear Parent/Guardian,\n\nWe are delighted to inform you that for the week of ${format(weekStart, 'do MMM', { locale })}, [STUDENT_NAME] has received a school values award for demonstrating exceptional kindness and respect. We are very proud!\n\nWell done,\n[TEACHER_NAME]`;
 
 
   useEffect(() => {
