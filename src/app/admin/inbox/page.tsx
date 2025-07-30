@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -14,7 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Trash2, Loader2, Eye, Mail, ClipboardCheck, ArrowUp, ArrowDown, Search, Reply } from 'lucide-react';
+import { MoreHorizontal, Trash2, Loader2, Eye, Mail, ClipboardCheck, ArrowUp, ArrowDown, Search, Reply, Send } from 'lucide-react';
 import { db } from '@/lib/db';
 import type { InboxMessageWithId } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -25,12 +26,24 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
+
 
 type SortableField = 'createdAt' | 'sender.name' | 'subject';
+
+const replyFormSchema = z.object({
+  replyMessage: z.string().min(1, 'Reply cannot be empty.'),
+});
 
 export default function InboxAdminPage() {
   const [messages, setMessages] = useState<InboxMessageWithId[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<InboxMessageWithId | null>(null);
   const [messageToView, setMessageToView] = useState<InboxMessageWithId | null>(null);
@@ -42,6 +55,12 @@ export default function InboxAdminPage() {
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
 
   const { toast } = useToast();
+
+  const replyForm = useForm<z.infer<typeof replyFormSchema>>({
+    resolver: zodResolver(replyFormSchema),
+    defaultValues: { replyMessage: '' },
+  });
+
 
   const fetchMessages = async () => {
     setIsLoading(true);
@@ -136,6 +155,7 @@ export default function InboxAdminPage() {
 
   const handleViewMessage = async (message: InboxMessageWithId) => {
     setMessageToView(message);
+    replyForm.reset();
     setIsViewDialogOpen(true);
     if (!message.isRead) {
         try {
@@ -145,6 +165,39 @@ export default function InboxAdminPage() {
         } catch (error) {
             console.error("Failed to mark message as read:", error);
         }
+    }
+  }
+
+   const handleSendReply = async (values: z.infer<typeof replyFormSchema>) => {
+    if (!messageToView) return;
+    setIsSending(true);
+
+    try {
+      // In a real app, this would call a backend service to send an email.
+      // For this demo, we'll just log it and show a success toast.
+      console.log('--- In-App Reply Sent ---');
+      console.log('Recipient:', messageToView.sender.email);
+      console.log('Subject:', `Re: ${messageToView.subject}`);
+      console.log('Body:', values.replyMessage);
+      console.log('---------------------------');
+      
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({
+        title: "Reply Sent",
+        description: `Your reply has been sent to ${messageToView.sender.name}.`,
+      });
+
+      replyForm.reset();
+    } catch (error) {
+       toast({
+        title: "Error Sending Reply",
+        description: "Could not send the reply. Please try again.",
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSending(false);
     }
   }
   
@@ -310,20 +363,42 @@ export default function InboxAdminPage() {
                         <div className="prose prose-sm dark:prose-invert whitespace-pre-wrap">
                             {messageToView.body}
                         </div>
+
+                         <Separator className="my-4" />
+
+                        <Form {...replyForm}>
+                            <form onSubmit={replyForm.handleSubmit(handleSendReply)} className="space-y-4">
+                                <FormField
+                                control={replyForm.control}
+                                name="replyMessage"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="font-semibold flex items-center gap-2">
+                                            <Reply className="h-4 w-4" /> Reply to {messageToView.sender.name}
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Textarea {...field} placeholder="Type your reply here..." rows={5} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                                <div className="flex justify-end">
+                                    <Button type="submit" disabled={isSending}>
+                                        {isSending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        <Send className="mr-2 h-4 w-4" />
+                                        Send Reply
+                                    </Button>
+                                </div>
+                            </form>
+                        </Form>
+
                     </div>
                   )}
               </ScrollArea>
-              {messageToView && (
-                <div className="flex justify-end pt-4 border-t">
-                    <Button asChild>
-                        <a href={`mailto:${messageToView.sender.email}?subject=Re: ${messageToView.subject}`}>
-                           <Reply className="mr-2 h-4 w-4" /> Reply
-                        </a>
-                    </Button>
-                </div>
-              )}
           </DialogContent>
       </Dialog>
     </div>
   );
 }
+
