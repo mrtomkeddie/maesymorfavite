@@ -31,9 +31,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 export default function DocumentsAdminPage() {
   const [documents, setDocuments] = useState<DocumentWithId[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | undefined>(undefined);
-  const [hasMore, setHasMore] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<DocumentWithId | null>(null);
@@ -44,34 +41,10 @@ export default function DocumentsAdminPage() {
   const { toast } = useToast();
 
   const fetchDocuments = async (initial = false) => {
-    if (initial) {
-      setIsLoading(true);
-      setLastDoc(undefined);
-      setHasMore(true);
-    } else {
-      setIsLoadingMore(true);
-    }
-    
-    try {
-      const { data, lastDoc: newLastDoc } = await db.getPaginatedDocuments(20, initial ? undefined : lastDoc);
-      if (initial) {
-        setDocuments(data);
-      } else {
-        setDocuments(prev => [...prev, ...data]);
-      }
-      setLastDoc(newLastDoc as QueryDocumentSnapshot);
-      setHasMore(!!newLastDoc);
-    } catch (error) {
-       console.error("Failed to fetch documents:", error);
-       toast({
-           title: "Error",
-           description: "Could not fetch documents.",
-           variant: "destructive",
-       });
-    }
-    
+    setIsLoading(true);
+    const { data } = await db.getPaginatedDocuments(100);
+    setDocuments(data);
     setIsLoading(false);
-    setIsLoadingMore(false);
   };
 
   useEffect(() => {
@@ -159,19 +132,19 @@ export default function DocumentsAdminPage() {
                     <CardTitle>Uploaded Documents</CardTitle>
                     <CardDescription>A list of all documents available on the parent portal.</CardDescription>
                 </div>
-                 <div className="flex flex-wrap items-center gap-2">
-                    <div className="relative w-full md:w-auto">
+                 <div className="flex flex-col sm:flex-row items-center gap-2">
+                    <div className="relative w-full sm:w-auto">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
                             type="search"
                             placeholder="Search by title..."
-                            className="w-full pl-8 md:w-[250px]"
+                            className="w-full pl-8 sm:w-[250px]"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
                      <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                        <SelectTrigger className='w-full md:w-[180px]'>
+                        <SelectTrigger className='w-full sm:w-[180px]'>
                             <SelectValue placeholder="Filter by category..."/>
                         </SelectTrigger>
                         <SelectContent>
@@ -182,7 +155,7 @@ export default function DocumentsAdminPage() {
                 </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-x-auto">
             {isLoading ? (
               <div className="flex justify-center items-center h-48">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -244,14 +217,6 @@ export default function DocumentsAdminPage() {
                     )}
                   </TableBody>
                 </Table>
-                {hasMore && filteredDocuments.length === documents.length && (
-                  <div className="flex justify-center mt-4">
-                    <Button onClick={() => fetchDocuments(false)} disabled={isLoadingMore}>
-                      {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
-                      Load More
-                    </Button>
-                  </div>
-                )}
               </>
             )}
           </CardContent>
@@ -289,5 +254,3 @@ export default function DocumentsAdminPage() {
     </Dialog>
   );
 }
-
-    

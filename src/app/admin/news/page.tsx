@@ -34,9 +34,6 @@ import { Label } from '@/components/ui/label';
 export default function NewsAdminPage() {
   const [news, setNews] = useState<NewsPostWithId[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | undefined>(undefined);
-  const [hasMore, setHasMore] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [selectedNews, setSelectedNews] = useState<NewsPostWithId | null>(null);
@@ -47,34 +44,10 @@ export default function NewsAdminPage() {
   const { toast } = useToast();
 
   const fetchNews = async (initial = false) => {
-    if (initial) {
-      setIsLoading(true);
-      setLastDoc(undefined);
-      setHasMore(true);
-    } else {
-      setIsLoadingMore(true);
-    }
-    
-    try {
-      const { data, lastDoc: newLastDoc } = await db.getPaginatedNews(20, initial ? undefined : lastDoc);
-      if (initial) {
-        setNews(data);
-      } else {
-        setNews(prev => [...prev, ...data]);
-      }
-      setLastDoc(newLastDoc as QueryDocumentSnapshot);
-      setHasMore(!!newLastDoc);
-    } catch (error) {
-       console.error("Failed to fetch news:", error);
-       toast({
-           title: "Error",
-           description: "Could not fetch news posts.",
-           variant: "destructive",
-       });
-    }
-    
+    setIsLoading(true);
+    const { data } = await db.getPaginatedNews(100);
+    setNews(data);
     setIsLoading(false);
-    setIsLoadingMore(false);
   };
 
   useEffect(() => {
@@ -168,13 +141,13 @@ export default function NewsAdminPage() {
                     <CardTitle>Published News</CardTitle>
                     <CardDescription>A list of all current news posts and alerts.</CardDescription>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                    <div className="relative w-full md:w-auto">
+                <div className="flex flex-col sm:flex-row items-center gap-2">
+                    <div className="relative w-full sm:w-auto">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
                             type="search"
                             placeholder="Search by title..."
-                            className="w-full pl-8 md:w-[250px]"
+                            className="w-full pl-8 sm:w-[250px]"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -186,7 +159,7 @@ export default function NewsAdminPage() {
                 </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-x-auto">
             {isLoading ? (
               <div className="flex justify-center items-center h-48">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -252,14 +225,6 @@ export default function NewsAdminPage() {
                     )}
                   </TableBody>
                 </Table>
-                {hasMore && filteredNews.length === news.length && (
-                  <div className="flex justify-center mt-4">
-                    <Button onClick={() => fetchNews(false)} disabled={isLoadingMore}>
-                      {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
-                      Load More
-                    </Button>
-                  </div>
-                )}
               </>
             )}
           </CardContent>
@@ -297,5 +262,3 @@ export default function NewsAdminPage() {
     </Dialog>
   );
 }
-
-    

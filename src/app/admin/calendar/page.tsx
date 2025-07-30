@@ -31,9 +31,6 @@ import { Input } from '@/components/ui/input';
 export default function CalendarAdminPage() {
   const [events, setEvents] = useState<CalendarEventWithId[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | undefined>(undefined);
-  const [hasMore, setHasMore] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEventWithId | null>(null);
@@ -45,34 +42,10 @@ export default function CalendarAdminPage() {
   const { toast } = useToast();
 
   const fetchEvents = async (initial = false) => {
-    if (initial) {
-      setIsLoading(true);
-      setLastDoc(undefined);
-      setHasMore(true);
-    } else {
-      setIsLoadingMore(true);
-    }
-    
-    try {
-      const { data, lastDoc: newLastDoc } = await db.getPaginatedCalendarEvents(20, initial ? undefined : lastDoc);
-      if (initial) {
-        setEvents(data);
-      } else {
-        setEvents(prev => [...prev, ...data]);
-      }
-      setLastDoc(newLastDoc as QueryDocumentSnapshot);
-      setHasMore(!!newLastDoc);
-    } catch (error) {
-       console.error("Failed to fetch events:", error);
-       toast({
-           title: "Error",
-           description: "Could not fetch calendar events.",
-           variant: "destructive",
-       });
-    }
-    
+    setIsLoading(true);
+    const { data } = await db.getPaginatedCalendarEvents(100);
+    setEvents(data);
     setIsLoading(false);
-    setIsLoadingMore(false);
   };
 
   useEffect(() => {
@@ -173,13 +146,13 @@ export default function CalendarAdminPage() {
                 <CardTitle>Upcoming Events</CardTitle>
                 <CardDescription>A list of all current and future school events.</CardDescription>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                  <div className="relative w-full md:w-auto">
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                  <div className="relative w-full sm:w-auto">
                       <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
                           type="search"
                           placeholder="Search by title..."
-                          className="w-full pl-8 md:w-[250px]"
+                          className="w-full pl-8 sm:w-[250px]"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                       />
@@ -191,7 +164,7 @@ export default function CalendarAdminPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-x-auto">
             {isLoading ? (
               <div className="flex justify-center items-center h-48">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -260,14 +233,6 @@ export default function CalendarAdminPage() {
                     )}
                   </TableBody>
                 </Table>
-                {hasMore && filteredAndSortedEvents.length === events.length && (
-                  <div className="flex justify-center mt-4">
-                    <Button onClick={() => fetchEvents(false)} disabled={isLoadingMore}>
-                      {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
-                      Load More
-                    </Button>
-                  </div>
-                )}
               </>
             )}
           </CardContent>
@@ -304,5 +269,3 @@ export default function CalendarAdminPage() {
     </Dialog>
   );
 }
-
-    

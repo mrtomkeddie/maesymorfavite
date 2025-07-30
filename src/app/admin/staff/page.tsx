@@ -56,9 +56,6 @@ export default function StaffAdminPage() {
   const [staff, setStaff] = useState<StaffMemberWithId[]>([]);
   const [groupedStaff, setGroupedStaff] = useState<Record<string, StaffMemberWithId[]>>({});
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | undefined>(undefined);
-  const [hasMore, setHasMore] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffMemberWithId | null>(null);
@@ -112,41 +109,11 @@ export default function StaffAdminPage() {
 
 
   const fetchStaff = async (initial = false) => {
-    if (initial) {
-      setIsLoading(true);
-      setLastDoc(undefined);
-      setHasMore(true);
-    } else {
-      setIsLoadingMore(true);
-    }
-    
-    try {
-      const { data, lastDoc: newLastDoc } = await db.getPaginatedStaff(50, initial ? undefined : lastDoc); // Fetch more to allow grouping
-      let newStaffList: StaffMemberWithId[] = [];
-      if (initial) {
-        setStaff(data);
-        newStaffList = data;
-      } else {
-        setStaff(prev => {
-          const combined = [...prev, ...data];
-          newStaffList = combined;
-          return combined;
-        });
-      }
-      setGroupedStaff(groupStaff(newStaffList));
-      setLastDoc(newLastDoc as QueryDocumentSnapshot);
-      setHasMore(!!newLastDoc);
-    } catch (error) {
-       console.error("Failed to fetch staff:", error);
-       toast({
-           title: "Error",
-           description: "Could not fetch staff data.",
-           variant: "destructive",
-       });
-    }
-    
+    setIsLoading(true);
+    const { data } = await db.getPaginatedStaff(100);
+    setStaff(data);
+    setGroupedStaff(groupStaff(data));
     setIsLoading(false);
-    setIsLoadingMore(false);
   };
 
   useEffect(() => {
@@ -286,14 +253,6 @@ export default function StaffAdminPage() {
                         </AccordionItem>
                       ))}
                     </Accordion>
-                    {hasMore && Object.keys(groupStaff(staff)).length === Object.keys(groupedStaff).length && (
-                      <div className="flex justify-center mt-4">
-                        <Button onClick={() => fetchStaff(false)} disabled={isLoadingMore}>
-                          {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
-                          Load More
-                        </Button>
-                      </div>
-                    )}
                   </>
                 ) : (
                   <div className="h-24 text-center flex items-center justify-center">
@@ -334,5 +293,3 @@ export default function StaffAdminPage() {
     </Dialog>
   );
 }
-
-    

@@ -56,38 +56,12 @@ export default function ChildrenAdminPage() {
   const { toast } = useToast();
 
   const fetchChildrenAndParents = async (initial = false) => {
-    if (initial) {
-        setIsLoading(true);
-        setLastDoc(undefined);
-        setHasMore(true);
-    } else {
-        setIsLoadingMore(true);
-    }
-
-    try {
-        const childrenResult = await db.getPaginatedChildren(100, initial ? undefined : lastDoc); // Fetch more to allow for client-side filtering
-        const parentsData = await db.getParents();
-
-        if (initial) {
-            setChildren(childrenResult.data);
-            setParents(parentsData);
-        } else {
-            setChildren(prev => [...prev, ...childrenResult.data]);
-        }
-        setLastDoc(childrenResult.lastDoc as QueryDocumentSnapshot);
-        setHasMore(!!childrenResult.lastDoc);
-
-    } catch (error) {
-        console.error("Failed to fetch data:", error);
-        toast({
-            title: "Error",
-            description: "Could not fetch children or parent data.",
-            variant: "destructive"
-        });
-    } finally {
-        setIsLoading(false);
-        setIsLoadingMore(false);
-    }
+    setIsLoading(true);
+    const childrenResult = await db.getPaginatedChildren(100);
+    const parentsData = await db.getParents();
+    setChildren(childrenResult.data);
+    setParents(parentsData);
+    setIsLoading(false);
   };
 
 
@@ -215,14 +189,14 @@ export default function ChildrenAdminPage() {
                 <h1 className="text-3xl font-bold tracking-tight">Child Management</h1>
                 <p className="text-muted-foreground">Add, edit, and manage child profiles.</p>
             </div>
-          <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" onClick={() => setIsPromoteAlertOpen(true)}>
+          <div className="flex flex-col sm:flex-row items-center gap-2">
+              <Button variant="outline" onClick={() => setIsPromoteAlertOpen(true)} className="w-full sm:w-auto">
                   <ChevronsUp className="mr-2 h-4 w-4" />
                   Promote Year Groups
               </Button>
               <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
                   <DialogTrigger asChild>
-                      <Button variant="outline">
+                      <Button variant="outline" className="w-full sm:w-auto">
                           <UploadCloud className="mr-2 h-4 w-4" />
                           Import from CSV
                       </Button>
@@ -243,7 +217,7 @@ export default function ChildrenAdminPage() {
                   </DialogContent>
               </Dialog>
               <DialogTrigger asChild>
-                  <Button>
+                  <Button className="w-full sm:w-auto">
                   <PlusCircle className="mr-2 h-4 w-4" /> Enrol Child
                   </Button>
               </DialogTrigger>
@@ -257,19 +231,19 @@ export default function ChildrenAdminPage() {
                       <CardTitle>All Children</CardTitle>
                       <CardDescription>A list of all currently enrolled children.</CardDescription>
                   </div>
-                  <div className='flex flex-wrap items-center gap-2'>
-                      <div className="relative w-full md:w-auto">
+                  <div className='flex flex-col sm:flex-row items-center gap-2'>
+                      <div className="relative w-full sm:w-auto">
                           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                           <Input
                               type="search"
                               placeholder="Search by name..."
-                              className="w-full pl-8 md:w-[250px]"
+                              className="w-full pl-8 sm:w-[250px]"
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
                           />
                       </div>
                       <Select value={yearFilter} onValueChange={setYearFilter}>
-                          <SelectTrigger className='w-full md:w-[180px]'>
+                          <SelectTrigger className='w-full sm:w-[180px]'>
                               <SelectValue placeholder="Filter by year..."/>
                           </SelectTrigger>
                           <SelectContent>
@@ -283,7 +257,7 @@ export default function ChildrenAdminPage() {
                   </div>
               </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-x-auto">
             {isLoading ? (
               <div className="flex justify-center items-center h-48">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -343,14 +317,6 @@ export default function ChildrenAdminPage() {
                     )}
                   </TableBody>
                 </Table>
-                {hasMore && (
-                  <div className="flex justify-center mt-4">
-                    <Button onClick={() => fetchChildrenAndParents(false)} disabled={isLoadingMore}>
-                      {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
-                      Load More
-                    </Button>
-                  </div>
-                )}
               </>
             )}
           </CardContent>

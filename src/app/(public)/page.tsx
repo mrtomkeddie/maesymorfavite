@@ -102,7 +102,7 @@ export default function HomePage() {
         />
         <div className="absolute inset-0 bg-black/60 z-10"></div>
         <div className="relative z-20 container mx-auto max-w-4xl px-8">
-            <h1 className="font-headline text-5xl font-extrabold tracking-tighter sm:text-6xl md:text-7xl">
+            <h1 className="font-headline text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-6xl">
                 {t.hero.title}
             </h1>
             <p className="mt-4 max-w-2xl mx-auto text-lg text-white/90 md:text-xl">
@@ -121,7 +121,7 @@ export default function HomePage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                
                 <div className="lg:col-span-2">
-                    <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground mb-8">
+                    <h2 className="font-headline text-3xl md:text-4xl font-extrabold tracking-tighter text-foreground mb-8">
                         {t.latestNews.heading}
                     </h2>
                     <div className="space-y-6">
@@ -150,7 +150,7 @@ export default function HomePage() {
 
                 <div className="lg:col-span-1 space-y-8">
                     <div>
-                        <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground mb-8">
+                        <h2 className="font-headline text-3xl md:text-4xl font-extrabold tracking-tighter text-foreground mb-8">
                             {t.keyInfo.heading}
                         </h2>
                          <div className="space-y-4">
@@ -169,7 +169,7 @@ export default function HomePage() {
                     </div>
                     
                     <div>
-                        <h2 className="font-headline text-4xl font-extrabold tracking-tighter text-foreground mb-8">
+                        <h2 className="font-headline text-3xl md:text-4xl font-extrabold tracking-tighter text-foreground mb-8">
                             {t.upcomingEvents.heading}
                         </h2>
                         <Card className="bg-background/70 shadow-lg border-0">
@@ -207,7 +207,7 @@ export default function HomePage() {
         {/* Login Prompt Section */}
         <section className="w-full py-16 md:py-24 bg-primary text-primary-foreground">
             <div className="container mx-auto max-w-4xl px-8 text-center">
-                 <h2 className="font-headline text-4xl font-extrabold tracking-tighter md:text-5xl">
+                 <h2 className="font-headline text-3xl md:text-4xl font-extrabold tracking-tighter">
                     {t.cta.heading}
                 </h2>
                 <p className="mt-4 max-w-2xl mx-auto text-lg text-primary-foreground/80">
@@ -221,4 +221,3 @@ export default function HomePage() {
     </div>
   );
 }
-

@@ -163,8 +163,8 @@ export default function InboxAdminPage() {
       </div>
       
        <div className="rounded-lg border">
-        <div className="p-4 flex flex-col md:flex-row gap-2 bg-muted/50 border-b">
-            <div className="relative w-full md:flex-grow">
+        <div className="p-4 flex flex-col sm:flex-row gap-2 bg-muted/50 border-b">
+            <div className="relative w-full sm:flex-grow">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                     type="search"
@@ -174,9 +174,9 @@ export default function InboxAdminPage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
             </div>
-            <div className="grid grid-cols-2 md:flex gap-2">
+            <div className="grid grid-cols-2 sm:flex gap-2">
                  <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className='w-full md:w-[150px]'>
+                    <SelectTrigger className='w-full sm:w-[150px]'>
                         <SelectValue placeholder="Filter by type..."/>
                     </SelectTrigger>
                     <SelectContent>
@@ -186,7 +186,7 @@ export default function InboxAdminPage() {
                     </SelectContent>
                 </Select>
                  <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortableField)}>
-                    <SelectTrigger className='w-full md:w-[150px]'>
+                    <SelectTrigger className='w-full sm:w-[150px]'>
                         <SelectValue placeholder="Sort by..."/>
                     </SelectTrigger>
                     <SelectContent>

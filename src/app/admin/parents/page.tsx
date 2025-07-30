@@ -32,9 +32,6 @@ export default function ParentsAdminPage() {
   const [parents, setParents] = useState<ParentWithId[]>([]);
   const [children, setChildren] = useState<ChildWithId[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | undefined>(undefined);
-  const [hasMore, setHasMore] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [selectedParent, setSelectedParent] = useState<ParentWithId | null>(null);
@@ -46,38 +43,12 @@ export default function ParentsAdminPage() {
   const { toast } = useToast();
 
   const fetchParentsAndChildren = async (initial = false) => {
-    if (initial) {
-        setIsLoading(true);
-        setLastDoc(undefined);
-        setHasMore(true);
-    } else {
-        setIsLoadingMore(true);
-    }
-
-    try {
-        const parentsResult = await db.getPaginatedParents(20, initial ? undefined : lastDoc);
-        const childrenData = await db.getChildren(); // Fetch all children for linking
-
-        if (initial) {
-            setParents(parentsResult.data);
-            setChildren(childrenData);
-        } else {
-            setParents(prev => [...prev, ...parentsResult.data]);
-        }
-        setLastDoc(parentsResult.lastDoc as QueryDocumentSnapshot);
-        setHasMore(!!parentsResult.lastDoc);
-
-    } catch (error) {
-        console.error("Failed to fetch data:", error);
-        toast({
-            title: "Error",
-            description: "Could not fetch parent or child data.",
-            variant: "destructive"
-        });
-    } finally {
-        setIsLoading(false);
-        setIsLoadingMore(false);
-    }
+    setIsLoading(true);
+    const parentsResult = await db.getPaginatedParents(20);
+    const childrenData = await db.getChildren();
+    setParents(parentsResult.data);
+    setChildren(childrenData);
+    setIsLoading(false);
   };
 
 
@@ -180,7 +151,7 @@ export default function ParentsAdminPage() {
                   </div>
               </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-x-auto">
             {isLoading ? (
               <div className="flex justify-center items-center h-48">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -242,14 +213,6 @@ export default function ParentsAdminPage() {
                     )}
                   </TableBody>
                 </Table>
-                {hasMore && filteredParents.length === parents.length && (
-                  <div className="flex justify-center mt-4">
-                    <Button onClick={() => fetchParentsAndChildren(false)} disabled={isLoadingMore}>
-                      {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
-                      Load More
-                    </Button>
-                  </div>
-                )}
               </>
             )}
           </CardContent>
