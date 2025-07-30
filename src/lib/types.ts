@@ -52,15 +52,26 @@ export type SiteSettings = {
 }
 
 export type InboxMessage = {
-    type: 'contact' | 'absence';
+    type: 'contact' | 'absence' | 'reply';
     subject: string;
     body: string;
     sender: {
+        id: string; // User ID
         name: string;
         email: string;
+        type: 'parent' | 'admin';
     };
-    isRead: boolean;
+    recipient: {
+        id: string; // User ID
+        name: string;
+        email: string;
+        type: 'parent' | 'admin';
+    };
+    isRead: boolean; // Kept for backwards compatibility with existing parent->admin messages
+    isReadByAdmin: boolean;
+    isReadByParent: boolean;
     createdAt: string; // ISO 8601
+    threadId?: string; // To group messages
 }
 
 export type InboxMessageWithId = InboxMessage & { id: string };

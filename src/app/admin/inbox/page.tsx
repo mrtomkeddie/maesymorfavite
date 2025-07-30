@@ -157,11 +157,11 @@ export default function InboxAdminPage() {
     setMessageToView(message);
     replyForm.reset();
     setIsViewDialogOpen(true);
-    if (!message.isRead) {
+    if (!message.isReadByAdmin) {
         try {
-            await db.updateInboxMessage(message.id, { isRead: true });
+            await db.updateInboxMessage(message.id, { isReadByAdmin: true });
             // Optimistically update UI
-            setMessages(prev => prev.map(m => m.id === message.id ? {...m, isRead: true} : m));
+            setMessages(prev => prev.map(m => m.id === message.id ? {...m, isReadByAdmin: true} : m));
         } catch (error) {
             console.error("Failed to mark message as read:", error);
         }
@@ -173,23 +173,30 @@ export default function InboxAdminPage() {
     setIsSending(true);
 
     try {
-      // In a real app, this would call a backend service to send an email.
-      // For this demo, we'll just log it and show a success toast.
-      console.log('--- In-App Reply Sent ---');
-      console.log('Recipient:', messageToView.sender.email);
-      console.log('Subject:', `Re: ${messageToView.subject}`);
-      console.log('Body:', values.replyMessage);
-      console.log('---------------------------');
-      
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Reply Sent",
-        description: `Your reply has been sent to ${messageToView.sender.name}.`,
-      });
+        const adminUser = { id: 'admin-1', name: 'School Admin', email: 'admin@example.com', type: 'admin' as const };
 
-      replyForm.reset();
+        await db.addInboxMessage({
+            type: 'reply',
+            subject: `Re: ${messageToView.subject}`,
+            body: values.replyMessage,
+            sender: adminUser,
+            recipient: messageToView.sender, // The parent becomes the recipient
+            isRead: false,
+            isReadByAdmin: true, // Admin has "read" their own message
+            isReadByParent: false,
+            createdAt: new Date().toISOString(),
+            threadId: messageToView.threadId || messageToView.id,
+        });
+
+        toast({
+            title: "Reply Sent",
+            description: `Your reply has been sent to ${messageToView.sender.name}.`,
+        });
+
+        replyForm.reset();
+        setIsViewDialogOpen(false); // Close dialog on success
+        setMessageToView(null);
+        fetchMessages(); // Refresh the inbox
     } catch (error) {
        toast({
         title: "Error Sending Reply",
@@ -201,7 +208,7 @@ export default function InboxAdminPage() {
     }
   }
   
-  const unreadCount = useMemo(() => messages.filter(m => !m.isRead).length, [messages]);
+  const unreadCount = useMemo(() => messages.filter(m => !m.isReadByAdmin).length, [messages]);
 
 
   return (
@@ -236,6 +243,7 @@ export default function InboxAdminPage() {
                         <SelectItem value="all">All Types</SelectItem>
                         <SelectItem value="absence">Absence</SelectItem>
                         <SelectItem value="contact">Contact</SelectItem>
+                        <SelectItem value="reply">Reply</SelectItem>
                     </SelectContent>
                 </Select>
                  <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortableField)}>
@@ -276,7 +284,7 @@ export default function InboxAdminPage() {
                   processedMessages.map((message) => (
                     <TableRow 
                         key={message.id} 
-                        className={`cursor-pointer ${!message.isRead ? 'bg-secondary/40 font-bold' : ''}`}
+                        className={`cursor-pointer ${!message.isReadByAdmin ? 'bg-secondary/40 font-bold' : ''}`}
                         onClick={() => handleViewMessage(message)}
                     >
                       <TableCell>{message.sender.name}</TableCell>
@@ -298,7 +306,7 @@ export default function InboxAdminPage() {
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => handleViewMessage(message)}>
                                     <Eye className="mr-2 h-4 w-4" />
-                                    {message.isRead ? 'View' : 'View & Mark Read'}
+                                    {message.isReadByAdmin ? 'View' : 'View & Mark Read'}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => openDeleteAlert(message)} className="text-destructive focus:text-destructive">
                                     <Trash2 className="mr-2 h-4 w-4" />
@@ -401,4 +409,3 @@ export default function InboxAdminPage() {
     </div>
   );
 }
-

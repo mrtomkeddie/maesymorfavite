@@ -180,15 +180,80 @@ export const updateWeeklyMenu = async (menu: WeeklyMenu) => console.log("Mock up
 
 
 // === INBOX ===
-const mockInbox: InboxMessageWithId[] = [
-    { id: '1', type: 'absence', subject: 'Absence Report for Charlie K.', body: 'Charlie is unwell today.', sender: { name: 'Jane Doe', email: 'parent@example.com' }, isRead: false, createdAt: new Date().toISOString() },
-    { id: '2', type: 'contact', subject: 'Question about school trip', body: 'When is the payment due?', sender: { name: 'John Smith', email: 'john@example.com' }, isRead: true, createdAt: new Date(Date.now() - 86400000).toISOString() },
+let mockInbox: InboxMessageWithId[] = [
+    { 
+        id: '1', 
+        type: 'absence', 
+        subject: 'Absence Report for Charlie K.', 
+        body: 'Charlie is unwell today.', 
+        sender: { id: 'parent-1', name: 'Jane Doe', email: 'parent@example.com', type: 'parent' }, 
+        recipient: { id: 'admin-1', name: 'Admin', email: 'admin@example.com', type: 'admin' },
+        isRead: false,
+        isReadByAdmin: false,
+        isReadByParent: true,
+        createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+        threadId: 'thread-1',
+    },
+    { 
+        id: 'reply-1', 
+        type: 'reply', 
+        subject: 'Re: Absence Report for Charlie K.', 
+        body: 'Thank you for letting us know. We hope Charlie feels better soon.', 
+        sender: { id: 'admin-1', name: 'Admin', email: 'admin@example.com', type: 'admin' }, 
+        recipient: { id: 'parent-1', name: 'Jane Doe', email: 'parent@example.com', type: 'parent' },
+        isRead: false, // Not relevant for replies
+        isReadByAdmin: true,
+        isReadByParent: false,
+        createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
+        threadId: 'thread-1',
+    },
+    { 
+        id: '2', 
+        type: 'contact', 
+        subject: 'Question about school trip', 
+        body: 'When is the payment due?', 
+        sender: { id: 'parent-2', name: 'John Smith', email: 'john@example.com', type: 'parent' }, 
+        recipient: { id: 'admin-1', name: 'Admin', email: 'admin@example.com', type: 'admin' },
+        isRead: true, 
+        isReadByAdmin: true,
+        isReadByParent: true,
+        createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+        threadId: 'thread-2',
+    },
 ];
-export const addInboxMessage = async (messageData: InboxMessage) => console.log("Mock addInboxMessage", messageData);
+
+export const addInboxMessage = async (messageData: Omit<InboxMessage, 'id'>): Promise<string> => {
+    console.log("Mock addInboxMessage", messageData);
+    const newMessage: InboxMessageWithId = {
+        ...messageData,
+        id: `mock_inbox_${Date.now()}`,
+    };
+    mockInbox.push(newMessage);
+    return newMessage.id;
+}
 export const getInboxMessages = async (): Promise<InboxMessageWithId[]> => Promise.resolve(mockInbox);
-export const updateInboxMessage = async (id: string, data: Partial<InboxMessage>) => console.log("Mock updateInboxMessage", id, data);
-export const deleteInboxMessage = async (id: string) => console.log("Mock deleteInboxMessage", id);
-export const getUnreadMessageCount = async (): Promise<number> => Promise.resolve(mockInbox.filter(m => !m.isRead).length);
+export const getInboxMessagesForUser = async (userId: string): Promise<InboxMessageWithId[]> => {
+    return Promise.resolve(mockInbox.filter(m => m.recipient.id === userId || m.sender.id === userId));
+}
+export const updateInboxMessage = async (id: string, data: Partial<InboxMessage>) => {
+    console.log("Mock updateInboxMessage", id, data);
+     const index = mockInbox.findIndex(m => m.id === id);
+    if (index > -1) {
+        mockInbox[index] = { ...mockInbox[index], ...data };
+    }
+};
+export const deleteInboxMessage = async (id: string) => {
+    console.log("Mock deleteInboxMessage", id);
+    mockInbox = mockInbox.filter(m => m.id !== id);
+}
+export const getUnreadMessageCount = async (userId: string, userType: 'admin' | 'parent'): Promise<number> => {
+    if (userType === 'admin') {
+        return Promise.resolve(mockInbox.filter(m => !m.isReadByAdmin).length);
+    } else {
+        return Promise.resolve(mockInbox.filter(m => m.recipient.id === userId && !m.isReadByParent).length);
+    }
+};
+
 
 // === GALLERY ===
 const mockPhotos: PhotoWithId[] = [

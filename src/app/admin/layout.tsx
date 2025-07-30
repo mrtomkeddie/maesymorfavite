@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -143,7 +144,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         const userRole = localStorage.getItem('userRole');
 
         if (isAuthenticated && userRole === 'admin') {
-            setSession({} as Session); // Mock session for dev
+            setSession({ user: { id: 'admin-1' } } as Session); // Mock session for dev
         } else {
             router.replace('/admin/login');
         }
@@ -186,7 +187,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (session) {
-      db.getUnreadMessageCount().then(setUnreadCount).catch(console.error);
+      const userId = session.user.id;
+      db.getUnreadMessageCount(userId, 'admin').then(setUnreadCount);
     }
   }, [session, pathname]); // Refetch on path change to update badge
 
@@ -261,7 +263,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <Link href={item.href}>
                             <item.icon />
                             <span>{item.label}</span>
-                            {item.badge && item.badge > 0 && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
+                            {item.badge && item.badge > 0 ? <SidebarMenuBadge>{item.badge}</SidebarMenuBadge> : null}
                         </Link>
                     </SidebarMenuButton>
                     </SidebarMenuItem>

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -12,6 +13,7 @@ import {
   SidebarInset,
   SidebarFooter,
   SidebarTrigger,
+  SidebarMenuBadge,
 } from '@/components/ui/sidebar';
 import {
   DropdownMenu,
@@ -29,6 +31,7 @@ import {
   Loader2,
   Camera,
   ChevronUp,
+  Mail,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -39,6 +42,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { supabase, getUserRole } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
+import { db } from '@/lib/db';
 
 export const LanguageToggle = () => {
     const { language, setLanguage } = useLanguage();
@@ -61,6 +65,7 @@ const content = {
     title: 'Parent Portal',
     menu: {
       dashboard: 'Dashboard',
+      inbox: 'Inbox',
       calendar: 'Calendar',
       gallery: 'Photo Gallery',
       absence: 'Report Absence',
@@ -75,6 +80,7 @@ const content = {
     title: 'Porth Rieni',
     menu: {
       dashboard: 'Dangosfwrdd',
+      inbox: 'Mewnflwch',
       calendar: 'Calendr',
       gallery: 'Oriel Ffotograffau',
       absence: 'Riportio Absenoldeb',
@@ -93,6 +99,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
   const { language } = useLanguage();
   const t = content[language];
   const isSupabaseConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -104,7 +111,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         const userRole = localStorage.getItem('userRole');
 
         if (isAuthenticated && userRole === 'parent') {
-            setSession({} as Session); // Mock session for dev
+            setSession({ user: { id: 'parent-1' } } as Session); // Mock session for dev
         } else {
              router.replace('/login');
         }
@@ -115,8 +122,6 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     const getSessionAndRole = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // We can add role checking here later if needed to ensure only 'parent' roles can access.
-        // For now, any logged-in user can see the parent portal for demonstration.
         setSession(session);
       } else {
         router.replace('/login');
@@ -140,6 +145,15 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       authListener.subscription.unsubscribe();
     };
   }, [router, isSupabaseConfigured]);
+  
+  useEffect(() => {
+    if (session) {
+      const userId = session.user.id;
+      db.getUnreadMessageCount(userId, 'parent').then(setUnreadCount);
+      // Optional: Set up a listener for real-time updates if using Supabase subscriptions
+    }
+  }, [session, pathname]);
+
 
   const handleLogout = async () => {
     if (isSupabaseConfigured) {
@@ -154,6 +168,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   const menuItems = [
     { href: '/dashboard', label: t.menu.dashboard, icon: LayoutDashboard },
+    { href: '/inbox', label: t.menu.inbox, icon: Mail, badge: unreadCount },
     { href: '/calendar', label: t.menu.calendar, icon: Calendar },
     { href: '/gallery', label: t.menu.gallery, icon: Camera },
     { href: '/absence', label: t.menu.absence, icon: ClipboardCheck },
@@ -190,6 +205,9 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                     <Link href={item.href}>
                       <item.icon />
                       <span>{item.label}</span>
+                      {item.badge && item.badge > 0 ? (
+                        <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                      ): null}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
