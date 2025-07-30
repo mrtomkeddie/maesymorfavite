@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Trash2, Loader2, Eye, Mail, ClipboardCheck, ArrowUp, ArrowDown, Search } from 'lucide-react';
+import { MoreHorizontal, Trash2, Loader2, Eye, Mail, ClipboardCheck, ArrowUp, ArrowDown, Search, Reply } from 'lucide-react';
 import { db } from '@/lib/db';
 import type { InboxMessageWithId } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -221,7 +221,11 @@ export default function InboxAdminPage() {
               <TableBody>
                 {processedMessages.length > 0 ? (
                   processedMessages.map((message) => (
-                    <TableRow key={message.id} className={!message.isRead ? 'bg-secondary/40 font-bold' : ''} data-state={!message.isRead ? 'unread' : 'read'}>
+                    <TableRow 
+                        key={message.id} 
+                        className={`cursor-pointer ${!message.isRead ? 'bg-secondary/40 font-bold' : ''}`}
+                        onClick={() => handleViewMessage(message)}
+                    >
                       <TableCell>{message.sender.name}</TableCell>
                       <TableCell className="font-medium">{message.subject}</TableCell>
                       <TableCell>
@@ -230,7 +234,7 @@ export default function InboxAdminPage() {
                           </Badge>
                       </TableCell>
                       <TableCell>{formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                          <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="h-8 w-8 p-0">
@@ -300,9 +304,7 @@ export default function InboxAdminPage() {
                             )}
                             <div>
                                 <p className="font-semibold">{messageToView.sender.name}</p>
-                                <a href={`mailto:${messageToView.sender.email}`} className="text-sm text-muted-foreground hover:underline">
-                                    {messageToView.sender.email}
-                                </a>
+                                <p className="text-sm text-muted-foreground">{messageToView.sender.email}</p>
                             </div>
                         </div>
                         <div className="prose prose-sm dark:prose-invert whitespace-pre-wrap">
@@ -311,6 +313,15 @@ export default function InboxAdminPage() {
                     </div>
                   )}
               </ScrollArea>
+              {messageToView && (
+                <div className="flex justify-end pt-4 border-t">
+                    <Button asChild>
+                        <a href={`mailto:${messageToView.sender.email}?subject=Re: ${messageToView.subject}`}>
+                           <Reply className="mr-2 h-4 w-4" /> Reply
+                        </a>
+                    </Button>
+                </div>
+              )}
           </DialogContent>
       </Dialog>
     </div>
