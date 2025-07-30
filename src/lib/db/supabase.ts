@@ -269,24 +269,32 @@ const fromSupabaseStaff = (staff: any): StaffMemberWithId => {
     if (!staff) return staff;
     return {
         ...staff,
+        userId: staff.user_id,
         photoUrl: staff.photo_url,
     };
 };
 
 const toSupabaseStaff = (staff: Partial<StaffMember>) => {
-    const { photoUrl, ...rest } = staff;
+    const { photoUrl, userId, ...rest } = staff;
     return {
         ...rest,
+        user_id: userId,
         photo_url: photoUrl,
     };
 };
 
-export const getStaff = async (): Promise<StaffMemberWithId[]> => {
+export const getStaff = async (userId?: string): Promise<StaffMemberWithId[]> => {
     const supabase = getSupabaseClient();
-    const { data, error } = await supabase
+    let query = supabase
         .from('staff')
         .select('*')
         .order('name', { ascending: true });
+    
+    if (userId) {
+        query = query.eq('user_id', userId);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
         console.error("Error fetching staff from Supabase:", error);
@@ -361,6 +369,17 @@ export const getPaginatedStaff = async (limitNum = 20, lastDoc?: any): Promise<{
 
     return { data: (data || []).map(fromSupabaseStaff), lastDoc: nextLastDoc };
 };
+
+export const getTeacherAndClass = async (userId: string): Promise<{ teacher: StaffMemberWithId, myClass: ChildWithId[] } | null> => {
+    const teacherProfile = await getStaff(userId);
+    if (!teacherProfile || teacherProfile.length === 0) {
+        console.warn(`No staff profile found for user ID: ${userId}`);
+        return null;
+    }
+    const teacher = teacherProfile[0];
+    const myClass = await getChildrenByYearGroup(teacher.team);
+    return { teacher, myClass };
+}
 
 // === DOCUMENTS ===
 const fromSupabaseDocument = (doc: any): DocumentWithId => {
