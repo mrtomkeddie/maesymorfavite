@@ -605,8 +605,10 @@ export const deleteChild = async (id: string) => {
 
 export const promoteAllChildren = async (): Promise<void> => {
     const supabase = getSupabaseClient();
-    const { data: children, error } = await supabase.from('children').select('*');
-    if (error) throw error;
+    
+    // Promote children
+    const { data: children, error: childError } = await supabase.from('children').select('*');
+    if (childError) throw childError;
 
     const leaversYear = new Date().getFullYear() + 1;
     const archiveLabel = `Archived/Leavers ${leaversYear}`;
@@ -630,7 +632,26 @@ export const promoteAllChildren = async (): Promise<void> => {
         
         if (updateError) console.error(`Failed to promote child ${child.id}:`, updateError);
     }
+
+    // Promote staff
+    const { data: staffList, error: staffError } = await supabase.from('staff').select('*');
+    if (staffError) throw staffError;
+    
+    for (const staff of staffList) {
+        const currentYearIndex = yearGroups.indexOf(staff.team);
+        // Only promote if they are in a year group and not in the final year
+        if (currentYearIndex > -1 && currentYearIndex < yearGroups.length - 1) {
+            const nextTeam = yearGroups[currentYearIndex + 1];
+            const { error: updateError } = await supabase
+                .from('staff')
+                .update({ team: nextTeam })
+                .eq('id', staff.id);
+
+             if (updateError) console.error(`Failed to promote staff ${staff.id}:`, updateError);
+        }
+    }
 };
+
 
 export const bulkUpdateChildren = async (ids: string[], data: Partial<Child>) => {
     const supabase = getSupabaseClient();

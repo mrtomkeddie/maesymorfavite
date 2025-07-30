@@ -152,7 +152,35 @@ export const addChild = async (childData: Child) => console.log("Mock addChild",
 export const bulkAddChildren = async (childrenData: Child[]) => console.log("Mock bulkAddChildren", childrenData.length);
 export const updateChild = async (id: string, childData: Partial<Child>) => console.log("Mock updateChild", id, childData);
 export const deleteChild = async (id: string) => console.log("Mock deleteChild", id);
-export const promoteAllChildren = async (): Promise<void> => console.log("Mock promoteAllChildren");
+
+export const promoteAllChildren = async (): Promise<void> => {
+    console.log("Mock promoting all children and staff...");
+    const leaversYear = new Date().getFullYear() + 1;
+    const archiveLabel = `Archived/Leavers ${leaversYear}`;
+
+    // Promote children
+    allMockChildren.forEach(child => {
+        const currentYearIndex = yearGroups.indexOf(child.yearGroup);
+        if (child.yearGroup === yearGroups[yearGroups.length - 1]) {
+            child.yearGroup = archiveLabel;
+        } else if (currentYearIndex > -1) {
+            child.yearGroup = yearGroups[currentYearIndex + 1];
+        }
+    });
+     console.log("Mock children promoted.");
+
+    // Promote staff
+    mockStaff.forEach(staff => {
+        const currentYearIndex = yearGroups.indexOf(staff.team);
+        if (currentYearIndex > -1 && currentYearIndex < yearGroups.length - 1) {
+            staff.team = yearGroups[currentYearIndex + 1];
+        }
+    });
+    console.log("Mock staff promoted.");
+
+    return Promise.resolve();
+};
+
 export const bulkUpdateChildren = async (ids: string[], data: Partial<Child>) => console.log("Mock bulkUpdateChildren", ids, data);
 export const getPaginatedChildren = async (limitNum = 20, lastDoc?: any): Promise<{ data: ChildWithId[], lastDoc?: any }> => {
     return Promise.resolve({ data: allMockChildren, lastDoc: undefined });
@@ -257,17 +285,28 @@ export const getUnreadMessageCount = async (userId: string, userType: 'admin' | 
 };
 
 // === NOTIFICATIONS ===
+let mockNotifications: ParentNotificationWithId[] = [
+     { id: 'notif-1', parentId: 'parent-1', childId: 'child_1', childName: 'Charlie K.', teacherId: 'teacher-1', teacherName: 'Mr. Evans', type: 'Achievement', notes: 'Received a values certificate for kindness!', date: new Date(Date.now() - 86400000 * 1).toISOString(), isRead: false },
+     { id: 'notif-2', parentId: 'parent-1', childId: 'child_1', childName: 'Charlie K.', teacherId: 'teacher-1', teacherName: 'Mr. Evans', type: 'Incident', notes: 'Bumped head in the playground.', treatmentGiven: 'Cold compress applied.', date: new Date(Date.now() - 86400000 * 3).toISOString(), isRead: true },
+];
+
 export const addParentNotification = async (notificationData: ParentNotification): Promise<string> => {
     console.log("Mock addParentNotification", notificationData);
-    return `mock_notification_${Date.now()}`;
+    const newNotif = { ...notificationData, id: `mock_notif_${Date.now()}`};
+    mockNotifications.push(newNotif);
+    return newNotif.id;
 };
 
 export const getNotificationsForParent = async (parentId: string): Promise<ParentNotificationWithId[]> => {
-    return Promise.resolve([]); // Mock: no notifications for now
+    return Promise.resolve(mockNotifications.filter(n => n.parentId === parentId));
 }
 
 export const markNotificationAsRead = async (notificationId: string): Promise<void> => {
     console.log("Mock markNotificationAsRead", notificationId);
+    const index = mockNotifications.findIndex(n => n.id === notificationId);
+    if(index > -1) {
+        mockNotifications[index].isRead = true;
+    }
 }
 
 
