@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   description: 'Public website and parent portal for Maes Y Morfa school.',
   icons: {
     icon: '/icon.png',
+    shortcut: '/icon.png',
     apple: '/mobile-icon.png',
   },
 };
