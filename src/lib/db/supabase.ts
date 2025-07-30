@@ -1,5 +1,4 @@
 
-
 // This file will contain the Supabase implementations of all data functions.
 // Note: This is a placeholder implementation. A real implementation would require a
 // Supabase project with tables matching the data structures in src/lib/types.ts.
@@ -883,6 +882,19 @@ export const getValuesAwardCount = async (childId: string): Promise<number> => {
     return count || 0;
 };
 
+export const getAwardsForChild = async (childId: string): Promise<ParentNotificationWithId[]> => {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('childId', childId)
+        .eq('type', 'Values Award')
+        .order('date', { ascending: false });
+        
+    if (error) throw error;
+    return data;
+};
+
 
 // === GALLERY ===
 const fromSupabasePhoto = (photo: any): PhotoWithId => {
@@ -1006,5 +1018,3 @@ export const getCollectionCount = async (collectionName: string): Promise<number
     }
     return count || 0;
 };
-
-    

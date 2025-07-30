@@ -1,5 +1,4 @@
 
-
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, writeBatch, where, getDoc, limit, startAfter, count, getCountFromServer } from "firebase/firestore"; 
 // This file is intended for a Firebase implementation, but for Studio's mock environment,
 // we will return mock data instead of making live calls.
@@ -286,6 +285,8 @@ export const getUnreadMessageCount = async (userId: string, userType: 'admin' | 
 let mockNotifications: ParentNotificationWithId[] = [
      { id: 'notif-1', parentId: 'parent-1', childId: 'child_1', childName: 'Charlie K.', teacherId: 'mock-teacher-id-1', teacherName: 'David Williams', type: 'Achievement', notes: 'Received a values certificate for kindness!', date: new Date(Date.now() - 86400000 * 1).toISOString(), isRead: false },
      { id: 'notif-2', parentId: 'parent-1', childId: 'child_1', childName: 'Charlie K.', teacherId: 'mock-teacher-id-1', teacherName: 'David Williams', type: 'Incident', notes: 'Bumped head in the playground.', treatmentGiven: 'Cold compress applied.', date: new Date(Date.now() - 86400000 * 3).toISOString(), isRead: true },
+     { id: 'notif-3', parentId: 'parent-1', childId: 'child_1', childName: 'Charlie K.', teacherId: 'mock-teacher-id-1', teacherName: 'David Williams', type: 'Values Award', notes: 'Values award for being helpful!', date: new Date(Date.now() - 86400000 * 7).toISOString(), isRead: true },
+     { id: 'notif-4', parentId: 'parent-1', childId: 'child_2', childName: 'Sophie K.', teacherId: 'mock-teacher-id-1', teacherName: 'David Williams', type: 'Values Award', notes: 'Values award for great teamwork!', date: new Date(Date.now() - 86400000 * 8).toISOString(), isRead: true },
 ];
 
 export const addParentNotification = async (notificationData: ParentNotification): Promise<string> => {
@@ -312,10 +313,12 @@ export const markNotificationAsRead = async (notificationId: string): Promise<vo
 }
 
 export const getValuesAwardCount = async (childId: string): Promise<number> => {
-    // For mock environment, we can use the hardcoded value from parentChildren
-    const child = parentChildren.find(c => c.id === childId);
-    return Promise.resolve(child?.valuesAwardCount || 0);
+    return Promise.resolve(mockNotifications.filter(n => n.childId === childId && n.type === 'Values Award').length);
 };
+
+export const getAwardsForChild = async (childId: string): Promise<ParentNotificationWithId[]> => {
+    return Promise.resolve(mockNotifications.filter(n => n.childId === childId && n.type === 'Values Award'));
+}
 
 
 // === GALLERY ===
@@ -375,5 +378,3 @@ export const getCollectionCount = async (collectionName: string): Promise<number
         default: return Promise.resolve(0);
     }
 }
-
-    

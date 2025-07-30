@@ -1,13 +1,12 @@
 
-
 'use client';
 
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
-import type { ChildWithId, StaffMemberWithId, InboxMessageWithId } from '@/lib/types';
+import type { ChildWithId, StaffMemberWithId, InboxMessageWithId, ParentNotificationWithId } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, FileText, User, Info, MessageSquare } from 'lucide-react';
+import { Loader2, Users, FileText, User, Info, MessageSquare, Award, Calendar } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -40,7 +39,11 @@ const content = {
         profileView: 'View Document',
         profileNone: 'No profile document uploaded.',
         reason: 'Reason',
-        date: 'Date'
+        date: 'Date',
+        awardSummaryTitle: 'Values Award Summary',
+        awardCountHeader: 'Awards This Year',
+        awardDatesTitle: 'Award Dates for {childName}',
+        awardDatesDesc: 'A list of dates this student received a Values Award.'
     },
     cy: {
         myClass: 'Fy Nosbarth',
@@ -63,7 +66,11 @@ const content = {
         profileView: 'Gweld y Ddogfen',
         profileNone: 'Dim dogfen proffil wedi\'i huwchlwytho.',
         reason: 'Rheswm',
-        date: 'Dyddiad'
+        date: 'Dyddiad',
+        awardSummaryTitle: 'Crynodeb Gwobrau Gwerthoedd',
+        awardCountHeader: 'Gwobrau Eleni',
+        awardDatesTitle: 'Dyddiadau Gwobrwyo ar gyfer {childName}',
+        awardDatesDesc: 'Rhestr o ddyddiadau y derbyniodd y myfyriwr hwn Wobr Gwerthoedd.'
     }
 }
 
@@ -73,9 +80,13 @@ export default function TeacherDashboard() {
     const [teacher, setTeacher] = useState<StaffMemberWithId | null>(null);
     const [myClass, setMyClass] = useState<ChildWithId[]>([]);
     const [absences, setAbsences] = useState<InboxMessageWithId[]>([]);
+    const [awardCounts, setAwardCounts] = useState<Record<string, number>>({});
+    const [awardDetails, setAwardDetails] = useState<Record<string, ParentNotificationWithId[]>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [selectedChild, setSelectedChild] = useState<ChildWithId | null>(null);
+    const [selectedChildAwards, setSelectedChildAwards] = useState<ParentNotificationWithId[]>([]);
     const [isChildDetailOpen, setIsChildDetailOpen] = useState(false);
+    const [isAwardDetailOpen, setIsAwardDetailOpen] = useState(false);
     const { toast } = useToast();
     const isSupabaseConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -97,21 +108,29 @@ export default function TeacherDashboard() {
                     setTeacher(teacherData.teacher);
                     setMyClass(teacherData.myClass);
 
+                    // Fetch absences
                     const allAbsences = await db.getInboxMessages();
-                    const classChildIds = new Set(teacherData.myClass.map(c => c.id));
                     const today = new Date();
                     today.setHours(0,0,0,0);
-
                     const relevantAbsences = allAbsences.filter(msg => {
                         if (msg.type !== 'absence') return false;
-                        
                         const child = teacherData.myClass.find(c => msg.subject.includes(c.name));
                         if (!child) return false;
-
                         const absenceDate = new Date(msg.body.split('Date of Absence: ')[1]?.split('\n')[0]);
                         return absenceDate >= today;
                     });
                     setAbsences(relevantAbsences);
+
+                    // Fetch awards data for each child
+                    const counts: Record<string, number> = {};
+                    const details: Record<string, ParentNotificationWithId[]> = {};
+                    for (const child of teacherData.myClass) {
+                        const awards = await db.getAwardsForChild(child.id);
+                        counts[child.id] = awards.length;
+                        details[child.id] = awards;
+                    }
+                    setAwardCounts(counts);
+                    setAwardDetails(details);
                 }
             } catch (error) {
                 console.error("Error fetching teacher data:", error);
@@ -131,6 +150,12 @@ export default function TeacherDashboard() {
         setSelectedChild(child);
         setIsChildDetailOpen(true);
     };
+    
+    const handleViewAwards = (child: ChildWithId) => {
+        setSelectedChild(child);
+        setSelectedChildAwards(awardDetails[child.id] || []);
+        setIsAwardDetailOpen(true);
+    };
 
     if (isLoading) {
         return (
@@ -147,7 +172,7 @@ export default function TeacherDashboard() {
                 <p className="text-muted-foreground">{t.welcome.replace('{name}', teacher?.name || '')}</p>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-2 space-y-6">
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> {t.classList} ({myClass.length})</CardTitle>
@@ -172,6 +197,33 @@ export default function TeacherDashboard() {
                                                     <Link href={{ pathname: '/teacher/notify', query: { childId: child.id, childName: child.name } }}>
                                                         <MessageSquare className="mr-2 h-4 w-4" /> {t.notifyParent}
                                                     </Link>
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                     <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><Award className="h-5 w-5" /> {t.awardSummaryTitle}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>{t.nameHeader}</TableHead>
+                                        <TableHead className="text-right">{t.awardCountHeader}</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {myClass.map(child => (
+                                        <TableRow key={child.id}>
+                                            <TableCell className="font-medium">{child.name}</TableCell>
+                                            <TableCell className="text-right">
+                                                <Button variant="outline" size="sm" onClick={() => handleViewAwards(child)} disabled={(awardCounts[child.id] || 0) === 0}>
+                                                    {awardCounts[child.id] || 0}
                                                 </Button>
                                             </TableCell>
                                         </TableRow>
@@ -259,6 +311,28 @@ export default function TeacherDashboard() {
                            </div>
                        </ScrollArea>
                     )}
+                </DialogContent>
+            </Dialog>
+            <Dialog open={isAwardDetailOpen} onOpenChange={setIsAwardDetailOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>{t.awardDatesTitle.replace('{childName}', selectedChild?.name || '')}</DialogTitle>
+                        <DialogDescription>{t.awardDatesDesc}</DialogDescription>
+                    </DialogHeader>
+                    <ScrollArea className="max-h-[60vh] pr-4">
+                        <div className="space-y-2 py-4">
+                            {selectedChildAwards.length > 0 ? (
+                                selectedChildAwards.map(award => (
+                                    <div key={award.id} className="flex items-center gap-3 rounded-md border p-3">
+                                        <Calendar className="h-5 w-5 text-primary" />
+                                        <span className="text-sm font-medium">{format(new Date(award.date), 'EEEE, dd MMMM yyyy')}</span>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-muted-foreground text-center py-4">No awards found.</p>
+                            )}
+                        </div>
+                    </ScrollArea>
                 </DialogContent>
             </Dialog>
         </div>
