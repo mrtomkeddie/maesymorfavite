@@ -68,7 +68,6 @@ export default function ContactPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [settings, setSettings] = useState<SiteSettings | null>(null);
     const [isSettingsLoading, setIsSettingsLoading] = useState(true);
-    const isSupabaseConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     useEffect(() => {
         const fetchSettings = async () => {
