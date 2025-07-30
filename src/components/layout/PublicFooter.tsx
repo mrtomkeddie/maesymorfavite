@@ -73,10 +73,15 @@ export function PublicFooter() {
   const { language } = useLanguage();
   const t = content[language];
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const isSupabaseConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   useEffect(() => {
-    db.getSiteSettings().then(setSettings).catch(console.error);
-  }, []);
+    if (isSupabaseConfigured) {
+        db.getSiteSettings().then(setSettings).catch(console.error);
+    } else {
+        db.getSiteSettings().then(setSettings);
+    }
+  }, [isSupabaseConfigured]);
   
   const footerLinkGroups = [
       t.quickLinks,
