@@ -5,7 +5,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -31,6 +31,8 @@ import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/db';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
+import { StaffMemberWithId } from '@/lib/types';
 
 const formSchema = z.object({
   type: z.enum(['Incident', 'Achievement', 'General'], {
@@ -47,9 +49,26 @@ function NotifyPageContent() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [teacher, setTeacher] = useState<StaffMemberWithId | null>(null);
+  const isSupabaseConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
 
   const childId = searchParams.get('childId');
   const childName = searchParams.get('childName');
+  
+  useEffect(() => {
+    const fetchTeacher = async () => {
+        let userId = 'mock-teacher-id-1';
+        if (isSupabaseConfigured) {
+            const { data: { session }} = await supabase.auth.getSession();
+            if (!session) return;
+            userId = session.user.id;
+        }
+        const teacherData = await db.getTeacherAndClass(userId);
+        if (teacherData) setTeacher(teacherData.teacher);
+    }
+    fetchTeacher();
+  }, [isSupabaseConfigured]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -72,15 +91,13 @@ function NotifyPageContent() {
     try {
         // This logic is simplified. In a real app, you'd fetch parent and teacher details.
         const parentId = 'parent-1'; // This should be dynamically fetched based on childId
-        const teacherId = 'teacher-1'; // This should come from the logged-in user's session
-        const teacherName = "Teacher"; // Logged-in teacher's name
 
         await db.addParentNotification({
             childId,
             childName,
             parentId,
-            teacherId,
-            teacherName,
+            teacherId: teacher?.id || 'teacher-1',
+            teacherName: teacher?.name || 'Teacher',
             date: new Date().toISOString(),
             type: values.type,
             notes: values.notes,
@@ -93,7 +110,7 @@ function NotifyPageContent() {
             description: `A notification has been sent to the parent/guardian of ${childName}.`,
         });
         
-        router.push('/teacher/dashboard');
+        router.push('/teacher/outbox');
 
     } catch (error) {
         console.error("Failed to send notification:", error);
@@ -120,7 +137,7 @@ function NotifyPageContent() {
     <div className="space-y-6">
       <Link href="/teacher/dashboard" className="flex items-center text-sm text-muted-foreground hover:text-primary">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Dashboard
+          Back to Class List
       </Link>
       <div>
         <h1 className="text-3xl font-bold font-headline">Send Parent Notification</h1>
@@ -152,7 +169,7 @@ function NotifyPageContent() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                          <SelectItem value="Achievement">Achievement (e.g., Star of the week)</SelectItem>
+                          <SelectItem value="Achievement">Achievement</SelectItem>
                           <SelectItem value="Incident">Incident (e.g., head bump)</SelectItem>
                           <SelectItem value="General">General Note</SelectItem>
                       </SelectContent>
@@ -217,3 +234,5 @@ export default function NotifyPage() {
         </Suspense>
     )
 }
+
+    

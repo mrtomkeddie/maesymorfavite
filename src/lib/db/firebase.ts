@@ -255,13 +255,13 @@ export const addInboxMessage = async (messageData: Omit<InboxMessage, 'id'>): Pr
     const newMessage: InboxMessageWithId = {
         ...messageData,
         id: `mock_inbox_${Date.now()}`,
-    };
+    } as InboxMessageWithId;
     mockInbox.push(newMessage);
     return newMessage.id;
 }
 export const getInboxMessages = async (): Promise<InboxMessageWithId[]> => Promise.resolve(mockInbox);
 export const getInboxMessagesForUser = async (userId: string): Promise<InboxMessageWithId[]> => {
-    return Promise.resolve(mockInbox.filter(m => m.recipient.id === userId || m.sender.id === userId));
+    return Promise.resolve(mockInbox.filter(m => m.recipient?.id === userId || m.sender?.id === userId));
 }
 export const updateInboxMessage = async (id: string, data: Partial<InboxMessage>) => {
     console.log("Mock updateInboxMessage", id, data);
@@ -278,14 +278,14 @@ export const getUnreadMessageCount = async (userId: string, userType: 'admin' | 
     if (userType === 'admin') {
         return Promise.resolve(mockInbox.filter(m => !m.isReadByAdmin).length);
     } else {
-        return Promise.resolve(mockInbox.filter(m => m.recipient.id === userId && !m.isReadByParent).length);
+        return Promise.resolve(mockInbox.filter(m => m.recipient?.id === userId && !m.isReadByParent).length);
     }
 };
 
 // === NOTIFICATIONS ===
 let mockNotifications: ParentNotificationWithId[] = [
-     { id: 'notif-1', parentId: 'parent-1', childId: 'child_1', childName: 'Charlie K.', teacherId: 'teacher-1', teacherName: 'Mr. Evans', type: 'Achievement', notes: 'Received a values certificate for kindness!', date: new Date(Date.now() - 86400000 * 1).toISOString(), isRead: false },
-     { id: 'notif-2', parentId: 'parent-1', childId: 'child_1', childName: 'Charlie K.', teacherId: 'teacher-1', teacherName: 'Mr. Evans', type: 'Incident', notes: 'Bumped head in the playground.', treatmentGiven: 'Cold compress applied.', date: new Date(Date.now() - 86400000 * 3).toISOString(), isRead: true },
+     { id: 'notif-1', parentId: 'parent-1', childId: 'child_1', childName: 'Charlie K.', teacherId: 'mock-teacher-id-1', teacherName: 'David Williams', type: 'Achievement', notes: 'Received a values certificate for kindness!', date: new Date(Date.now() - 86400000 * 1).toISOString(), isRead: false },
+     { id: 'notif-2', parentId: 'parent-1', childId: 'child_1', childName: 'Charlie K.', teacherId: 'mock-teacher-id-1', teacherName: 'David Williams', type: 'Incident', notes: 'Bumped head in the playground.', treatmentGiven: 'Cold compress applied.', date: new Date(Date.now() - 86400000 * 3).toISOString(), isRead: true },
 ];
 
 export const addParentNotification = async (notificationData: ParentNotification): Promise<string> => {
@@ -294,6 +294,10 @@ export const addParentNotification = async (notificationData: ParentNotification
     mockNotifications.push(newNotif);
     return newNotif.id;
 };
+
+export const getParentNotifications = async (): Promise<ParentNotificationWithId[]> => {
+    return Promise.resolve(mockNotifications);
+}
 
 export const getNotificationsForParent = async (parentId: string): Promise<ParentNotificationWithId[]> => {
     return Promise.resolve(mockNotifications.filter(n => n.parentId === parentId));

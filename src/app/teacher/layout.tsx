@@ -35,7 +35,8 @@ import {
   Users2,
   ChevronUp,
   MessageSquare,
-  Award
+  Award,
+  Send
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -54,7 +55,7 @@ const content = {
     title: 'Teacher Portal',
     menu: {
       dashboard: 'My Class',
-      notify: 'Notify Parent',
+      outbox: 'Sent Messages',
       values: 'Values Award',
     },
     account: {
@@ -67,7 +68,7 @@ const content = {
     title: 'Porth Athrawon',
     menu: {
       dashboard: 'Fy Nosbarth',
-      notify: 'Hysbysu Rhiant',
+      outbox: 'Negeseuon a Anfonwyd',
       values: 'Gwobr Gwerthoedd',
     },
      account: {
@@ -152,7 +153,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
 
   const menuItems = [
     { href: '/teacher/dashboard', label: t.menu.dashboard, icon: LayoutDashboard },
-    { href: '/teacher/notify', label: t.menu.notify, icon: MessageSquare },
+    { href: '/teacher/outbox', label: t.menu.outbox, icon: Send },
     { href: '/teacher/values-award', label: t.menu.values, icon: Award },
   ];
   
@@ -239,3 +240,5 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
       </SidebarProvider>
   );
 }
+
+    

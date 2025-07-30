@@ -60,16 +60,16 @@ export type InboxMessage = {
     subject: string;
     body: string;
     sender: {
-        id: string; 
+        id?: string; 
         name: string;
         email: string;
-        type: 'parent' | 'admin' | 'teacher';
+        type?: 'parent' | 'admin' | 'teacher';
     };
-    recipient: {
-        id: string; 
+    recipient?: {
+        id?: string; 
         name: string;
         email: string;
-        type: 'parent' | 'admin' | 'teacher';
+        type?: 'parent' | 'admin' | 'teacher';
     };
     isReadByAdmin: boolean;
     isReadByParent: boolean;
@@ -122,3 +122,5 @@ export type UserWithRole = {
     role: UserRole;
     created_at: string;
 };
+
+    

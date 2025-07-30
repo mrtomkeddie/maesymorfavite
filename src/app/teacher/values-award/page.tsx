@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,7 +18,7 @@ import {
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, ArrowLeft, Award, Check } from 'lucide-react';
+import { Loader2, ArrowLeft, Award, Check, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
@@ -26,6 +27,7 @@ import { supabase } from '@/lib/supabase';
 import { ChildWithId, StaffMemberWithId } from '@/lib/types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { format, startOfWeek, endOfWeek } from 'date-fns';
 
 const valuesAwardFormSchema = z.object({
   childIds: z.array(z.string()).refine((value) => value.length > 0, {
@@ -36,8 +38,6 @@ const valuesAwardFormSchema = z.object({
   }),
 });
 
-const defaultMessageTemplate = "Dear Parent/Guardian,\n\nWe are delighted to inform you that [STUDENT_NAME] has received a school values award this week for demonstrating exceptional kindness and respect. We are very proud!\n\nWell done,\nThe Maes Y Morfa Team";
-
 
 export default function ValuesAwardPage() {
   const router = useRouter();
@@ -47,6 +47,13 @@ export default function ValuesAwardPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const isSupabaseConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  const today = new Date();
+  const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday
+  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
+  const weekString = `w/c ${format(weekStart, 'do MMMM yyyy')}`;
+
+  const defaultMessageTemplate = `Dear Parent/Guardian,\n\nWe are delighted to inform you that for the week of ${format(weekStart, 'do MMM')}, [STUDENT_NAME] has received a school values award for demonstrating exceptional kindness and respect. We are very proud!\n\nWell done,\n[TEACHER_NAME]`;
 
 
   useEffect(() => {
@@ -63,6 +70,7 @@ export default function ValuesAwardPage() {
             if (teacherData) {
                 setTeacher(teacherData.teacher);
                 setMyClass(teacherData.myClass);
+                form.setValue('message', defaultMessageTemplate.replace('[TEACHER_NAME]', teacherData.teacher.name));
             }
         } catch (error) {
             console.error("Error fetching teacher data:", error);
@@ -76,6 +84,7 @@ export default function ValuesAwardPage() {
         }
     };
     fetchTeacherData();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toast, isSupabaseConfigured]);
 
   const form = useForm<z.infer<typeof valuesAwardFormSchema>>({
@@ -151,8 +160,8 @@ export default function ValuesAwardPage() {
             <form onSubmit={form.handleSubmit(onSubmit)}>
                 <CardHeader>
                     <CardTitle>1. Select Students</CardTitle>
-                    <CardDescription>
-                        Choose one or more students from your class list below.
+                     <CardDescription className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" /> Award for week commencing: <span className="font-semibold">{format(weekStart, 'EEEE, do MMMM yyyy')}</span>
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -207,7 +216,7 @@ export default function ValuesAwardPage() {
                 <CardHeader>
                     <CardTitle>2. Notification Message</CardTitle>
                     <CardDescription>
-                        This pre-written message will be sent. The `[STUDENT_NAME]` tag will be automatically replaced with each selected child's name.
+                        This pre-written message will be sent. The `[STUDENT_NAME]` and `[TEACHER_NAME]` tags will be automatically replaced.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -242,3 +251,5 @@ export default function ValuesAwardPage() {
   );
 }
 
+
+    

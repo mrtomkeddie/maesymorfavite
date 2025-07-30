@@ -4,10 +4,10 @@
 
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/db';
-import { supabase, getUserRole } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import type { ChildWithId, StaffMemberWithId, InboxMessageWithId } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, FileText, User, Info, AlertTriangle, BookOpen, Smile, Link as LinkIcon } from 'lucide-react';
+import { Loader2, Users, FileText, User, Info, AlertTriangle, BookOpen, Smile, Link as LinkIcon, MessageSquare } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -121,7 +121,7 @@ export default function TeacherDashboard() {
                                                 </Button>
                                                 <Button variant="default" size="sm" asChild className="ml-2">
                                                     <Link href={{ pathname: '/teacher/notify', query: { childId: child.id, childName: child.name } }}>
-                                                        <Smile className="mr-2 h-4 w-4" /> Notify Parent
+                                                        <MessageSquare className="mr-2 h-4 w-4" /> Notify Parent
                                                     </Link>
                                                 </Button>
                                             </TableCell>
@@ -218,3 +218,5 @@ export default function TeacherDashboard() {
         </div>
     );
 }
+
+    
