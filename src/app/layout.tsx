@@ -18,11 +18,6 @@ const ptSans = PT_Sans({
 export const metadata: Metadata = {
   title: 'Parent Portal | Maes Y Morfa School',
   description: 'Public website and parent portal for Maes Y Morfa school.',
-  icons: {
-    icon: '/icon.png',
-    shortcut: '/icon.png',
-    apple: '/mobile-icon.png',
-  },
 };
 
 export default function RootLayout({
@@ -32,6 +27,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+       <head>
+        <link rel="icon" href="/icon.png" type="image/png" />
+        <link rel="shortcut icon" href="/icon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/mobile-icon.png" type="image/png" />
+      </head>
       <body className={cn("min-h-screen bg-background font-body antialiased", ptSans.variable)}>
         <LanguageProvider>
           {children}
