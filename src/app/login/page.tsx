@@ -7,7 +7,7 @@ import Link from "next/link";
 import Image from 'next/image';
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, getUserRole } from "@/lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,12 +15,12 @@ export default function LoginPage() {
 
   useEffect(() => {
     const checkSession = async () => {
-      // Only check session if Supabase is configured
-      if (isSupabaseConfigured) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          // Here you would also check the user's role
-          // For now, we assume if they have a session, they go to the parent dashboard.
+      if (!isSupabaseConfigured) return;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const role = await getUserRole(session.user.id);
+        if (role === 'parent') {
           router.push('/dashboard');
         }
       }
