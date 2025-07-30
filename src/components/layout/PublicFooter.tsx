@@ -75,8 +75,6 @@ export function PublicFooter() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
-    // This effect will run on the client side, where `db` will be correctly
-    // initialized based on the environment variable.
     db.getSiteSettings().then(setSettings).catch(console.error);
   }, []);
   

@@ -5,11 +5,15 @@ import { DatabaseProvider } from './types';
 
 // This function determines which database provider to use.
 // It checks an environment variable. If the variable is set to 'supabase',
-// it uses the Supabase provider. Otherwise, it defaults to the mock
-// Firebase provider. This allows for easy switching between a live
-// database for production and mock data for development.
+// and the necessary keys are present, it uses the Supabase provider. 
+// Otherwise, it defaults to the mock Firebase provider.
 const getDbProvider = (): DatabaseProvider => {
-    if (process.env.NEXT_PUBLIC_DB_PROVIDER === 'supabase') {
+    const isSupabaseConfigured = 
+        process.env.NEXT_PUBLIC_DB_PROVIDER === 'supabase' &&
+        !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+        !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (isSupabaseConfigured) {
         return supabase;
     }
     return firebase;
