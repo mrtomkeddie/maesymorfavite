@@ -34,7 +34,8 @@ import {
   Loader2,
   Users2,
   ChevronUp,
-  MessageSquare
+  MessageSquare,
+  Award
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -54,6 +55,7 @@ const content = {
     menu: {
       dashboard: 'My Class',
       notify: 'Notify Parent',
+      values: 'Values Award',
     },
     account: {
         title: 'My Account',
@@ -66,6 +68,7 @@ const content = {
     menu: {
       dashboard: 'Fy Nosbarth',
       notify: 'Hysbysu Rhiant',
+      values: 'Gwobr Gwerthoedd',
     },
      account: {
         title: 'Fy Nghyfrif',
@@ -93,7 +96,9 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
         if (isAuthenticated && userRole === 'teacher') {
             setSession({ user: { id: `${userRole}-1` } } as Session);
         } else {
-             router.replace('/teacher/login');
+             if (pathname !== '/teacher/login') {
+                router.replace('/teacher/login');
+             }
         }
         setIsLoading(false);
         return;
@@ -148,6 +153,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
   const menuItems = [
     { href: '/teacher/dashboard', label: t.menu.dashboard, icon: LayoutDashboard },
     { href: '/teacher/notify', label: t.menu.notify, icon: MessageSquare },
+    { href: '/teacher/values-award', label: t.menu.values, icon: Award },
   ];
   
   if (pathname.startsWith('/teacher/login')) {

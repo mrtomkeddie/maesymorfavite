@@ -152,7 +152,7 @@ function NotifyPageContent() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                          <SelectItem value="Achievement">Achievement (e.g., certificate)</SelectItem>
+                          <SelectItem value="Achievement">Achievement (e.g., Star of the week)</SelectItem>
                           <SelectItem value="Incident">Incident (e.g., head bump)</SelectItem>
                           <SelectItem value="General">General Note</SelectItem>
                       </SelectContent>

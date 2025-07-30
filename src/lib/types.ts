@@ -86,7 +86,7 @@ export type ParentNotification = {
     teacherId: string;
     teacherName: string;
     date: string; // ISO 8601
-    type: 'Incident' | 'Achievement' | 'General';
+    type: 'Incident' | 'Achievement' | 'General' | 'Values Award';
     notes: string;
     treatmentGiven?: string;
     isRead: boolean;
