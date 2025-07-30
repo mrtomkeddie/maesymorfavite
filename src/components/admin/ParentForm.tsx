@@ -227,9 +227,9 @@ export function ParentForm({ onSuccess, existingParent, allChildren }: ParentFor
 
 
   return (
-    <ScrollArea className="max-h-[80vh] pr-6">
+    <ScrollArea className="max-h-[80vh] px-6">
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-2 pb-6">
         <FormField
           control={form.control}
           name="name"

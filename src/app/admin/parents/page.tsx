@@ -151,13 +151,13 @@ export default function ParentsAdminPage() {
                   </div>
               </div>
           </CardHeader>
-          <CardContent className="overflow-x-auto">
+          <CardContent>
             {isLoading ? (
               <div className="flex justify-center items-center h-48">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
-              <>
+              <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -213,7 +213,7 @@ export default function ParentsAdminPage() {
                     )}
                   </TableBody>
                 </Table>
-              </>
+              </div>
             )}
           </CardContent>
         </Card>

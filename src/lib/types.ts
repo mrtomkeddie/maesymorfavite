@@ -56,18 +56,17 @@ export type InboxMessage = {
     subject: string;
     body: string;
     sender: {
-        id: string; // User ID
+        id: string; 
         name: string;
         email: string;
         type: 'parent' | 'admin';
     };
     recipient: {
-        id: string; // User ID
+        id: string; 
         name: string;
         email: string;
         type: 'parent' | 'admin';
     };
-    isRead: boolean; // Kept for backwards compatibility with existing parent->admin messages
     isReadByAdmin: boolean;
     isReadByParent: boolean;
     createdAt: string; // ISO 8601

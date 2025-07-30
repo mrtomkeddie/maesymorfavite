@@ -32,6 +32,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 
 type SortableField = 'createdAt' | 'sender.name' | 'subject';
@@ -42,11 +43,12 @@ const replyFormSchema = z.object({
 
 export default function InboxAdminPage() {
   const [messages, setMessages] = useState<InboxMessageWithId[]>([]);
+  const [threads, setThreads] = useState<Record<string, InboxMessageWithId[]>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
-  const [messageToDelete, setMessageToDelete] = useState<InboxMessageWithId | null>(null);
-  const [messageToView, setMessageToView] = useState<InboxMessageWithId | null>(null);
+  const [threadToDelete, setThreadToDelete] = useState<string | null>(null);
+  const [threadToView, setThreadToView] = useState<string | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,111 +67,134 @@ export default function InboxAdminPage() {
   const fetchMessages = async () => {
     setIsLoading(true);
     try {
-      const allMessages = await db.getInboxMessages();
-      setMessages(allMessages);
+        const allMessages = await db.getInboxMessages();
+        setMessages(allMessages);
+
+        // Group messages by threadId
+        const groupedByThread: Record<string, InboxMessageWithId[]> = {};
+        allMessages.forEach(msg => {
+            const threadId = msg.threadId || msg.id;
+            if (!groupedByThread[threadId]) {
+                groupedByThread[threadId] = [];
+            }
+            groupedByThread[threadId].push(msg);
+        });
+
+        // Sort messages within each thread by date
+        for (const threadId in groupedByThread) {
+            groupedByThread[threadId].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        }
+        
+        setThreads(groupedByThread);
     } catch (error) {
-      console.error("Failed to fetch inbox messages:", error);
-      toast({
-        title: "Error",
-        description: "Could not load inbox messages.",
-        variant: "destructive",
-      });
+        console.error("Failed to fetch inbox messages:", error);
+        toast({
+            title: "Error",
+            description: "Could not load inbox messages.",
+            variant: "destructive",
+        });
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
   };
+
 
   useEffect(() => {
     fetchMessages();
      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
-  const processedMessages = useMemo(() => {
-    let filtered = [...messages];
+  const processedThreads = useMemo(() => {
+    let threadEntries = Object.entries(threads);
 
-    // Apply type filter
+    // Apply filters to threads based on the first message
     if (typeFilter !== 'all') {
-      filtered = filtered.filter(m => m.type === typeFilter);
+      threadEntries = threadEntries.filter(([, messages]) => messages[0].type === typeFilter);
     }
 
-    // Apply search query
     if (searchQuery) {
-        filtered = filtered.filter(m => 
-            m.sender.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            m.subject.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+        threadEntries = threadEntries.filter(([, messages]) => {
+            const firstMessage = messages[0];
+            return firstMessage.sender.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                   firstMessage.subject.toLowerCase().includes(searchQuery.toLowerCase())
+        });
     }
 
-    // Apply sorting
-    return filtered.sort((a, b) => {
-      let valA: string | number;
-      let valB: string | number;
-
-      if (sortBy === 'createdAt') {
-        valA = new Date(a.createdAt).getTime();
-        valB = new Date(b.createdAt).getTime();
-      } else if (sortBy === 'sender.name') {
-        valA = a.sender.name;
-        valB = b.sender.name;
-      } else { // subject
-        valA = a.subject;
-        valB = b.subject;
-      }
-      
-      if (typeof valA === 'string' && typeof valB === 'string') {
-        return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-      } else {
-        return sortOrder === 'asc' ? (valA as number) - (valB as number) : (valB as number) - (valA as number);
-      }
+    // Sort threads based on the last message's date
+    threadEntries.sort(([, messagesA], [, messagesB]) => {
+        const lastMessageA = messagesA[messagesA.length - 1];
+        const lastMessageB = messagesB[messagesB.length - 1];
+        return new Date(lastMessageB.createdAt).getTime() - new Date(lastMessageA.createdAt).getTime();
     });
-  }, [messages, typeFilter, searchQuery, sortBy, sortOrder]);
+    
+    return threadEntries;
+  }, [threads, typeFilter, searchQuery, sortOrder]);
 
 
-  const openDeleteAlert = (message: InboxMessageWithId) => {
-    setMessageToDelete(message);
+  const openDeleteAlert = (threadId: string) => {
+    setThreadToDelete(threadId);
     setIsDeleteAlertOpen(true);
   }
 
   const handleDelete = async () => {
-    if (!messageToDelete) return;
-
+    if (!threadToDelete) return;
+    const messagesToDelete = threads[threadToDelete] || [];
     try {
-      await db.deleteInboxMessage(messageToDelete.id);
-      toast({
-        title: "Success",
-        description: "Message deleted successfully.",
-      });
-      fetchMessages(); // Refetch after deletion
+        for(const message of messagesToDelete) {
+            await db.deleteInboxMessage(message.id);
+        }
+        toast({
+            title: "Success",
+            description: "Message thread deleted successfully.",
+        });
+        fetchMessages();
     } catch (error) {
-      console.error("Error deleting message:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete message. Please try again.",
-        variant: "destructive",
-      });
+        console.error("Error deleting message thread:", error);
+        toast({
+            title: "Error",
+            description: "Failed to delete message thread. Please try again.",
+            variant: "destructive",
+        });
     } finally {
-      setIsDeleteAlertOpen(false);
-      setMessageToDelete(null);
+        setIsDeleteAlertOpen(false);
+        setThreadToDelete(null);
     }
   };
 
-  const handleViewMessage = async (message: InboxMessageWithId) => {
-    setMessageToView(message);
+  const handleViewThread = async (threadId: string) => {
+    setThreadToView(threadId);
     replyForm.reset();
     setIsViewDialogOpen(true);
-    if (!message.isReadByAdmin) {
-        try {
-            await db.updateInboxMessage(message.id, { isReadByAdmin: true });
-            // Optimistically update UI
-            setMessages(prev => prev.map(m => m.id === message.id ? {...m, isReadByAdmin: true} : m));
-        } catch (error) {
-            console.error("Failed to mark message as read:", error);
+    
+    const threadMessages = threads[threadId];
+    if (!threadMessages) return;
+
+    for (const message of threadMessages) {
+        if (!message.isReadByAdmin) {
+            try {
+                await db.updateInboxMessage(message.id, { isReadByAdmin: true });
+                // Optimistically update UI
+                setThreads(prev => {
+                    const newThreads = {...prev};
+                    const threadToUpdate = newThreads[threadId].map(m => m.id === message.id ? {...m, isReadByAdmin: true} : m);
+                    newThreads[threadId] = threadToUpdate;
+                    return newThreads;
+                });
+            } catch (error) {
+                console.error("Failed to mark message as read:", error);
+            }
         }
     }
   }
 
    const handleSendReply = async (values: z.infer<typeof replyFormSchema>) => {
-    if (!messageToView) return;
+    if (!threadToView) return;
+    const currentThread = threads[threadToView];
+    if (!currentThread || currentThread.length === 0) return;
+    
+    const firstMessage = currentThread[0];
+    const parent = firstMessage.sender.type === 'parent' ? firstMessage.sender : firstMessage.recipient;
+
     setIsSending(true);
 
     try {
@@ -177,26 +202,25 @@ export default function InboxAdminPage() {
 
         await db.addInboxMessage({
             type: 'reply',
-            subject: `Re: ${messageToView.subject}`,
+            subject: `Re: ${firstMessage.subject}`,
             body: values.replyMessage,
             sender: adminUser,
-            recipient: messageToView.sender, // The parent becomes the recipient
+            recipient: parent,
             isRead: false,
-            isReadByAdmin: true, // Admin has "read" their own message
+            isReadByAdmin: true,
             isReadByParent: false,
             createdAt: new Date().toISOString(),
-            threadId: messageToView.threadId || messageToView.id,
+            threadId: threadToView,
         });
 
         toast({
             title: "Reply Sent",
-            description: `Your reply has been sent to ${messageToView.sender.name}.`,
+            description: `Your reply has been sent to ${parent.name}.`,
         });
 
         replyForm.reset();
-        setIsViewDialogOpen(false); // Close dialog on success
-        setMessageToView(null);
-        fetchMessages(); // Refresh the inbox
+        fetchMessages();
+
     } catch (error) {
        toast({
         title: "Error Sending Reply",
@@ -208,7 +232,10 @@ export default function InboxAdminPage() {
     }
   }
   
-  const unreadCount = useMemo(() => messages.filter(m => !m.isReadByAdmin).length, [messages]);
+  const hasUnread = (thread: InboxMessageWithId[]) => {
+    return thread.some(m => !m.isReadByAdmin);
+  }
+  const unreadCount = useMemo(() => Object.values(threads).filter(hasUnread).length, [threads]);
 
 
   return (
@@ -217,7 +244,7 @@ export default function InboxAdminPage() {
           <div>
               <h1 className="text-3xl font-bold tracking-tight">Inbox</h1>
               <p className="text-muted-foreground">
-                  {unreadCount > 0 ? `You have ${unreadCount} unread messages.` : 'No unread messages.'}
+                  {unreadCount > 0 ? `You have ${unreadCount} unread message threads.` : 'No unread messages.'}
               </p>
           </div>
       </div>
@@ -234,7 +261,7 @@ export default function InboxAdminPage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
             </div>
-            <div className="grid grid-cols-2 sm:flex gap-2">
+            <div className="grid grid-cols-1 sm:flex gap-2">
                  <Select value={typeFilter} onValueChange={setTypeFilter}>
                     <SelectTrigger className='w-full sm:w-[150px]'>
                         <SelectValue placeholder="Filter by type..."/>
@@ -243,26 +270,11 @@ export default function InboxAdminPage() {
                         <SelectItem value="all">All Types</SelectItem>
                         <SelectItem value="absence">Absence</SelectItem>
                         <SelectItem value="contact">Contact</SelectItem>
-                        <SelectItem value="reply">Reply</SelectItem>
                     </SelectContent>
                 </Select>
-                 <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortableField)}>
-                    <SelectTrigger className='w-full sm:w-[150px]'>
-                        <SelectValue placeholder="Sort by..."/>
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="createdAt">Date</SelectItem>
-                        <SelectItem value="sender.name">From</SelectItem>
-                        <SelectItem value="subject">Subject</SelectItem>
-                    </SelectContent>
-                </Select>
-                <Button variant="outline" size="icon" onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}>
-                    {sortOrder === 'desc' ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />}
-                    <span className="sr-only">Toggle sort order</span>
-                </Button>
             </div>
         </div>
-        <div className="p-0">
+        <div>
           {isLoading ? (
             <div className="flex justify-center items-center h-48">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -274,27 +286,30 @@ export default function InboxAdminPage() {
                 <TableRow>
                   <TableHead className="w-[150px]">From</TableHead>
                   <TableHead>Subject</TableHead>
-                  <TableHead className="w-[100px]">Type</TableHead>
-                  <TableHead className="w-[150px]">Received</TableHead>
+                  <TableHead className="w-[150px]">Last Update</TableHead>
                   <TableHead className="text-right w-[80px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {processedMessages.length > 0 ? (
-                  processedMessages.map((message) => (
+                {processedThreads.length > 0 ? (
+                  processedThreads.map(([threadId, messages]) => {
+                    const firstMessage = messages[0];
+                    const lastMessage = messages[messages.length-1];
+                    const isUnread = hasUnread(messages);
+                    return (
                     <TableRow 
-                        key={message.id} 
-                        className={`cursor-pointer ${!message.isReadByAdmin ? 'bg-secondary/40 font-bold' : ''}`}
-                        onClick={() => handleViewMessage(message)}
+                        key={threadId} 
+                        className={cn("cursor-pointer", isUnread && 'bg-secondary/40 font-bold')}
+                        onClick={() => handleViewThread(threadId)}
                     >
-                      <TableCell>{message.sender.name}</TableCell>
-                      <TableCell className="font-medium">{message.subject}</TableCell>
                       <TableCell>
-                          <Badge variant={message.type === 'absence' ? 'destructive' : 'outline'}>
-                              {message.type.charAt(0).toUpperCase() + message.type.slice(1)}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                              {isUnread && <div className="h-2 w-2 rounded-full bg-primary shrink-0" />}
+                              <span>{firstMessage.sender.name}</span>
+                          </div>
                       </TableCell>
-                      <TableCell>{formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}</TableCell>
+                      <TableCell className="font-medium">{firstMessage.subject}</TableCell>
+                      <TableCell>{formatDistanceToNow(new Date(lastMessage.createdAt), { addSuffix: true })}</TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                          <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -304,22 +319,22 @@ export default function InboxAdminPage() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleViewMessage(message)}>
+                                <DropdownMenuItem onClick={() => handleViewThread(threadId)}>
                                     <Eye className="mr-2 h-4 w-4" />
-                                    {message.isReadByAdmin ? 'View' : 'View & Mark Read'}
+                                    {isUnread ? 'View & Mark Read' : 'View'}
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => openDeleteAlert(message)} className="text-destructive focus:text-destructive">
+                                <DropdownMenuItem onClick={() => openDeleteAlert(threadId)} className="text-destructive focus:text-destructive">
                                     <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
+                                    Delete Thread
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
-                  ))
+                  )})
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
+                    <TableCell colSpan={4} className="h-24 text-center">
                       Your inbox is empty or no messages match your search.
                     </TableCell>
                   </TableRow>
@@ -336,7 +351,7 @@ export default function InboxAdminPage() {
             <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete this message.
+                This action cannot be undone. This will permanently delete this entire message thread.
             </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -347,63 +362,68 @@ export default function InboxAdminPage() {
       </AlertDialog>
 
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-          <DialogContent className="sm:max-w-xl">
+          <DialogContent className="sm:max-w-2xl flex flex-col max-h-[90vh]">
                <DialogHeader>
-                  <DialogTitle>{messageToView?.subject}</DialogTitle>
+                  <DialogTitle>{threadToView ? threads[threadToView][0].subject : ''}</DialogTitle>
                   <DialogDescription>
-                      Received on {messageToView && format(new Date(messageToView.createdAt), 'PPP p')}
+                      Conversation with {threadToView ? threads[threadToView][0].sender.name : ''}
                   </DialogDescription>
               </DialogHeader>
-              <ScrollArea className="max-h-[60vh] pr-4">
-                  {messageToView && (
+              <ScrollArea className="flex-grow pr-4 -mr-6">
+                  {threadToView && threads[threadToView] && (
                     <div className="space-y-4 py-4">
-                        <div className="flex items-center gap-4 p-3 bg-muted rounded-md">
-                            {messageToView.type === 'absence' ? (
-                                <ClipboardCheck className="h-6 w-6 text-primary" />
-                            ) : (
-                                <Mail className="h-6 w-6 text-primary" />
-                            )}
-                            <div>
-                                <p className="font-semibold">{messageToView.sender.name}</p>
-                                <p className="text-sm text-muted-foreground">{messageToView.sender.email}</p>
-                            </div>
-                        </div>
-                        <div className="prose prose-sm dark:prose-invert whitespace-pre-wrap">
-                            {messageToView.body}
-                        </div>
-
-                         <Separator className="my-4" />
-
-                        <Form {...replyForm}>
-                            <form onSubmit={replyForm.handleSubmit(handleSendReply)} className="space-y-4">
-                                <FormField
-                                control={replyForm.control}
-                                name="replyMessage"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="font-semibold flex items-center gap-2">
-                                            <Reply className="h-4 w-4" /> Reply to {messageToView.sender.name}
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Textarea {...field} placeholder="Type your reply here..." rows={5} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                                />
-                                <div className="flex justify-end">
-                                    <Button type="submit" disabled={isSending}>
-                                        {isSending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                        <Send className="mr-2 h-4 w-4" />
-                                        Send Reply
-                                    </Button>
+                        {threads[threadToView].map(message => (
+                             <div key={message.id} className={cn(
+                                "p-4 rounded-md flex gap-4",
+                                message.sender.type === 'admin' ? "bg-primary/10" : "bg-card border"
+                            )}>
+                                <div className="shrink-0 mt-1">
+                                    {message.sender.type === 'admin' ? <Reply className="h-5 w-5 text-primary" /> : <Mail className="h-5 w-5 text-primary" />}
                                 </div>
-                            </form>
-                        </Form>
-
+                                <div className="flex-grow">
+                                    <div className="flex justify-between items-baseline">
+                                    <p className="font-semibold">
+                                        {message.sender.name}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {format(new Date(message.createdAt), 'dd MMM yyyy, p')}
+                                    </p>
+                                    </div>
+                                    <p className="mt-2 text-sm whitespace-pre-wrap">{message.body}</p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                   )}
               </ScrollArea>
+              <div className="flex-shrink-0 pt-4 border-t">
+                <Form {...replyForm}>
+                    <form onSubmit={replyForm.handleSubmit(handleSendReply)} className="space-y-4">
+                        <FormField
+                        control={replyForm.control}
+                        name="replyMessage"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="font-semibold flex items-center gap-2">
+                                    <Reply className="h-4 w-4" /> Reply
+                                </FormLabel>
+                                <FormControl>
+                                    <Textarea {...field} placeholder="Type your reply here..." rows={4} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <div className="flex justify-end">
+                            <Button type="submit" disabled={isSending}>
+                                {isSending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                <Send className="mr-2 h-4 w-4" />
+                                Send Reply
+                            </Button>
+                        </div>
+                    </form>
+                </Form>
+              </div>
           </DialogContent>
       </Dialog>
     </div>
