@@ -315,3 +315,4 @@ export default function InboxAdminPage() {
       </Dialog>
     </div>
   );
+}
