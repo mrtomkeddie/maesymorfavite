@@ -51,8 +51,10 @@ export function PublicHeader() {
   const t = content[language];
   const navLinks = t.nav;
   const [isParent, setIsParent] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     const authStatus = localStorage.getItem('isAuthenticated') === 'true' && localStorage.getItem('userRole') === 'parent';
     setIsParent(authStatus);
   }, []);
@@ -121,7 +123,7 @@ export function PublicHeader() {
                         </Button>
                     </SheetClose>
                      <SheetClose asChild>
-                         {isParent ? (
+                         {isClient && isParent ? (
                              <Button asChild className="w-full">
                                 <Link href="/dashboard"> <LayoutDashboard className="mr-2 h-4 w-4" /> {t.dashboard}</Link>
                              </Button>
