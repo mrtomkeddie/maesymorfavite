@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -55,8 +54,8 @@ const content = {
         messageDesc: 'This pre-written message will be sent. The `[STUDENT_NAME]` and `[TEACHER_NAME]` tags will be automatically replaced.',
         submitButton: 'Send Award to {count} Student(s)',
         toast: {
-            success: "A values award notification has been sent to the parents of {count} student(s).",
-            error: "Could not send the notifications. Please try again."
+            success: { title: "Success!", description: "A values award notification has been sent to the parents of {count} student(s)." },
+            error: { title: "Error", description: "Could not send the notifications. Please try again." }
         }
     },
     cy: {
@@ -73,8 +72,8 @@ const content = {
         messageDesc: 'Anfonir y neges hon sydd wedi\'i hysgrifennu ymlaen llaw. Bydd y tagiau `[ENW_MYFYRIWR]` a `[ENW_ATHRO]` yn cael eu disodli\'n awtomatig.',
         submitButton: 'Anfon Gwobr i {count} Myfyriwr',
         toast: {
-            success: "Mae hysbysiad gwobr gwerthoedd wedi\'i anfon at rieni {count} o fyfyrwyr.",
-            error: "Ni ellid anfon yr hysbysiadau. Rhowch gynnig arall arni."
+            success: { title: "Llwyddiant!", description: "Mae hysbysiad gwobr gwerthoedd wedi\'i anfon at rieni {count} o fyfyrwyr." },
+            error: { title: "Gwall", description: "Ni ellid anfon yr hysbysiadau. Rhowch gynnig arall arni." }
         }
     }
 }
@@ -95,8 +94,6 @@ export default function ValuesAwardPage() {
   const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday
   const locale = language === 'cy' ? cy : enGB;
   
-  const weekString = `w/c ${format(weekStart, 'do MMMM yyyy', { locale })}`;
-
   const defaultMessageTemplate = language === 'cy' 
     ? `Annwyl Riant/Gwarcheidwad,\n\nRydym yn falch iawn o'ch hysbysu, am wythnos ${format(weekStart, 'do MMM', { locale })}, bod [ENW_MYFYRIWR] wedi derbyn gwobr gwerthoedd yr ysgol am ddangos caredigrwydd a pharch eithriadol. Rydym yn falch iawn!\n\nDa iawn,\n[ENW_ATHRO]`
     : `Dear Parent/Guardian,\n\nWe are delighted to inform you that for the week of ${format(weekStart, 'do MMM', { locale })}, [STUDENT_NAME] has received a school values award for demonstrating exceptional kindness and respect. We are very proud!\n\nWell done,\n[TEACHER_NAME]`;
@@ -133,8 +130,8 @@ export default function ValuesAwardPage() {
      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toast, isSupabaseConfigured, language]);
 
-  const form = useForm<z.infer<ReturnType<typeof formSchema>>>({
-    resolver: zodResolver(formSchema(t.formSchema)),
+  const form = useForm<z.infer<ReturnType<typeof valuesAwardFormSchema>>>({
+    resolver: zodResolver(valuesAwardFormSchema(t.formSchema)),
     defaultValues: {
       childIds: [],
       message: defaultMessageTemplate,
@@ -167,7 +164,7 @@ export default function ValuesAwardPage() {
         
         toast({
             title: t.toast.success.title,
-            description: t.toast.success.replace('{count}', String(childIds.length)),
+            description: t.toast.success.description.replace('{count}', String(childIds.length)),
         });
         
         router.push('/teacher/dashboard');
@@ -176,7 +173,7 @@ export default function ValuesAwardPage() {
         console.error("Failed to send notifications:", error);
         toast({
             title: "Submission Failed",
-            description: t.toast.error,
+            description: t.toast.error.description,
             variant: 'destructive',
         });
     } finally {
