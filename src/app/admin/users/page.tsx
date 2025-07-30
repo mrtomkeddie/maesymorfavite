@@ -78,10 +78,27 @@ export default function UsersAdminPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState<Session['user'] | null>(null);
     const { toast } = useToast();
+    const isSupabaseConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
 
     useEffect(() => {
         const fetchUsersAndSession = async () => {
             setIsLoading(true);
+
+            if (!isSupabaseConfigured) {
+                // If Supabase isn't configured, we can't fetch real users.
+                // We'll use the mock data from the db provider.
+                try {
+                    const usersData = await db.getUsersWithRoles();
+                    setUsers(usersData);
+                } catch (error) {
+                     console.error("Failed to fetch mock users:", error);
+                } finally {
+                    setIsLoading(false);
+                }
+                return;
+            }
+            
             try {
                 const usersData = await db.getUsersWithRoles();
                 setUsers(usersData);
@@ -100,7 +117,7 @@ export default function UsersAdminPage() {
         };
         fetchUsersAndSession();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [isSupabaseConfigured]);
 
     const handleRoleChange = async (userId: string, newRole: UserRole) => {
         try {
