@@ -154,11 +154,10 @@ export const updateChild = async (id: string, childData: Partial<Child>) => cons
 export const deleteChild = async (id: string) => console.log("Mock deleteChild", id);
 
 export const promoteAllChildren = async (): Promise<void> => {
-    console.log("Mock promoting all children and staff...");
+    console.log("Mock promoting all children...");
     const leaversYear = new Date().getFullYear() + 1;
     const archiveLabel = `Archived/Leavers ${leaversYear}`;
 
-    // Promote children
     allMockChildren.forEach(child => {
         const currentYearIndex = yearGroups.indexOf(child.yearGroup);
         if (child.yearGroup === yearGroups[yearGroups.length - 1]) {
@@ -168,15 +167,6 @@ export const promoteAllChildren = async (): Promise<void> => {
         }
     });
      console.log("Mock children promoted.");
-
-    // Promote staff
-    mockStaff.forEach(staff => {
-        const currentYearIndex = yearGroups.indexOf(staff.team);
-        if (currentYearIndex > -1 && currentYearIndex < yearGroups.length - 1) {
-            staff.team = yearGroups[currentYearIndex + 1];
-        }
-    });
-    console.log("Mock staff promoted.");
 
     return Promise.resolve();
 };
@@ -367,3 +357,5 @@ export const getCollectionCount = async (collectionName: string): Promise<number
         default: return Promise.resolve(0);
     }
 }
+
+    

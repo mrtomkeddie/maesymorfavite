@@ -632,24 +632,6 @@ export const promoteAllChildren = async (): Promise<void> => {
         
         if (updateError) console.error(`Failed to promote child ${child.id}:`, updateError);
     }
-
-    // Promote staff
-    const { data: staffList, error: staffError } = await supabase.from('staff').select('*');
-    if (staffError) throw staffError;
-    
-    for (const staff of staffList) {
-        const currentYearIndex = yearGroups.indexOf(staff.team);
-        // Only promote if they are in a year group and not in the final year
-        if (currentYearIndex > -1 && currentYearIndex < yearGroups.length - 1) {
-            const nextTeam = yearGroups[currentYearIndex + 1];
-            const { error: updateError } = await supabase
-                .from('staff')
-                .update({ team: nextTeam })
-                .eq('id', staff.id);
-
-             if (updateError) console.error(`Failed to promote staff ${staff.id}:`, updateError);
-        }
-    }
 };
 
 
@@ -983,3 +965,5 @@ export const getCollectionCount = async (collectionName: string): Promise<number
     }
     return count || 0;
 };
+
+    
