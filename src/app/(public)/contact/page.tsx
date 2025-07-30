@@ -72,6 +72,7 @@ export default function ContactPage() {
 
     useEffect(() => {
         const fetchSettings = async () => {
+            setIsSettingsLoading(true);
             try {
                 const siteSettings = await db.getSiteSettings();
                 setSettings(siteSettings);
