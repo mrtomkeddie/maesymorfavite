@@ -21,8 +21,7 @@ const content = {
         ],
         kidsCorner: { href: '/kids-corner', label: "Kids' Corner", icon: Gamepad2 },
         portal: 'Parent Portal',
-        adminLogin: 'Admin Login',
-        teacherLogin: 'Teacher Login',
+        staffLogin: 'Staff Login',
         dashboard: 'Return to Dashboard',
         lang1: 'Cymraeg',
         lang2: 'English',
@@ -39,8 +38,7 @@ const content = {
         ],
         kidsCorner: { href: '/kids-corner', label: "Cornel y Plant", icon: Gamepad2 },
         portal: 'Porth Rieni',
-        adminLogin: 'Mewngofnodi Gweinyddwr',
-        teacherLogin: 'Mewngofnodi Athro',
+        staffLogin: 'Mewngofnodi Staff',
         dashboard: 'Yn ôl i\'r Dangosfwrdd',
         lang1: 'Cymraeg',
         lang2: 'English',
@@ -101,8 +99,8 @@ export function PublicHeader() {
                         </Button>
                     </SheetClose>
                 </div>
-                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                  <div className="flex flex-1 flex-col gap-2 p-6">
+                   <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                     {navLinks.map((link) => {
                         const Icon = link.icon;
                         return (
@@ -137,12 +135,7 @@ export function PublicHeader() {
                      </SheetClose>
                     <SheetClose asChild>
                         <Button asChild variant="outline" className="w-full">
-                            <Link href="/teacher/login">{t.teacherLogin}</Link>
-                        </Button>
-                    </SheetClose>
-                    <SheetClose asChild>
-                        <Button asChild variant="outline" className="w-full">
-                            <Link href="/admin/login">{t.adminLogin}</Link>
+                            <Link href="/staff/login">{t.staffLogin}</Link>
                         </Button>
                     </SheetClose>
                  </div>
