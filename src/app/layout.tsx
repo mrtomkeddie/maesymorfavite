@@ -28,9 +28,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
        <head>
-        <link rel="icon" href="/icon.png" type="image/png" />
-        <link rel="shortcut icon" href="/icon.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/mobile-icon.png" type="image/png" />
+        <link rel="icon" href="/icon.png?v=2" type="image/png" sizes="any" />
+        <link rel="apple-touch-icon" href="/mobile-icon.png?v=2" type="image/png" />
       </head>
       <body className={cn("min-h-screen bg-background font-body antialiased", ptSans.variable)}>
         <LanguageProvider>
