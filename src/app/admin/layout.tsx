@@ -143,23 +143,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
         const userRole = localStorage.getItem('userRole');
 
-        if (isAuthenticated && (userRole === 'admin' || userRole === 'teacher')) {
+        if (isAuthenticated && (userRole === 'admin')) {
             setSession({ user: { id: `${userRole}-1` } } as Session); // Mock session for dev
         } else {
-            router.replace('/login');
+             router.replace('/login');
         }
         setIsLoading(false);
         return;
     }
-
+    
     const getSessionAndRole = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         const role = await getUserRole(session.user.id);
         if (role === 'admin') {
           setSession(session);
-        } else if (role === 'teacher') {
-            router.replace('/teacher/dashboard');
         } else {
           // If the user is logged in but not an admin, deny access.
           router.replace('/login'); // Or a dedicated 'access-denied' page
@@ -230,7 +228,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     // { href: '/admin/help', label: 'Help', icon: HelpCircle },
   ];
 
-  if (pathname === '/admin/login') {
+  if (pathname.startsWith('/admin/login')) {
     return <>{children}</>;
   }
   

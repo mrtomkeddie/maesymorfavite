@@ -21,7 +21,7 @@ const formSchema = z.object({
 });
 
 interface LoginFormProps {
-  userRole: 'parent' | 'admin';
+  userRole: 'parent' | 'admin' | 'teacher';
 }
 
 export function LoginForm({ userRole }: LoginFormProps) {
@@ -67,7 +67,13 @@ export function LoginForm({ userRole }: LoginFormProps) {
         description: "Welcome back!",
     });
     
-    const destination = userRole === 'admin' ? '/admin/dashboard' : '/dashboard';
+    let destination = '/dashboard';
+    if (userRole === 'admin') {
+      destination = '/admin/dashboard';
+    } else if (userRole === 'teacher') {
+      destination = '/teacher/dashboard';
+    }
+    
     router.push(destination);
     router.refresh();
   }
@@ -89,7 +95,7 @@ export function LoginForm({ userRole }: LoginFormProps) {
               <FormItem>
                 <FormLabel>Email Address</FormLabel>
                 <FormControl>
-                  <Input placeholder={userRole === 'admin' ? "admin@example.com" : "parent@example.com"} {...field} />
+                  <Input placeholder={userRole === 'admin' ? "admin@example.com" : userRole === 'teacher' ? "teacher@example.com" : "parent@example.com"} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

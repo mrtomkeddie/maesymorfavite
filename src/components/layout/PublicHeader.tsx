@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/components/ui/sheet';
-import { Menu, Home, Info, Newspaper, School, Briefcase, Mail, X, LayoutDashboard, Gamepad2 } from 'lucide-react';
+import { Menu, Home, Info, Newspaper, School, Briefcase, Mail, X, LayoutDashboard, Gamepad2, UserCog } from 'lucide-react';
 import { useLanguage } from '@/app/(public)/LanguageProvider';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
@@ -22,6 +22,7 @@ const content = {
         kidsCorner: { href: '/kids-corner', label: "Kids' Corner", icon: Gamepad2 },
         portal: 'Parent Portal',
         adminLogin: 'Admin Login',
+        teacherLogin: 'Teacher Login',
         dashboard: 'Return to Dashboard',
         lang1: 'Cymraeg',
         lang2: 'English',
@@ -39,6 +40,7 @@ const content = {
         kidsCorner: { href: '/kids-corner', label: "Cornel y Plant", icon: Gamepad2 },
         portal: 'Porth Rieni',
         adminLogin: 'Mewngofnodi Gweinyddwr',
+        teacherLogin: 'Mewngofnodi Athro',
         dashboard: 'Yn ôl i\'r Dangosfwrdd',
         lang1: 'Cymraeg',
         lang2: 'English',
@@ -88,7 +90,6 @@ export function PublicHeader() {
             </SheetTrigger>
             <SheetContent side="right" className="w-[22rem] bg-background p-0 text-foreground" closeIcon={false}>
               <div className="flex h-full flex-col">
-                <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <div className="flex h-20 items-center justify-between border-b border-border/40 px-6">
                     <Link href="/" className="flex items-center gap-3">
                         <Image src="/logo-header.png" alt="Maes Y Morfa logo" width={1640} height={403} className="h-14 w-auto max-h-14" />
@@ -100,6 +101,7 @@ export function PublicHeader() {
                         </Button>
                     </SheetClose>
                 </div>
+                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                  <div className="flex flex-1 flex-col gap-2 p-6">
                     {navLinks.map((link) => {
                         const Icon = link.icon;
@@ -133,6 +135,11 @@ export function PublicHeader() {
                              </Button>
                          )}
                      </SheetClose>
+                    <SheetClose asChild>
+                        <Button asChild variant="outline" className="w-full">
+                            <Link href="/teacher/login">{t.teacherLogin}</Link>
+                        </Button>
+                    </SheetClose>
                     <SheetClose asChild>
                         <Button asChild variant="outline" className="w-full">
                             <Link href="/admin/login">{t.adminLogin}</Link>
