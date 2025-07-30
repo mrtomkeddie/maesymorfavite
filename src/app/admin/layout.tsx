@@ -158,6 +158,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (role === 'admin') {
           setSession(session);
         } else {
+          // If logged in but not an admin, log out and redirect to admin login
+          await supabase.auth.signOut();
           router.replace('/admin/login');
         }
       } else {

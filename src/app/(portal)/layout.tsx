@@ -124,6 +124,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         if (role === 'parent') {
           setSession(session);
         } else {
+          // If logged in but not a parent, log out and redirect to parent login
+          await supabase.auth.signOut();
           router.replace('/login');
         }
       } else {

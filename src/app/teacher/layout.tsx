@@ -93,7 +93,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
         if (isAuthenticated && userRole === 'teacher') {
             setSession({ user: { id: `${userRole}-1` } } as Session);
         } else {
-             router.replace('/login');
+             router.replace('/teacher/login');
         }
         setIsLoading(false);
         return;
@@ -106,6 +106,8 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
         if (role === 'teacher') {
           setSession(session);
         } else {
+          // If logged in but not a teacher, log out and redirect to teacher login
+          await supabase.auth.signOut();
           router.replace('/teacher/login');
         }
       } else {
