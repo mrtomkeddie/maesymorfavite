@@ -698,35 +698,70 @@ export const updateWeeklyMenu = async (menu: WeeklyMenu) => {
 const fromSupabaseInboxMessage = (message: any): InboxMessageWithId => {
     return {
         id: message.id,
-        type: message.type,
-        subject: message.subject,
-        body: message.body,
-        sender: message.sender,
-        isRead: message.is_read,
         createdAt: message.created_at,
+        isReadByAdmin: message.isReadByAdmin,
+        isReadByParent: message.isReadByParent,
+        threadId: message.threadId,
+        ...message,
     };
 };
 
 const toSupabaseInboxMessage = (message: Partial<InboxMessage>) => {
+    const { isReadByAdmin, isReadByParent, threadId, ...rest } = message;
     return {
-        type: message.type,
-        subject: message.subject,
-        body: message.body,
-        sender: message.sender,
-        is_read: message.isRead,
-        created_at: message.createdAt,
+        ...rest,
+        isReadByAdmin: isReadByAdmin,
+        isReadByParent: isReadByParent,
+        threadId: threadId,
     };
 };
 
-export const addInboxMessage = async (messageData: InboxMessage) => {
+export const addInboxMessage = async (messageData: InboxMessage): Promise<string> => {
     const supabase = getSupabaseClient();
-    const { error } = await supabase.from('inbox').insert([toSupabaseInboxMessage(messageData)]);
+    // If threadId is not provided, this is the first message in a thread.
+    // We'll set the threadId to be the same as the message's own ID after insertion.
+    let { threadId, ...restOfMessageData } = messageData;
+    
+    const { data, error } = await supabase
+      .from('inbox')
+      .insert([toSupabaseInboxMessage(restOfMessageData)])
+      .select('id')
+      .single();
+
     if (error) throw error;
+
+    const messageId = data.id;
+
+    if (!threadId) {
+        // This is a new thread, so update the message to set its threadId to its own id.
+        const { error: updateError } = await supabase
+            .from('inbox')
+            .update({ threadId: messageId })
+            .eq('id', messageId);
+        
+        if (updateError) {
+            console.error("Error setting threadId for new message:", updateError);
+            // Even if this fails, we still return the messageId
+        }
+    }
+    
+    return messageId;
 };
 
 export const getInboxMessages = async (): Promise<InboxMessageWithId[]> => {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase.from('inbox').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    return data.map(fromSupabaseInboxMessage);
+};
+
+export const getInboxMessagesForUser = async (userId: string): Promise<InboxMessageWithId[]> => {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+        .from('inbox')
+        .select('*')
+        .or(`sender->>id.eq.${userId},recipient->>id.eq.${userId}`);
+    
     if (error) throw error;
     return data.map(fromSupabaseInboxMessage);
 };
@@ -743,15 +778,24 @@ export const deleteInboxMessage = async (id: string) => {
     if (error) throw error;
 };
 
-export const getUnreadMessageCount = async (): Promise<number> => {
+export const getUnreadMessageCount = async (userId: string, userType: 'admin' | 'parent'): Promise<number> => {
     const supabase = getSupabaseClient();
-    const { count, error } = await supabase
+    
+    const query = supabase
         .from('inbox')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_read', false);
+        .select('*', { count: 'exact', head: true });
+
+    if (userType === 'admin') {
+        query.eq('isReadByAdmin', false);
+    } else {
+        query.eq('recipient->>id', userId).eq('isReadByParent', false);
+    }
+    
+    const { count, error } = await query;
     if (error) throw error;
     return count || 0;
 };
+
 
 // === GALLERY ===
 const fromSupabasePhoto = (photo: any): PhotoWithId => {
@@ -861,3 +905,4 @@ export const getCollectionCount = async (collectionName: string): Promise<number
     }
     return count || 0;
 };
+
