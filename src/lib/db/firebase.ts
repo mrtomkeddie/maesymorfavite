@@ -116,6 +116,14 @@ export const getPaginatedStaff = async (limitNum = 20, lastDoc?: any): Promise<{
     return Promise.resolve({ data: mockStaff, lastDoc: undefined });
 };
 
+export const getTeacherAndClass = async (userId: string): Promise<{ teacher: StaffMemberWithId, myClass: ChildWithId[] } | null> => {
+    const teacher = mockStaff.find(s => s.userId === userId);
+    if (!teacher) {
+        return null;
+    }
+    const myClass = allMockChildren.filter(c => c.yearGroup === teacher.team);
+    return Promise.resolve({ teacher, myClass });
+}
 
 // === DOCUMENTS ===
 const mockDocuments: DocumentWithId[] = [
