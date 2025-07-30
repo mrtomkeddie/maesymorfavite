@@ -109,9 +109,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     if (!isSupabaseConfigured) {
         const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
         const userRole = localStorage.getItem('userRole');
-
         if (isAuthenticated && userRole === 'parent') {
-            setSession({ user: { id: 'parent-1' } } as Session); // Mock session for dev
+            setSession({ user: { id: 'parent-1' } } as Session);
         } else {
              router.replace('/login');
         }
@@ -126,7 +125,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         if (role === 'parent') {
           setSession(session);
         } else {
-          router.replace('/login');
+          // If role is not parent, redirect to appropriate login
+          router.replace(role === 'admin' ? '/admin/login' : '/teacher/login');
         }
       } else {
         router.replace('/login');

@@ -142,9 +142,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (!isSupabaseConfigured) {
         const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
         const userRole = localStorage.getItem('userRole');
-
-        if (isAuthenticated && (userRole === 'admin')) {
-            setSession({ user: { id: `${userRole}-1` } } as Session); // Mock session for dev
+        if (isAuthenticated && userRole === 'admin') {
+            setSession({ user: { id: `${userRole}-1` } } as Session);
         } else {
              router.replace('/login');
         }
@@ -159,10 +158,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (role === 'admin') {
           setSession(session);
         } else {
-          router.replace('/login');
+          // If role is not admin, redirect to appropriate login
+          router.replace(role === 'teacher' ? '/teacher/login' : '/login');
         }
-      } else if (pathname !== '/admin/login') {
-        router.replace('/admin/login');
+      } else {
+         if (pathname !== '/admin/login') {
+            router.replace('/admin/login');
+         }
       }
       setIsLoading(false);
     };

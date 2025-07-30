@@ -90,9 +90,8 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
     if (!isSupabaseConfigured) {
         const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
         const userRole = localStorage.getItem('userRole');
-
-        if (isAuthenticated && (userRole === 'teacher')) {
-            setSession({ user: { id: `${userRole}-1` } } as Session); // Mock session for dev
+        if (isAuthenticated && userRole === 'teacher') {
+            setSession({ user: { id: `${userRole}-1` } } as Session);
         } else {
              router.replace('/login');
         }
@@ -107,10 +106,13 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
         if (role === 'teacher') {
           setSession(session);
         } else {
-          router.replace('/login'); 
+          // If role is not teacher, redirect to appropriate login
+          router.replace(role === 'admin' ? '/admin/login' : '/login');
         }
-      } else if (pathname !== '/teacher/login') {
-        router.replace('/teacher/login');
+      } else {
+         if (pathname !== '/teacher/login') {
+            router.replace('/teacher/login');
+         }
       }
       setIsLoading(false);
     };
