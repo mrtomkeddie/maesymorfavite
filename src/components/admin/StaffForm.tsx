@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, CheckCircle } from 'lucide-react';
+import { Loader2, CheckCircle, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/db';
 import { uploadFile, deleteFile } from '@/lib/firebase/storage';
@@ -31,6 +31,8 @@ import {
 } from '@/components/ui/select';
 import { Progress } from '../ui/progress';
 import { useLanguage } from '@/app/(public)/LanguageProvider';
+import { Separator } from '../ui/separator';
+import { Checkbox } from '../ui/checkbox';
 
 export const staffTeams = [
     "Leadership Team",
@@ -50,7 +52,18 @@ const formSchema = (t: any) => z.object({
   team: z.string({ required_error: t.team_required_error }),
   bio: z.string().optional(),
   photo: z.any().optional(),
+  email: z.string().email({ message: t.email_message }).optional().or(z.literal('')),
+  createAdminAccount: z.boolean().default(false),
+}).refine(data => {
+    if (data.createAdminAccount && !data.email) {
+        return false;
+    }
+    return true;
+}, {
+    message: "Email is required to create an admin account.",
+    path: ["email"],
 });
+
 
 const content = {
     en: {
@@ -58,6 +71,7 @@ const content = {
             name_message: 'Name must be at least 2 characters.',
             role_message: 'Role must be at least 2 characters.',
             team_required_error: 'Please select a team.',
+            email_message: "Please enter a valid email address."
         },
         nameLabel: 'Full Name',
         namePlaceholder: 'e.g., Jane Doe',
@@ -69,6 +83,10 @@ const content = {
         bioPlaceholder: 'A short introduction...',
         photoLabel: 'Profile Photo (Optional)',
         photoDesc: 'Upload a photo of the staff member.',
+        portalAccessLabel: 'Portal Access',
+        emailLabel: "Staff Member's Email Address",
+        createAdminLabel: "Create admin account for this user",
+        createAdminDesc: "This will send an invitation to the email above to set a password and access the admin portal.",
         uploadComplete: 'Upload complete!',
         toastSuccess: {
             update: { title: "Success!", description: "Staff member has been updated." },
@@ -88,6 +106,7 @@ const content = {
             name_message: 'Rhaid i\'r enw fod o leiaf 2 nod.',
             role_message: 'Rhaid i\'r rôl fod o leiaf 2 nod.',
             team_required_error: 'Dewiswch dîm.',
+             email_message: "Mewnbynnwch gyfeiriad e-bost dilys."
         },
         nameLabel: 'Enw Llawn',
         namePlaceholder: 'e.e., Siân Jones',
@@ -99,6 +118,10 @@ const content = {
         bioPlaceholder: 'Cyflwyniad byr...',
         photoLabel: 'Llun Proffil (Dewisol)',
         photoDesc: 'Uwchlwythwch lun o\'r aelod staff.',
+        portalAccessLabel: 'Mynediad Porth',
+        emailLabel: "Cyfeiriad E-bost yr Aelod o Staff",
+        createAdminLabel: "Creu cyfrif gweinyddwr ar gyfer y defnyddiwr hwn",
+        createAdminDesc: "Bydd hyn yn anfon gwahoddiad i'r e-bost uchod i osod cyfrinair a chael mynediad i borth y gweinyddwr.",
         uploadComplete: 'Wedi\'i uwchlwytho\'n llwyddiannus!',
         toastSuccess: {
             update: { title: "Llwyddiant!", description: "Mae aelod staff wedi'i ddiweddaru." },
@@ -135,6 +158,8 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
       team: existingStaff?.team || '',
       bio: existingStaff?.bio || '',
       photo: undefined,
+      email: existingStaff?.email || '',
+      createAdminAccount: false,
     },
   });
 
@@ -147,11 +172,9 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
 
       if (fileToUpload) {
         setUploadProgress(0);
-        // If there's an old photo, delete it
         if (existingStaff?.photoUrl) {
           await deleteFile(existingStaff.photoUrl);
         }
-        // Upload the new one
         photoUrl = await uploadFile(fileToUpload, 'staff-photos', (progress) => {
           setUploadProgress(progress);
         });
@@ -164,13 +187,17 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
         team: values.team,
         bio: values.bio,
         photoUrl: photoUrl,
+        email: values.email,
       };
 
       if (existingStaff) {
         await db.updateStaffMember(existingStaff.id, staffData);
         toast(t.toastSuccess.update);
       } else {
-        await db.addStaffMember(staffData);
+        const newStaffId = await db.addStaffMember(staffData);
+        if (values.createAdminAccount && values.email) {
+            await db.createAdminUser(values.email);
+        }
         toast(t.toastSuccess.add);
       }
       
@@ -289,6 +316,50 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
             </FormItem>
           )}
         />
+
+        <Separator />
+        
+        <div className="space-y-4 rounded-lg border p-4">
+            <h3 className="text-lg font-medium flex items-center gap-2"><Shield className="h-5 w-5 text-primary" /> {t.portalAccessLabel}</h3>
+             <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>{t.emailLabel}</FormLabel>
+                        <FormControl>
+                            <Input type="email" placeholder="staff.member@example.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            {!existingStaff && (
+                 <FormField
+                    control={form.control}
+                    name="createAdminAccount"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-3 bg-secondary">
+                        <FormControl>
+                            <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                            <FormLabel>
+                            {t.createAdminLabel}
+                            </FormLabel>
+                            <FormDescription>
+                            {t.createAdminDesc}
+                            </FormDescription>
+                        </div>
+                        </FormItem>
+                    )}
+                 />
+            )}
+        </div>
+
 
         <div className="flex justify-end">
           <Button type="submit" disabled={isLoading}>

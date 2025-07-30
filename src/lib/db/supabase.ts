@@ -1,5 +1,6 @@
 
 
+
 // This file will contain the Supabase implementations of all data functions.
 // Note: This is a placeholder implementation. A real implementation would require a
 // Supabase project with tables matching the data structures in src/lib/types.ts.
@@ -295,17 +296,20 @@ export const getStaff = async (): Promise<StaffMemberWithId[]> => {
     return (data || []).map(fromSupabaseStaff);
 };
 
-export const addStaffMember = async (staffData: StaffMember) => {
+export const addStaffMember = async (staffData: StaffMember): Promise<string> => {
     const supabase = getSupabaseClient();
 
-    const { error } = await supabase
+    const { data, error } = await supabase
         .from('staff')
-        .insert([toSupabaseStaff(staffData)]);
+        .insert([toSupabaseStaff(staffData)])
+        .select('id')
+        .single();
 
     if (error) {
         console.error("Error adding staff member to Supabase:", error);
         throw error;
     }
+    return data.id;
 };
 
 export const updateStaffMember = async (id: string, staffData: Partial<StaffMember>) => {
@@ -887,6 +891,18 @@ export const updateUserRole = async (userId: string, role: UserRole) => {
     }
 };
 
+export const createAdminUser = async (email: string) => {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
+        data: { role: 'admin' }
+    });
+    if (error) {
+        console.error("Error creating admin user:", error);
+        throw error;
+    }
+    return data;
+}
+
 
 // === UTILITIES ===
 export const getCollectionCount = async (collectionName: string): Promise<number> => {
@@ -905,4 +921,3 @@ export const getCollectionCount = async (collectionName: string): Promise<number
     }
     return count || 0;
 };
-

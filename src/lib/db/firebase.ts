@@ -92,17 +92,19 @@ export const getPaginatedCalendarEvents = async (limitNum = 20, lastDoc?: any): 
 // === STAFF ===
 const { mockParents: allMockParents, mockChildren: allMockChildren } = generateMockData();
 const mockStaff: StaffMemberWithId[] = [
-    { id: '1', name: 'Jane Morgan', role: 'Headteacher', team: 'Leadership Team' },
-    { id: '2', name: 'Alex Evans', role: 'Deputy Head', team: 'Leadership Team' },
-    { id: '3', name: 'David Williams', role: 'Teacher', team: 'Year 6' },
+    { id: '1', name: 'Jane Morgan', role: 'Headteacher', team: 'Leadership Team', email: 'jane.morgan@example.com' },
+    { id: '2', name: 'Alex Evans', role: 'Deputy Head', team: 'Leadership Team', email: 'alex.evans@example.com' },
+    { id: '3', name: 'David Williams', role: 'Teacher', team: 'Year 6', email: 'david.williams@example.com' },
 ];
 
 export const getStaff = async (): Promise<StaffMemberWithId[]> => {
     return Promise.resolve(mockStaff);
 }
-export const addStaffMember = async (staffData: StaffMember) => {
+export const addStaffMember = async (staffData: StaffMember): Promise<string> => {
     console.log("Mock addStaffMember:", staffData);
-    return Promise.resolve();
+    const newId = `mock_staff_${Date.now()}`;
+    mockStaff.push({ ...staffData, id: newId });
+    return Promise.resolve(newId);
 };
 export const updateStaffMember = async (id: string, staffData: Partial<StaffMember>) => {
     console.log(`Mock updateStaffMember (id: ${id}):`, staffData);
@@ -188,7 +190,6 @@ let mockInbox: InboxMessageWithId[] = [
         body: 'Charlie is unwell today.', 
         sender: { id: 'parent-1', name: 'Jane Doe', email: 'parent@example.com', type: 'parent' }, 
         recipient: { id: 'admin-1', name: 'Admin', email: 'admin@example.com', type: 'admin' },
-        isRead: false,
         isReadByAdmin: false,
         isReadByParent: true,
         createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
@@ -201,7 +202,6 @@ let mockInbox: InboxMessageWithId[] = [
         body: 'Thank you for letting us know. We hope Charlie feels better soon.', 
         sender: { id: 'admin-1', name: 'Admin', email: 'admin@example.com', type: 'admin' }, 
         recipient: { id: 'parent-1', name: 'Jane Doe', email: 'parent@example.com', type: 'parent' },
-        isRead: false, // Not relevant for replies
         isReadByAdmin: true,
         isReadByParent: false,
         createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
@@ -214,7 +214,6 @@ let mockInbox: InboxMessageWithId[] = [
         body: 'When is the payment due?', 
         sender: { id: 'parent-2', name: 'John Smith', email: 'john@example.com', type: 'parent' }, 
         recipient: { id: 'admin-1', name: 'Admin', email: 'admin@example.com', type: 'admin' },
-        isRead: true, 
         isReadByAdmin: true,
         isReadByParent: true,
         createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
@@ -287,6 +286,20 @@ export const updateUserRole = async (userId: string, role: UserRole): Promise<vo
     if (userIndex !== -1) {
         mockUsers[userIndex].role = role;
     }
+};
+
+export const createAdminUser = async(email: string) => {
+    console.log(`Mock: Creating admin user for ${email}`);
+    // In a real app, this would use supabase.auth.admin.inviteUserByEmail
+    // For the mock, we'll just add them to our in-memory user list.
+    const newUser: UserWithRole = {
+        id: `mock-admin-${Date.now()}`,
+        email: email,
+        role: 'admin',
+        created_at: new Date().toISOString()
+    };
+    mockUsers.push(newUser);
+    return Promise.resolve({ user: newUser, data: newUser });
 };
 
 // === UTILITIES ===

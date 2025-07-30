@@ -6,6 +6,7 @@ export type StaffMember = {
     team: string;
     bio?: string;
     photoUrl?: string;
+    email?: string;
 };
 
 export type StaffMemberWithId = StaffMember & { id: string };
