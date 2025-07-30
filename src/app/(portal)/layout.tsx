@@ -108,8 +108,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   useEffect(() => {
     if (!isSupabaseConfigured) {
         const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-        const userRole = localStorage.getItem('userRole');
-        if (isAuthenticated && userRole === 'parent') {
+        if (isAuthenticated) {
             setSession({ user: { id: 'parent-1' } } as Session);
         } else {
              router.replace('/login');
@@ -125,8 +124,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         if (role === 'parent') {
           setSession(session);
         } else {
-          // If role is not parent, redirect to appropriate login
-          router.replace(role === 'admin' ? '/admin/login' : '/teacher/login');
+          router.replace('/login');
         }
       } else {
         router.replace('/login');

@@ -158,8 +158,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (role === 'admin') {
           setSession(session);
         } else {
-          // If role is not admin, redirect to appropriate login
-          router.replace(role === 'teacher' ? '/teacher/login' : '/login');
+          router.replace('/admin/login');
         }
       } else {
          if (pathname !== '/admin/login') {

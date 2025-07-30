@@ -106,8 +106,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
         if (role === 'teacher') {
           setSession(session);
         } else {
-          // If role is not teacher, redirect to appropriate login
-          router.replace(role === 'admin' ? '/admin/login' : '/login');
+          router.replace('/teacher/login');
         }
       } else {
          if (pathname !== '/teacher/login') {
