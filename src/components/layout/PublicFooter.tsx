@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useLanguage } from '@/app/(public)/LanguageProvider';
@@ -76,14 +75,8 @@ export function PublicFooter() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
-    // Only fetch settings if Supabase is the configured provider.
-    // Otherwise, the mock provider will return the data.
-    if (process.env.NEXT_PUBLIC_DB_PROVIDER === 'supabase') {
-        db.getSiteSettings().then(setSettings).catch(console.error);
-    } else {
-        // In the mock environment, directly call the mock provider.
-        db.getSiteSettings().then(setSettings);
-    }
+    // db.getSiteSettings will correctly use the mock provider in this environment
+    db.getSiteSettings().then(setSettings).catch(console.error);
   }, []);
   
   const footerLinkGroups = [
