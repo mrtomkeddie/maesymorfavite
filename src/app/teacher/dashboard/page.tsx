@@ -25,16 +25,22 @@ export default function TeacherDashboard() {
     const [selectedChild, setSelectedChild] = useState<ChildWithId | null>(null);
     const [isChildDetailOpen, setIsChildDetailOpen] = useState(false);
     const { toast } = useToast();
+    const isSupabaseConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     useEffect(() => {
         const fetchTeacherData = async () => {
             setIsLoading(true);
             try {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session) {
-                    throw new Error("Not authenticated");
+                let userId = 'mock-teacher-id-1'; // Default for non-supabase env
+                if (isSupabaseConfigured) {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session) {
+                        throw new Error("Not authenticated");
+                    }
+                    userId = session.user.id;
                 }
-                const teacherData = await db.getTeacherAndClass(session.user.id);
+
+                const teacherData = await db.getTeacherAndClass(userId);
                 if (teacherData) {
                     setTeacher(teacherData.teacher);
                     setMyClass(teacherData.myClass);
@@ -70,7 +76,7 @@ export default function TeacherDashboard() {
             }
         };
         fetchTeacherData();
-    }, [toast]);
+    }, [toast, isSupabaseConfigured]);
 
     const handleViewChild = (child: ChildWithId) => {
         setSelectedChild(child);
