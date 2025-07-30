@@ -107,6 +107,7 @@ export default function DashboardPage() {
   const [weeklyMenu, setWeeklyMenu] = useState<WeeklyMenu | null>(null);
   const [isLoadingMenu, setIsLoadingMenu] = useState(true);
   const [notifications, setNotifications] = useState<ParentNotificationWithId[]>([]);
+  const [awardCounts, setAwardCounts] = useState<Record<string, number>>({});
   const isMobile = useIsMobile();
   const parentId = 'parent-1'; // This would be dynamic in a real app
 
@@ -134,9 +135,19 @@ export default function DashboardPage() {
         const fetchedNotifications = await db.getNotificationsForParent(parentId);
         setNotifications(fetchedNotifications);
     };
+    
+    const fetchAwardCounts = async () => {
+        const counts: Record<string, number> = {};
+        for (const child of parentChildren) {
+            const count = await db.getValuesAwardCount(child.id);
+            counts[child.id] = count;
+        }
+        setAwardCounts(counts);
+    };
 
     fetchMenu();
     fetchNotifications();
+    fetchAwardCounts();
   }, [parentId]);
  
   const notificationIcons = {
@@ -199,6 +210,10 @@ export default function DashboardPage() {
                                       <div className="flex items-center gap-2 text-sm">
                                         <UserCheck className="h-4 w-4 text-primary" />
                                         <span>Teacher: <strong>{child.teacher}</strong></span>
+                                     </div>
+                                      <div className="flex items-center gap-2 text-sm">
+                                        <Trophy className="h-4 w-4 text-primary" />
+                                        <span>Values Awards: <strong>{awardCounts[child.id] ?? '...'}</strong></span>
                                      </div>
                                 </div>
                             </div>

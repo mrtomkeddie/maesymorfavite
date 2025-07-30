@@ -11,7 +11,7 @@ import { yearGroups } from "@/components/admin/ChildForm";
 import { QueryDocumentSnapshot } from "firebase/firestore";
 import { news as mockNewsData } from '@/lib/mockNews';
 import { calendarEvents as mockCalendarEvents } from '@/lib/mockCalendar';
-import { generateMockData } from '@/lib/mockData';
+import { generateMockData, parentChildren } from '@/lib/mockData';
 
 // === NEWS ===
 export type NewsPostWithId = NewsPost & { id: string };
@@ -310,6 +310,12 @@ export const markNotificationAsRead = async (notificationId: string): Promise<vo
         mockNotifications[index].isRead = true;
     }
 }
+
+export const getValuesAwardCount = async (childId: string): Promise<number> => {
+    // For mock environment, we can use the hardcoded value from parentChildren
+    const child = parentChildren.find(c => c.id === childId);
+    return Promise.resolve(child?.valuesAwardCount || 0);
+};
 
 
 // === GALLERY ===

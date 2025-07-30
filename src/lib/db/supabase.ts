@@ -844,6 +844,16 @@ export const addParentNotification = async (notificationData: ParentNotification
     return data.id;
 };
 
+export const getParentNotifications = async (): Promise<ParentNotificationWithId[]> => {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('date', { ascending: false });
+    if (error) throw error;
+    return data;
+}
+
 export const getNotificationsForParent = async (parentId: string): Promise<ParentNotificationWithId[]> => {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase
@@ -860,6 +870,18 @@ export const markNotificationAsRead = async (notificationId: string): Promise<vo
     const { error } = await supabase.from('notifications').update({ isRead: true }).eq('id', notificationId);
     if (error) throw error;
 }
+
+export const getValuesAwardCount = async (childId: string): Promise<number> => {
+    const supabase = getSupabaseClient();
+    const { count, error } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('childId', childId)
+      .eq('type', 'Values Award');
+
+    if (error) throw error;
+    return count || 0;
+};
 
 
 // === GALLERY ===
