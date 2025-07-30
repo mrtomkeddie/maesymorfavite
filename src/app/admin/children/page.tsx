@@ -264,59 +264,61 @@ export default function ChildrenAdminPage() {
               </div>
             ) : (
               <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Year Group</TableHead>
-                      <TableHead>Linked Parent(s)</TableHead>
-                      <TableHead className="text-right w-[80px]">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredAndSortedChildren.length > 0 ? (
-                      filteredAndSortedChildren.map((child) => (
-                        <TableRow key={child.id}>
-                          <TableCell className="font-medium">{child.name}</TableCell>
-                          <TableCell>{child.yearGroup}</TableCell>
-                          <TableCell>{getParentInfo(child.linkedParents)}</TableCell>
-                          <TableCell className="text-right">
-                             <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                        <span className="sr-only">Open menu</span>
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                    <DropdownMenuItem onClick={() => handleViewChild(child)}>
-                                        <Eye className="mr-2 h-4 w-4" />
-                                        View
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleEdit(child)}>
-                                        <Pencil className="mr-2 h-4 w-4" />
-                                        Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => openDeleteAlert(child)} className="text-destructive focus:text-destructive">
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Delete
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Year Group</TableHead>
+                        <TableHead>Linked Parent(s)</TableHead>
+                        <TableHead className="text-right w-[80px]">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredAndSortedChildren.length > 0 ? (
+                        filteredAndSortedChildren.map((child) => (
+                          <TableRow key={child.id}>
+                            <TableCell className="font-medium">{child.name}</TableCell>
+                            <TableCell>{child.yearGroup}</TableCell>
+                            <TableCell>{getParentInfo(child.linkedParents)}</TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" className="h-8 w-8 p-0">
+                                          <span className="sr-only">Open menu</span>
+                                          <MoreHorizontal className="h-4 w-4" />
+                                      </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                      <DropdownMenuItem onClick={() => handleViewChild(child)}>
+                                          <Eye className="mr-2 h-4 w-4" />
+                                          View
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => handleEdit(child)}>
+                                          <Pencil className="mr-2 h-4 w-4" />
+                                          Edit
+                                      </DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem onClick={() => openDeleteAlert(child)} className="text-destructive focus:text-destructive">
+                                          <Trash2 className="mr-2 h-4 w-4" />
+                                          Delete
+                                      </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={5} className="h-24 text-center">
+                            No children found matching the current filter.
                           </TableCell>
                         </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center">
-                          No children found matching the current filter.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </>
             )}
           </CardContent>

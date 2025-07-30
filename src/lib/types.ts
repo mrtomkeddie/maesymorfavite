@@ -79,6 +79,8 @@ export type InboxMessage = {
 
 export type InboxMessageWithId = InboxMessage & { id: string };
 
+export type NotificationType = 'Incident' | 'Achievement' | 'General' | 'Values Award';
+
 export type ParentNotification = {
     childId: string;
     childName: string;
@@ -86,7 +88,7 @@ export type ParentNotification = {
     teacherId: string;
     teacherName: string;
     date: string; // ISO 8601
-    type: 'Incident' | 'Achievement' | 'General' | 'Values Award';
+    type: NotificationType;
     notes: string;
     treatmentGiven?: string;
     isRead: boolean;

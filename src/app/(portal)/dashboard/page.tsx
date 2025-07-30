@@ -24,16 +24,72 @@ import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, Dr
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format, formatDistanceToNow } from 'date-fns';
+import { useLanguage } from '@/app/(public)/LanguageProvider';
+import { cy, enGB } from 'date-fns/locale';
 
 const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
-const MenuDialogContent = ({ weeklyMenu, isLoadingMenu }: { weeklyMenu: WeeklyMenu | null, isLoadingMenu: boolean }) => (
+const content = {
+  en: {
+    welcome: "Welcome back, Jane!",
+    description: "Here's what's happening at Maes Y Morfa today.",
+    notifications: "Recent Notifications",
+    children: "My Children",
+    attendance: "Attendance",
+    teacher: "Teacher",
+    awards: "Values Awards",
+    actions: "Quick Actions",
+    reportAbsence: "Report an Absence",
+    lunch: "Today's Lunch",
+    lunchDesc: "A sample of what's on the menu today.",
+    lunchMain: "Main",
+    lunchAlt: "Vegetarian / Alt",
+    lunchDessert: "Dessert",
+    viewMenu: "View Full Menu",
+    menuTitle: "This Week's Lunch Menu",
+    menuDesc: "Here's what's on offer for lunch this week at Maes Y Morfa.",
+    day: "Day",
+    mainCourse: "Main Course",
+    vegAlt: "Vegetarian / Alt",
+    dessertCourse: "Dessert",
+    notAvailable: "Not available",
+    notAvailableToday: "Not available today",
+    loading: "Loading...",
+  },
+  cy: {
+    welcome: "Croeso'n ôl, Jane!",
+    description: "Dyma beth sy'n digwydd ym Maes Y Morfa heddiw.",
+    notifications: "Hysbysiadau Diweddar",
+    children: "Fy Mhlant",
+    attendance: "Presenoldeb",
+    teacher: "Athro/Athrawes",
+    awards: "Gwobrau Gwerthoedd",
+    actions: "Gweithredoedd Cyflym",
+    reportAbsence: "Riportio Absenoldeb",
+    lunch: "Cinio Heddiw",
+    lunchDesc: "Sampl o'r hyn sydd ar y fwydlen heddiw.",
+    lunchMain: "Prif Gwrs",
+    lunchAlt: "Llysieuol / Amgen",
+    lunchDessert: "Pwdin",
+    viewMenu: "Gweld y Fwydlen Lawn",
+    menuTitle: "Bwydlen Ginio'r Wythnos Hon",
+    menuDesc: "Dyma beth sydd ar gael amser cinio'r wythnos hon ym Maes Y Morfa.",
+    day: "Diwrnod",
+    mainCourse: "Prif Gwrs",
+    vegAlt: "Llysieuol / Amgen",
+    dessertCourse: "Pwdin",
+    notAvailable: "Dim ar gael",
+    notAvailableToday: "Dim ar gael heddiw",
+    loading: "Yn llwytho...",
+  }
+};
+
+
+const MenuDialogContent = ({ weeklyMenu, isLoadingMenu, t }: { weeklyMenu: WeeklyMenu | null, isLoadingMenu: boolean, t: typeof content.en }) => (
     <>
         <DialogHeader>
-            <DialogTitle>This Week's Lunch Menu</DialogTitle>
-            <DialogDescription>
-                Here's what's on offer for lunch this week at Maes Y Morfa.
-            </DialogDescription>
+            <DialogTitle>{t.menuTitle}</DialogTitle>
+            <DialogDescription>{t.menuDesc}</DialogDescription>
         </DialogHeader>
         <div className="pt-4">
             {isLoadingMenu ? (
@@ -44,19 +100,19 @@ const MenuDialogContent = ({ weeklyMenu, isLoadingMenu }: { weeklyMenu: WeeklyMe
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[100px]">Day</TableHead>
-                            <TableHead>Main Course</TableHead>
-                            <TableHead>Vegetarian / Alt</TableHead>
-                            <TableHead>Dessert</TableHead>
+                            <TableHead className="w-[100px]">{t.day}</TableHead>
+                            <TableHead>{t.mainCourse}</TableHead>
+                            <TableHead>{t.vegAlt}</TableHead>
+                            <TableHead>{t.dessertCourse}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {days.map(day => (
                             <TableRow key={day}>
                                 <TableCell className="font-medium capitalize">{day}</TableCell>
-                                <TableCell>{weeklyMenu?.[day]?.main || 'N/A'}</TableCell>
-                                <TableCell>{weeklyMenu?.[day]?.alt || 'N/A'}</TableCell>
-                                <TableCell>{weeklyMenu?.[day]?.dessert || 'N/A'}</TableCell>
+                                <TableCell>{weeklyMenu?.[day]?.main || t.notAvailable}</TableCell>
+                                <TableCell>{weeklyMenu?.[day]?.alt || t.notAvailable}</TableCell>
+                                <TableCell>{weeklyMenu?.[day]?.dessert || t.notAvailable}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -66,13 +122,11 @@ const MenuDialogContent = ({ weeklyMenu, isLoadingMenu }: { weeklyMenu: WeeklyMe
     </>
 );
 
-const MenuDrawerContent = ({ weeklyMenu, isLoadingMenu }: { weeklyMenu: WeeklyMenu | null, isLoadingMenu: boolean }) => (
+const MenuDrawerContent = ({ weeklyMenu, isLoadingMenu, t }: { weeklyMenu: WeeklyMenu | null, isLoadingMenu: boolean, t: typeof content.en }) => (
     <>
         <DrawerHeader className="text-left">
-            <DrawerTitle>This Week's Lunch Menu</DrawerTitle>
-            <DrawerDescription>
-                Here's what's on offer for lunch this week at Maes Y Morfa.
-            </DrawerDescription>
+            <DrawerTitle>{t.menuTitle}</DrawerTitle>
+            <DrawerDescription>{t.menuDesc}</DrawerDescription>
         </DrawerHeader>
         <div className="px-4">
             {isLoadingMenu ? (
@@ -88,9 +142,9 @@ const MenuDrawerContent = ({ weeklyMenu, isLoadingMenu }: { weeklyMenu: WeeklyMe
                                     <CardTitle className="capitalize">{day}</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-2 text-sm">
-                                    <p><strong>Main:</strong> {weeklyMenu?.[day]?.main || 'N/A'}</p>
-                                    <p><strong>Alt:</strong> {weeklyMenu?.[day]?.alt || 'N/A'}</p>
-                                    <p><strong>Dessert:</strong> {weeklyMenu?.[day]?.dessert || 'N/A'}</p>
+                                    <p><strong>{t.lunchMain}:</strong> {weeklyMenu?.[day]?.main || t.notAvailable}</p>
+                                    <p><strong>{t.lunchAlt}:</strong> {weeklyMenu?.[day]?.alt || t.notAvailable}</p>
+                                    <p><strong>{t.lunchDessert}:</strong> {weeklyMenu?.[day]?.dessert || t.notAvailable}</p>
                                 </CardContent>
                             </Card>
                         ))}
@@ -110,6 +164,10 @@ export default function DashboardPage() {
   const [awardCounts, setAwardCounts] = useState<Record<string, number>>({});
   const isMobile = useIsMobile();
   const parentId = 'parent-1'; // This would be dynamic in a real app
+  const { language } = useLanguage();
+  const t = content[language];
+  const locale = language === 'cy' ? cy : enGB;
+
 
   useEffect(() => {
     const fetchMenu = async () => {
@@ -118,14 +176,14 @@ export default function DashboardPage() {
         if (fullMenu) {
             setWeeklyMenu(fullMenu);
             const today = new Date().toLocaleString('en-US', { weekday: 'long' }).toLowerCase();
-            const currentDayMenu = fullMenu[today] || { main: 'Not available today', alt: 'Not available today', dessert: 'Not available today' };
+            const currentDayMenu = fullMenu[today] || { main: t.notAvailableToday, alt: t.notAvailableToday, dessert: t.notAvailableToday };
             setTodayMenu(currentDayMenu);
         } else {
-             setTodayMenu({ main: 'Not available', alt: 'Not available', dessert: 'Not available' });
+             setTodayMenu({ main: t.notAvailable, alt: t.notAvailable, dessert: t.notAvailable });
         }
       } catch (error) {
         console.error("Failed to fetch lunch menu", error);
-        setTodayMenu({ main: 'Not available', alt: 'Not available', dessert: 'Not available' });
+        setTodayMenu({ main: t.notAvailable, alt: t.notAvailable, dessert: t.notAvailable });
       } finally {
         setIsLoadingMenu(false);
       }
@@ -148,20 +206,21 @@ export default function DashboardPage() {
     fetchMenu();
     fetchNotifications();
     fetchAwardCounts();
-  }, [parentId]);
+  }, [parentId, t.notAvailable, t.notAvailableToday]);
  
   const notificationIcons = {
     'Achievement': <Trophy className="h-6 w-6 text-yellow-500" />,
     'Incident': <Megaphone className="h-6 w-6 text-red-500" />,
     'General': <Bell className="h-6 w-6 text-blue-500" />,
+    'Values Award': <Trophy className="h-6 w-6 text-yellow-500" />
   }
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold font-headline">Welcome back, Jane!</h1>
-          <p className="text-muted-foreground">Here's what's happening at Maes Y Morfa today.</p>
+          <h1 className="text-3xl font-bold font-headline">{t.welcome}</h1>
+          <p className="text-muted-foreground">{t.description}</p>
         </div>
         <LanguageToggle />
       </div>
@@ -173,7 +232,7 @@ export default function DashboardPage() {
             {notifications.length > 0 && (
                 <Card>
                     <CardHeader>
-                        <CardTitle>Recent Notifications</CardTitle>
+                        <CardTitle>{t.notifications}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {notifications.slice(0, 3).map(notif => (
@@ -182,7 +241,7 @@ export default function DashboardPage() {
                                 <div>
                                     <p className="font-semibold">{notif.childName}: {notif.type}</p>
                                     <p className="text-sm text-muted-foreground">{notif.notes}</p>
-                                    <p className="text-xs text-muted-foreground mt-1">{formatDistanceToNow(new Date(notif.date), { addSuffix: true })} from {notif.teacherName}</p>
+                                    <p className="text-xs text-muted-foreground mt-1">{formatDistanceToNow(new Date(notif.date), { addSuffix: true, locale })} from {notif.teacherName}</p>
                                 </div>
                             </div>
                         ))}
@@ -192,7 +251,7 @@ export default function DashboardPage() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>My Children</CardTitle>
+                    <CardTitle>{t.children}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {parentChildren.map(child => (
@@ -205,15 +264,15 @@ export default function DashboardPage() {
                                 <div className="space-y-2">
                                      <div className="flex items-center gap-2 text-sm">
                                         <Percent className="h-4 w-4 text-primary" />
-                                        <span>Attendance: <strong>{child.attendance}</strong></span>
+                                        <span>{t.attendance}: <strong>{child.attendance}</strong></span>
                                      </div>
                                       <div className="flex items-center gap-2 text-sm">
                                         <UserCheck className="h-4 w-4 text-primary" />
-                                        <span>Teacher: <strong>{child.teacher}</strong></span>
+                                        <span>{t.teacher}: <strong>{child.teacher}</strong></span>
                                      </div>
                                       <div className="flex items-center gap-2 text-sm">
                                         <Trophy className="h-4 w-4 text-primary" />
-                                        <span>Values Awards: <strong>{awardCounts[child.id] ?? '...'}</strong></span>
+                                        <span>{t.awards}: <strong>{awardCounts[child.id] ?? t.loading}</strong></span>
                                      </div>
                                 </div>
                             </div>
@@ -226,11 +285,11 @@ export default function DashboardPage() {
         <div className="lg:col-span-1 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+              <CardTitle>{t.actions}</CardTitle>
             </CardHeader>
             <CardContent>
               <Button asChild className="w-full justify-start">
-                <Link href="/absence"><ClipboardCheck className="mr-2 h-4 w-4" /> Report an Absence</Link>
+                <Link href="/absence"><ClipboardCheck className="mr-2 h-4 w-4" /> {t.reportAbsence}</Link>
               </Button>
             </CardContent>
           </Card>
@@ -239,9 +298,9 @@ export default function DashboardPage() {
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Utensils className="h-5 w-5 text-primary" />
-                    <span>Today's Lunch</span>
+                    <span>{t.lunch}</span>
                 </CardTitle>
-                <CardDescription>A sample of what's on the menu today.</CardDescription>
+                <CardDescription>{t.lunchDesc}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {isLoadingMenu ? (
@@ -255,21 +314,21 @@ export default function DashboardPage() {
                   <div className="flex items-start gap-3">
                       <Pizza className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
                       <div>
-                          <h4 className="font-semibold text-sm">Main</h4>
+                          <h4 className="font-semibold text-sm">{t.lunchMain}</h4>
                           <p className="text-sm text-muted-foreground">{todayMenu?.main}</p>
                       </div>
                   </div>
                    <div className="flex items-start gap-3">
                       <Salad className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
                       <div>
-                          <h4 className="font-semibold text-sm">Vegetarian / Alt</h4>
+                          <h4 className="font-semibold text-sm">{t.lunchAlt}</h4>
                           <p className="text-sm text-muted-foreground">{todayMenu?.alt}</p>
                       </div>
                   </div>
                   <div className="flex items-start gap-3">
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground mt-0.5 shrink-0 h-5 w-5"><path d="M11 15.54c-2.31-1.39-3-4.24-3-6.54C8 5.42 9.79 3 12 3s4 2.42 4 6c0 2.3-1.02 5.15-3 6.54"/><path d="M12 21a6.5 6.5 0 0 0 6.5-6.5H12v6.5Z"/><path d="M12 21a6.5 6.5 0 0 1-6.5-6.5H12v6.5Z"/><path d="M12 3v18"/></svg>
                       <div>
-                          <h4 className="font-semibold text-sm">Dessert</h4>
+                          <h4 className="font-semibold text-sm">{t.lunchDessert}</h4>
                           <p className="text-sm text-muted-foreground">{todayMenu?.dessert}</p>
                       </div>
                   </div>
@@ -280,22 +339,22 @@ export default function DashboardPage() {
                         <Drawer>
                             <DrawerTrigger asChild>
                                 <Button variant="secondary" className="w-full justify-start">
-                                    <Utensils className="mr-2 h-4 w-4" /> View Full Menu
+                                    <Utensils className="mr-2 h-4 w-4" /> {t.viewMenu}
                                 </Button>
                             </DrawerTrigger>
                             <DrawerContent>
-                                <MenuDrawerContent weeklyMenu={weeklyMenu} isLoadingMenu={isLoadingMenu} />
+                                <MenuDrawerContent weeklyMenu={weeklyMenu} isLoadingMenu={isLoadingMenu} t={t}/>
                             </DrawerContent>
                         </Drawer>
                     ) : (
                         <Dialog>
                             <DialogTrigger asChild>
                                 <Button variant="secondary" className="w-full justify-start">
-                                    <Utensils className="mr-2 h-4 w-4" /> View Full Menu
+                                    <Utensils className="mr-2 h-4 w-4" /> {t.viewMenu}
                                 </Button>
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-3xl">
-                                <MenuDialogContent weeklyMenu={weeklyMenu} isLoadingMenu={isLoadingMenu} />
+                                <MenuDialogContent weeklyMenu={weeklyMenu} isLoadingMenu={isLoadingMenu} t={t} />
                             </DialogContent>
                         </Dialog>
                     )}

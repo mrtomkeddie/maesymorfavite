@@ -182,7 +182,7 @@ const content = {
                 "Llwythwch y ffeil PDF i fyny.",
                 "Cliciwch 'Llwytho Dogfen i Fyny'. Bydd nawr ar gael yn Porth y Rieni."
               ],
-              tip: "Mae'r holl ddogfennau a lwythir i fyny ar gael yn unig i rieni sydd wedi mewngofnodi ym Mhorth y Rieni, nid ar y wefan gyhoeddus."
+              tip: "Mae dogfennau ar gael yn yr adran 'Gwybodaeth Allweddol' ar y wefan gyhoeddus ac ym Mhorth y Rieni."
             },
             { id: 'settings', title: 'Gosodiadau Gwefan', icon: Settings, href: '/admin/settings',
               instructions: [
