@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
 import { PT_Sans } from 'next/font/google';
 import { LanguageProvider } from './(public)/LanguageProvider';
+import { Drawer } from '@/components/ui/drawer';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],

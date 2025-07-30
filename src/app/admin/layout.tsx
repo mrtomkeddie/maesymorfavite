@@ -356,8 +356,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </Sidebar>
         <SidebarInset>
           <main className="p-4 md:p-6 lg:p-8">
-            <div className="flex justify-end mb-4">
-                <LanguageToggle />
+             <div className="flex justify-between items-center mb-4">
+                 <div className="md:hidden">
+                    <SidebarTrigger />
+                 </div>
+                <div className="ml-auto">
+                    <LanguageToggle />
+                </div>
             </div>
             {children}
           </main>

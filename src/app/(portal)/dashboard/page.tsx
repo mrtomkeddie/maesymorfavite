@@ -20,13 +20,92 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { LanguageToggle } from '../layout';
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+
+const MenuDialogContent = ({ weeklyMenu, isLoadingMenu }: { weeklyMenu: WeeklyMenu | null, isLoadingMenu: boolean }) => (
+    <>
+        <DialogHeader>
+            <DialogTitle>This Week's Lunch Menu</DialogTitle>
+            <DialogDescription>
+                Here's what's on offer for lunch this week at Maes Y Morfa.
+            </DialogDescription>
+        </DialogHeader>
+        <div className="pt-4">
+            {isLoadingMenu ? (
+                <div className="flex justify-center items-center h-48">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+            ) : (
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="w-[100px]">Day</TableHead>
+                            <TableHead>Main Course</TableHead>
+                            <TableHead>Vegetarian / Alt</TableHead>
+                            <TableHead>Dessert</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {days.map(day => (
+                            <TableRow key={day}>
+                                <TableCell className="font-medium capitalize">{day}</TableCell>
+                                <TableCell>{weeklyMenu?.[day]?.main || 'N/A'}</TableCell>
+                                <TableCell>{weeklyMenu?.[day]?.alt || 'N/A'}</TableCell>
+                                <TableCell>{weeklyMenu?.[day]?.dessert || 'N/A'}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            )}
+        </div>
+    </>
+);
+
+const MenuDrawerContent = ({ weeklyMenu, isLoadingMenu }: { weeklyMenu: WeeklyMenu | null, isLoadingMenu: boolean }) => (
+    <>
+        <DrawerHeader className="text-left">
+            <DrawerTitle>This Week's Lunch Menu</DrawerTitle>
+            <DrawerDescription>
+                Here's what's on offer for lunch this week at Maes Y Morfa.
+            </DrawerDescription>
+        </DrawerHeader>
+        <div className="px-4">
+            {isLoadingMenu ? (
+                <div className="flex justify-center items-center h-48">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+            ) : (
+                 <ScrollArea className="h-[60vh]">
+                    <div className="space-y-4">
+                        {days.map(day => (
+                             <Card key={day}>
+                                <CardHeader>
+                                    <CardTitle className="capitalize">{day}</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-2 text-sm">
+                                    <p><strong>Main:</strong> {weeklyMenu?.[day]?.main || 'N/A'}</p>
+                                    <p><strong>Alt:</strong> {weeklyMenu?.[day]?.alt || 'N/A'}</p>
+                                    <p><strong>Dessert:</strong> {weeklyMenu?.[day]?.dessert || 'N/A'}</p>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </ScrollArea>
+            )}
+        </div>
+    </>
+);
+
 
 export default function DashboardPage() {
   const [todayMenu, setTodayMenu] = useState<DailyMenu | null>(null);
   const [weeklyMenu, setWeeklyMenu] = useState<WeeklyMenu | null>(null);
   const [isLoadingMenu, setIsLoadingMenu] = useState(true);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const fetchMenu = async () => {
@@ -70,7 +149,7 @@ export default function DashboardPage() {
                 <CardContent className="space-y-4">
                     {parentChildren.map(child => (
                         <div key={child.id} className="flex items-center gap-4 rounded-lg border p-4">
-                            <div className="flex-grow grid grid-cols-2 gap-4">
+                            <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <h3 className="font-bold text-lg">{child.name}</h3>
                                     <p className="text-sm text-muted-foreground">{child.yearGroup}</p>
@@ -145,49 +224,29 @@ export default function DashboardPage() {
                 </>
               )}
                 <div className="pt-2">
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button variant="secondary" className="w-full justify-start">
-                                <Utensils className="mr-2 h-4 w-4" /> View Full Menu
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-3xl">
-                            <DialogHeader>
-                                <DialogTitle>This Week's Lunch Menu</DialogTitle>
-                                <DialogDescription>
-                                    Here's what's on offer for lunch this week at Maes Y Morfa.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="pt-4">
-                                {isLoadingMenu ? (
-                                    <div className="flex justify-center items-center h-48">
-                                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                                    </div>
-                                ) : (
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead className="w-[100px]">Day</TableHead>
-                                                <TableHead>Main Course</TableHead>
-                                                <TableHead>Vegetarian / Alt</TableHead>
-                                                <TableHead>Dessert</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {days.map(day => (
-                                                <TableRow key={day}>
-                                                    <TableCell className="font-medium capitalize">{day}</TableCell>
-                                                    <TableCell>{weeklyMenu?.[day]?.main || 'N/A'}</TableCell>
-                                                    <TableCell>{weeklyMenu?.[day]?.alt || 'N/A'}</TableCell>
-                                                    <TableCell>{weeklyMenu?.[day]?.dessert || 'N/A'}</TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                )}
-                            </div>
-                        </DialogContent>
-                    </Dialog>
+                    {isMobile ? (
+                        <Drawer>
+                            <DrawerTrigger asChild>
+                                <Button variant="secondary" className="w-full justify-start">
+                                    <Utensils className="mr-2 h-4 w-4" /> View Full Menu
+                                </Button>
+                            </DrawerTrigger>
+                            <DrawerContent>
+                                <MenuDrawerContent weeklyMenu={weeklyMenu} isLoadingMenu={isLoadingMenu} />
+                            </DrawerContent>
+                        </Drawer>
+                    ) : (
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button variant="secondary" className="w-full justify-start">
+                                    <Utensils className="mr-2 h-4 w-4" /> View Full Menu
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-3xl">
+                                <MenuDialogContent weeklyMenu={weeklyMenu} isLoadingMenu={isLoadingMenu} />
+                            </DialogContent>
+                        </Dialog>
+                    )}
                 </div>
             </CardContent>
           </Card>
