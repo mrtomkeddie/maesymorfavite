@@ -6,7 +6,7 @@ import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy,
 import { db as firestoreDb } from "../firebase/config";
 import type { NewsPost } from "@/lib/mockNews";
 import type { CalendarEvent } from "@/lib/mockCalendar";
-import type { StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, LinkedParent, InboxMessage, InboxMessageWithId, Photo, PhotoWithId, DailyMenu, WeeklyMenu, UserWithRole, UserRole } from "@/lib/types";
+import type { StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, LinkedParent, InboxMessage, InboxMessageWithId, Photo, PhotoWithId, DailyMenu, WeeklyMenu, UserWithRole, UserRole, ParentNotification, ParentNotificationWithId } from "@/lib/types";
 import { yearGroups } from "@/components/admin/ChildForm";
 import { QueryDocumentSnapshot } from "firebase/firestore";
 import { news as mockNewsData } from '@/lib/mockNews';
@@ -92,9 +92,9 @@ export const getPaginatedCalendarEvents = async (limitNum = 20, lastDoc?: any): 
 // === STAFF ===
 const { mockParents: allMockParents, mockChildren: allMockChildren } = generateMockData();
 const mockStaff: StaffMemberWithId[] = [
-    { id: '1', name: 'Jane Morgan', role: 'Headteacher', team: 'Leadership Team', email: 'jane.morgan@example.com' },
+    { id: '1', name: 'Jane Morgan', role: 'Headteacher', team: 'Leadership Team', email: 'jane.morgan@example.com', userId: 'mock-admin-id-1' },
     { id: '2', name: 'Alex Evans', role: 'Deputy Head', team: 'Leadership Team', email: 'alex.evans@example.com' },
-    { id: '3', name: 'David Williams', role: 'Teacher', team: 'Year 6', email: 'david.williams@example.com' },
+    { id: '3', name: 'David Williams', role: 'Teacher', team: 'Year 6', email: 'david.williams@example.com', userId: 'mock-teacher-id-1'},
 ];
 
 export const getStaff = async (): Promise<StaffMemberWithId[]> => {
@@ -145,6 +145,9 @@ export const getPaginatedParents = async (limitNum = 20, lastDoc?: any): Promise
 
 // === CHILDREN ===
 export const getChildren = async (): Promise<ChildWithId[]> => Promise.resolve(allMockChildren);
+export const getChildrenByYearGroup = async (yearGroup: string): Promise<ChildWithId[]> => {
+    return Promise.resolve(allMockChildren.filter(c => c.yearGroup === yearGroup));
+};
 export const addChild = async (childData: Child) => console.log("Mock addChild", childData);
 export const bulkAddChildren = async (childrenData: Child[]) => console.log("Mock bulkAddChildren", childrenData.length);
 export const updateChild = async (id: string, childData: Partial<Child>) => console.log("Mock updateChild", id, childData);
@@ -253,6 +256,20 @@ export const getUnreadMessageCount = async (userId: string, userType: 'admin' | 
     }
 };
 
+// === NOTIFICATIONS ===
+export const addParentNotification = async (notificationData: ParentNotification): Promise<string> => {
+    console.log("Mock addParentNotification", notificationData);
+    return `mock_notification_${Date.now()}`;
+};
+
+export const getNotificationsForParent = async (parentId: string): Promise<ParentNotificationWithId[]> => {
+    return Promise.resolve([]); // Mock: no notifications for now
+}
+
+export const markNotificationAsRead = async (notificationId: string): Promise<void> => {
+    console.log("Mock markNotificationAsRead", notificationId);
+}
+
 
 // === GALLERY ===
 const mockPhotos: PhotoWithId[] = [
@@ -275,9 +292,9 @@ export const getPhotosForYearGroups = async (yearGroups: string[]): Promise<Phot
 // This is now a mutable, in-memory store to simulate role changes for demos.
 let mockUsers: UserWithRole[] = [
     { id: 'mock-admin-id-1', email: 'main.admin@example.com', role: 'admin', created_at: new Date(Date.now() - 86400000 * 5).toISOString() },
+    { id: 'mock-teacher-id-1', email: 'teacher@example.com', role: 'teacher', created_at: new Date(Date.now() - 86400000 * 4).toISOString() },
     { id: 'mock-parent-id-1', email: 'parent.one@example.com', role: 'parent', created_at: new Date(Date.now() - 86400000 * 3).toISOString() },
     { id: 'mock-parent-id-2', email: 'parent.two@example.com', role: 'parent', created_at: new Date(Date.now() - 86400000 * 2).toISOString() },
-    { id: 'mock-parent-id-3', email: 'another.parent@example.com', role: 'parent', created_at: new Date(Date.now() - 86400000 * 1).toISOString() },
 ];
 export const getUsersWithRoles = async (): Promise<UserWithRole[]> => Promise.resolve(mockUsers);
 export const updateUserRole = async (userId: string, role: UserRole): Promise<void> => {
@@ -288,19 +305,19 @@ export const updateUserRole = async (userId: string, role: UserRole): Promise<vo
     }
 };
 
-export const createAdminUser = async(email: string) => {
-    console.log(`Mock: Creating admin user for ${email}`);
-    // In a real app, this would use supabase.auth.admin.inviteUserByEmail
-    // For the mock, we'll just add them to our in-memory user list.
-    const newUser: UserWithRole = {
-        id: `mock-admin-${Date.now()}`,
+export const createUser = async(email: string, role: UserRole) => {
+    console.log(`Mock: Creating user for ${email} with role ${role}`);
+    const newUser = {
+        id: `mock-user-${Date.now()}`,
         email: email,
-        role: 'admin',
-        created_at: new Date().toISOString()
+        aud: 'authenticated',
+        created_at: new Date().toISOString(),
+        role: role,
     };
-    mockUsers.push(newUser);
-    return Promise.resolve({ user: newUser, data: newUser });
+    mockUsers.push({ id: newUser.id, email: newUser.email, role: role, created_at: newUser.created_at });
+    return Promise.resolve({ user: newUser, data: { user: newUser } as any });
 };
+
 
 // === UTILITIES ===
 export const getCollectionCount = async (collectionName: string): Promise<number> => {

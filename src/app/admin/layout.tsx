@@ -143,10 +143,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
         const userRole = localStorage.getItem('userRole');
 
-        if (isAuthenticated && userRole === 'admin') {
-            setSession({ user: { id: 'admin-1' } } as Session); // Mock session for dev
+        if (isAuthenticated && (userRole === 'admin' || userRole === 'teacher')) {
+            setSession({ user: { id: `${userRole}-1` } } as Session); // Mock session for dev
         } else {
-            router.replace('/admin/login');
+            router.replace('/login');
         }
         setIsLoading(false);
         return;
@@ -158,6 +158,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         const role = await getUserRole(session.user.id);
         if (role === 'admin') {
           setSession(session);
+        } else if (role === 'teacher') {
+            router.replace('/teacher/dashboard');
         } else {
           // If the user is logged in but not an admin, deny access.
           router.replace('/login'); // Or a dedicated 'access-denied' page
@@ -199,7 +201,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     // For both Supabase and mock, clear local storage and redirect
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('userRole');
-    router.push('/admin/login');
+    router.push('/login');
     router.refresh();
   };
 

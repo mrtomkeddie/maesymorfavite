@@ -9,13 +9,13 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ClipboardCheck, Utensils, ArrowRight, UserCheck, Percent, Pizza, Salad, Loader2 } from 'lucide-react';
+import { ClipboardCheck, Utensils, ArrowRight, UserCheck, Percent, Pizza, Salad, Loader2, Bell, Megaphone, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { parentChildren } from '@/lib/mockData';
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/db';
-import type { DailyMenu, WeeklyMenu } from '@/lib/types';
+import type { DailyMenu, WeeklyMenu, ParentNotificationWithId } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -23,6 +23,7 @@ import { LanguageToggle } from '../layout';
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { format, formatDistanceToNow } from 'date-fns';
 
 const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
@@ -105,7 +106,9 @@ export default function DashboardPage() {
   const [todayMenu, setTodayMenu] = useState<DailyMenu | null>(null);
   const [weeklyMenu, setWeeklyMenu] = useState<WeeklyMenu | null>(null);
   const [isLoadingMenu, setIsLoadingMenu] = useState(true);
+  const [notifications, setNotifications] = useState<ParentNotificationWithId[]>([]);
   const isMobile = useIsMobile();
+  const parentId = 'parent-1'; // This would be dynamic in a real app
 
   useEffect(() => {
     const fetchMenu = async () => {
@@ -126,9 +129,22 @@ export default function DashboardPage() {
         setIsLoadingMenu(false);
       }
     };
+
+    const fetchNotifications = async () => {
+        const fetchedNotifications = await db.getNotificationsForParent(parentId);
+        setNotifications(fetchedNotifications);
+    };
+
     fetchMenu();
-  }, []);
+    fetchNotifications();
+  }, [parentId]);
  
+  const notificationIcons = {
+    'Achievement': <Trophy className="h-6 w-6 text-yellow-500" />,
+    'Incident': <Megaphone className="h-6 w-6 text-red-500" />,
+    'General': <Bell className="h-6 w-6 text-blue-500" />,
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
@@ -142,6 +158,27 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
         
         <div className="lg:col-span-2 space-y-6">
+            
+            {notifications.length > 0 && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Recent Notifications</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {notifications.slice(0, 3).map(notif => (
+                            <div key={notif.id} className="flex items-start gap-4 p-4 rounded-lg border">
+                                <div className="mt-1">{notificationIcons[notif.type]}</div>
+                                <div>
+                                    <p className="font-semibold">{notif.childName}: {notif.type}</p>
+                                    <p className="text-sm text-muted-foreground">{notif.notes}</p>
+                                    <p className="text-xs text-muted-foreground mt-1">{formatDistanceToNow(new Date(notif.date), { addSuffix: true })} from {notif.teacherName}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            )}
+
             <Card>
                 <CardHeader>
                     <CardTitle>My Children</CardTitle>

@@ -1,12 +1,11 @@
 
 
-
 // This file will contain the Supabase implementations of all data functions.
 // Note: This is a placeholder implementation. A real implementation would require a
 // Supabase project with tables matching the data structures in src/lib/types.ts.
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import type { NewsPost, NewsPostWithId, CalendarEvent, CalendarEventWithId, StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, InboxMessage, InboxMessageWithId, Photo, PhotoWithId, WeeklyMenu, UserWithRole, UserRole } from '@/lib/types';
+import type { NewsPost, NewsPostWithId, CalendarEvent, CalendarEventWithId, StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, InboxMessage, InboxMessageWithId, Photo, PhotoWithId, WeeklyMenu, UserWithRole, UserRole, ParentNotification, ParentNotificationWithId } from '@/lib/types';
 import { news as mockNews } from '@/lib/mockNews';
 import { yearGroups } from '@/components/admin/ChildForm';
 
@@ -545,6 +544,8 @@ const fromSupabaseChild = (child: any): ChildWithId => {
         yearGroup: child.year_group,
         dob: child.dob,
         linkedParents: child.linked_parents,
+        allergies: child.allergies,
+        onePageProfileUrl: child.one_page_profile_url,
     };
 };
 
@@ -554,12 +555,25 @@ const toSupabaseChild = (child: Partial<Child>) => {
         year_group: child.yearGroup,
         dob: child.dob,
         linked_parents: child.linkedParents,
+        allergies: child.allergies,
+        one_page_profile_url: child.onePageProfileUrl,
     };
 };
 
 export const getChildren = async (): Promise<ChildWithId[]> => {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase.from('children').select('*').order('name', { ascending: true });
+    if (error) throw error;
+    return data.map(fromSupabaseChild);
+};
+
+export const getChildrenByYearGroup = async (yearGroup: string): Promise<ChildWithId[]> => {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+        .from('children')
+        .select('*')
+        .eq('year_group', yearGroup)
+        .order('name', { ascending: true });
     if (error) throw error;
     return data.map(fromSupabaseChild);
 };
@@ -800,6 +814,31 @@ export const getUnreadMessageCount = async (userId: string, userType: 'admin' | 
     return count || 0;
 };
 
+// === NOTIFICATIONS ===
+export const addParentNotification = async (notificationData: ParentNotification): Promise<string> => {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase.from('notifications').insert([notificationData]).select('id').single();
+    if (error) throw error;
+    return data.id;
+};
+
+export const getNotificationsForParent = async (parentId: string): Promise<ParentNotificationWithId[]> => {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('parentId', parentId)
+        .order('date', { ascending: false });
+    if (error) throw error;
+    return data;
+}
+
+export const markNotificationAsRead = async (notificationId: string): Promise<void> => {
+    const supabase = getSupabaseClient();
+    const { error } = await supabase.from('notifications').update({ isRead: true }).eq('id', notificationId);
+    if (error) throw error;
+}
+
 
 // === GALLERY ===
 const fromSupabasePhoto = (photo: any): PhotoWithId => {
@@ -870,7 +909,7 @@ export const getPhotosForYearGroups = async (yearGroups: string[]): Promise<Phot
 // === USER MANAGEMENT ===
 export const getUsersWithRoles = async (): Promise<UserWithRole[]> => {
     const supabase = getSupabaseClient();
-    const { data, error } = await supabase.from('users_with_roles').select('*');
+    const { data, error } = await supabase.rpc('get_users_with_roles');
     if (error) {
         console.error("Error fetching users with roles:", error);
         throw error;
@@ -883,7 +922,7 @@ export const updateUserRole = async (userId: string, role: UserRole) => {
 
     const { error } = await supabase
         .from('user_roles')
-        .upsert({ id: userId, role: role });
+        .upsert({ user_id: userId, role: role }, { onConflict: 'user_id' });
 
     if (error) {
         console.error("Error updating user role:", error);
@@ -891,15 +930,17 @@ export const updateUserRole = async (userId: string, role: UserRole) => {
     }
 };
 
-export const createAdminUser = async (email: string) => {
+export const createUser = async (email: string, role: UserRole) => {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-        data: { role: 'admin' }
+        data: { role: role }
     });
     if (error) {
-        console.error("Error creating admin user:", error);
+        console.error("Error creating user:", error);
         throw error;
     }
+    // Note: The user_roles table should be updated via a trigger in Supabase
+    // when a new user is created via invitation.
     return data;
 }
 

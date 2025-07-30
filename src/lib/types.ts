@@ -3,10 +3,11 @@
 export type StaffMember = {
     name: string;
     role: string;
-    team: string;
+    team: string; // Used for class assignment for teachers, e.g., "Year 2"
     bio?: string;
     photoUrl?: string;
     email?: string;
+    userId?: string; // Link to the user account
 };
 
 export type StaffMemberWithId = StaffMember & { id: string };
@@ -38,6 +39,8 @@ export type Child = {
     yearGroup: string;
     dob?: string; // ISO 8601 string
     linkedParents?: LinkedParent[];
+    allergies?: string;
+    onePageProfileUrl?: string;
 }
 
 export type ChildWithId = Child & { id: string };
@@ -60,13 +63,13 @@ export type InboxMessage = {
         id: string; 
         name: string;
         email: string;
-        type: 'parent' | 'admin';
+        type: 'parent' | 'admin' | 'teacher';
     };
     recipient: {
         id: string; 
         name: string;
         email: string;
-        type: 'parent' | 'admin';
+        type: 'parent' | 'admin' | 'teacher';
     };
     isReadByAdmin: boolean;
     isReadByParent: boolean;
@@ -75,6 +78,21 @@ export type InboxMessage = {
 }
 
 export type InboxMessageWithId = InboxMessage & { id: string };
+
+export type ParentNotification = {
+    childId: string;
+    childName: string;
+    parentId: string;
+    teacherId: string;
+    teacherName: string;
+    date: string; // ISO 8601
+    type: 'Incident' | 'Achievement' | 'General';
+    notes: string;
+    treatmentGiven?: string;
+    isRead: boolean;
+}
+
+export type ParentNotificationWithId = ParentNotification & { id: string };
 
 export type Photo = {
     caption: string;
@@ -96,7 +114,7 @@ export type WeeklyMenu = {
     [day: string]: DailyMenu;
 }
 
-export type UserRole = 'admin' | 'parent';
+export type UserRole = 'admin' | 'parent' | 'teacher';
 
 export type UserWithRole = {
     id: string;

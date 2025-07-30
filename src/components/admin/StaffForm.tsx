@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,7 +22,7 @@ import { Loader2, CheckCircle, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/db';
 import { uploadFile, deleteFile } from '@/lib/firebase/storage';
-import { StaffMemberWithId } from '@/lib/types';
+import { StaffMemberWithId, UserRole } from '@/lib/types';
 import {
   Select,
   SelectContent,
@@ -32,7 +33,6 @@ import {
 import { Progress } from '../ui/progress';
 import { useLanguage } from '@/app/(public)/LanguageProvider';
 import { Separator } from '../ui/separator';
-import { Checkbox } from '../ui/checkbox';
 
 export const staffTeams = [
     "Leadership Team",
@@ -53,14 +53,14 @@ const formSchema = (t: any) => z.object({
   bio: z.string().optional(),
   photo: z.any().optional(),
   email: z.string().email({ message: t.email_message }).optional().or(z.literal('')),
-  createAdminAccount: z.boolean().default(false),
+  portalAccess: z.enum(['none', 'teacher', 'admin']).default('none'),
 }).refine(data => {
-    if (data.createAdminAccount && !data.email) {
+    if (data.portalAccess !== 'none' && !data.email) {
         return false;
     }
     return true;
 }, {
-    message: "Email is required to create an admin account.",
+    message: "Email is required to grant portal access.",
     path: ["email"],
 });
 
@@ -85,8 +85,8 @@ const content = {
         photoDesc: 'Upload a photo of the staff member.',
         portalAccessLabel: 'Portal Access',
         emailLabel: "Staff Member's Email Address",
-        createAdminLabel: "Create admin account for this user",
-        createAdminDesc: "This will send an invitation to the email above to set a password and access the admin portal.",
+        portalAccessRoleLabel: 'Portal Role',
+        portalAccessRoleDesc: "Grant this user access to the Teacher or Admin portal.",
         uploadComplete: 'Upload complete!',
         toastSuccess: {
             update: { title: "Success!", description: "Staff member has been updated." },
@@ -120,8 +120,8 @@ const content = {
         photoDesc: 'Uwchlwythwch lun o\'r aelod staff.',
         portalAccessLabel: 'Mynediad Porth',
         emailLabel: "Cyfeiriad E-bost yr Aelod o Staff",
-        createAdminLabel: "Creu cyfrif gweinyddwr ar gyfer y defnyddiwr hwn",
-        createAdminDesc: "Bydd hyn yn anfon gwahoddiad i'r e-bost uchod i osod cyfrinair a chael mynediad i borth y gweinyddwr.",
+        portalAccessRoleLabel: 'Rôl y Porth',
+        portalAccessRoleDesc: "Caniatáu i'r defnyddiwr hwn gael mynediad i borth yr Athro neu'r Gweinyddwr.",
         uploadComplete: 'Wedi\'i uwchlwytho\'n llwyddiannus!',
         toastSuccess: {
             update: { title: "Llwyddiant!", description: "Mae aelod staff wedi'i ddiweddaru." },
@@ -159,7 +159,7 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
       bio: existingStaff?.bio || '',
       photo: undefined,
       email: existingStaff?.email || '',
-      createAdminAccount: false,
+      portalAccess: 'none',
     },
   });
 
@@ -169,6 +169,7 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
     try {
       let photoUrl = existingStaff?.photoUrl || '';
       const fileToUpload = values.photo instanceof File ? values.photo : null;
+      let userId = existingStaff?.userId || undefined;
 
       if (fileToUpload) {
         setUploadProgress(0);
@@ -180,6 +181,11 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
         });
         setUploadProgress(100);
       }
+      
+      if (!existingStaff && values.portalAccess !== 'none' && values.email) {
+          const newUser = await db.createUser(values.email, values.portalAccess as UserRole);
+          userId = newUser.user.id;
+      }
 
       const staffData = {
         name: values.name,
@@ -188,16 +194,17 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
         bio: values.bio,
         photoUrl: photoUrl,
         email: values.email,
+        userId: userId,
       };
 
       if (existingStaff) {
         await db.updateStaffMember(existingStaff.id, staffData);
+        if (existingStaff.userId && values.portalAccess !== 'none') {
+             await db.updateUserRole(existingStaff.userId, values.portalAccess as UserRole);
+        }
         toast(t.toastSuccess.update);
       } else {
-        const newStaffId = await db.addStaffMember(staffData);
-        if (values.createAdminAccount && values.email) {
-            await db.createAdminUser(values.email);
-        }
+        await db.addStaffMember(staffData);
         toast(t.toastSuccess.add);
       }
       
@@ -334,30 +341,31 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
                     </FormItem>
                 )}
             />
-            {!existingStaff && (
-                 <FormField
-                    control={form.control}
-                    name="createAdminAccount"
-                    render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-3 bg-secondary">
-                        <FormControl>
-                            <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                            <FormLabel>
-                            {t.createAdminLabel}
-                            </FormLabel>
-                            <FormDescription>
-                            {t.createAdminDesc}
-                            </FormDescription>
-                        </div>
-                        </FormItem>
-                    )}
-                 />
-            )}
+             <FormField
+                control={form.control}
+                name="portalAccess"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>{t.portalAccessRoleLabel}</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                        <SelectTrigger>
+                        <SelectValue placeholder="Select a role..." />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        <SelectItem value="none">No Access</SelectItem>
+                        <SelectItem value="teacher">Teacher</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                    </Select>
+                     <FormDescription>
+                        {t.portalAccessRoleDesc}
+                    </FormDescription>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
         </div>
 
 
@@ -371,3 +379,4 @@ export function StaffForm({ onSuccess, existingStaff }: StaffFormProps) {
     </Form>
   );
 }
+
