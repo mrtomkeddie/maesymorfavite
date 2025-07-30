@@ -11,18 +11,22 @@ import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
+  const isSupabaseConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        // Here you would also check the user's role
-        // For now, we assume if they have a session, they go to the parent dashboard.
-        router.push('/dashboard');
+      // Only check session if Supabase is configured
+      if (isSupabaseConfigured) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          // Here you would also check the user's role
+          // For now, we assume if they have a session, they go to the parent dashboard.
+          router.push('/dashboard');
+        }
       }
     };
     checkSession();
-  }, [router]);
+  }, [router, isSupabaseConfigured]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
