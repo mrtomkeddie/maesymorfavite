@@ -8,14 +8,17 @@ import { DatabaseProvider } from './types';
 // and the necessary keys are present, it uses the Supabase provider. 
 // Otherwise, it defaults to the mock Firebase provider.
 const getDbProvider = (): DatabaseProvider => {
+    // Check if Supabase environment variables are present and not empty
     const isSupabaseConfigured = 
-        process.env.NEXT_PUBLIC_DB_PROVIDER === 'supabase' &&
         !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
         !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (isSupabaseConfigured) {
+    if (process.env.NEXT_PUBLIC_DB_PROVIDER === 'supabase' && isSupabaseConfigured) {
         return supabase;
     }
+    
+    // Default to Firebase mock provider if Supabase is not the chosen provider
+    // or if the Supabase credentials are not fully configured.
     return firebase;
 }
 

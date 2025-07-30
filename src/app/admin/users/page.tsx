@@ -13,6 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { useLanguage } from '@/app/(public)/LanguageProvider';
+import { supabase } from '@/lib/supabase';
+import { Session } from '@supabase/supabase-js';
 
 const content = {
     en: {
@@ -74,27 +76,29 @@ export default function UsersAdminPage() {
     const t = content[language];
     const [users, setUsers] = useState<UserWithRole[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [currentUser, setCurrentUser] = useState<Session['user'] | null>(null);
     const { toast } = useToast();
 
-    const fetchUsers = async () => {
-        setIsLoading(true);
-        try {
-            const usersData = await db.getUsersWithRoles();
-            setUsers(usersData);
-        } catch (error) {
-            console.error("Failed to fetch users:", error);
-            toast({
-                title: t.toast.error.title,
-                description: "Could not load user data.",
-                variant: 'destructive'
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     useEffect(() => {
-        fetchUsers();
+        const fetchUsersAndSession = async () => {
+            setIsLoading(true);
+            try {
+                const usersData = await db.getUsersWithRoles();
+                setUsers(usersData);
+                const { data: { session } } = await supabase.auth.getSession();
+                setCurrentUser(session?.user ?? null);
+            } catch (error) {
+                console.error("Failed to fetch users:", error);
+                toast({
+                    title: t.toast.error.title,
+                    description: "Could not load user data.",
+                    variant: 'destructive'
+                });
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchUsersAndSession();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -151,7 +155,7 @@ export default function UsersAdminPage() {
                                             <TableCell className="text-right">
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                                        <Button variant="ghost" className="h-8 w-8 p-0" disabled={user.id === currentUser?.id}>
                                                             <span className="sr-only">Open menu</span>
                                                             <MoreHorizontal className="h-4 w-4" />
                                                         </Button>
