@@ -13,11 +13,6 @@ import {
   SidebarInset,
   SidebarFooter,
   SidebarTrigger,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-  SidebarSeparator,
-  useSidebar,
   SidebarMenuBadge,
 } from '@/components/ui/sidebar';
 import {
@@ -32,20 +27,16 @@ import {
   LayoutDashboard,
   LogOut,
   Loader2,
-  Users2,
   ChevronUp,
-  MessageSquare,
-  Award,
-  Send
+  Send,
+  Award
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
-import { db } from '@/lib/db';
 import { useLanguage } from '../(public)/LanguageProvider';
-import { Button } from '@/components/ui/button';
 import { supabase, getUserRole } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { LanguageToggle } from '../(portal)/layout';
@@ -73,7 +64,7 @@ const content = {
     },
      account: {
         title: 'Fy Nghyfrif',
-        role: 'Athro',
+        role: 'Athro/Athrawes',
         logout: 'Allgofnodi'
     }
   }
@@ -112,7 +103,6 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
         if (role === 'teacher') {
           setSession(session);
         } else {
-          // If logged in but not a teacher, log out and redirect to teacher login
           await supabase.auth.signOut();
           router.replace('/teacher/login');
         }
@@ -240,5 +230,3 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
       </SidebarProvider>
   );
 }
-
-    

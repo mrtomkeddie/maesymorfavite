@@ -7,17 +7,69 @@ import { db } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
 import type { ChildWithId, StaffMemberWithId, InboxMessageWithId } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, FileText, User, Info, AlertTriangle, BookOpen, Smile, Link as LinkIcon, MessageSquare } from 'lucide-react';
+import { Loader2, Users, FileText, User, Info, MessageSquare } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { useLanguage } from '@/app/(public)/LanguageProvider';
+import { AlertTriangle, BookOpen, Link as LinkIcon } from 'lucide-react';
+
+const content = {
+    en: {
+        myClass: 'My Class',
+        welcome: 'Welcome, {name}. Here\'s an overview of your class today.',
+        classList: 'Class List',
+        upcomingAbsences: 'Upcoming Absences',
+        upcomingAbsencesDesc: 'Absences reported for today and future dates.',
+        noAbsences: 'No absences reported for your class.',
+        nameHeader: 'Name',
+        actionsHeader: 'Actions',
+        viewDetails: 'View Details',
+        notifyParent: 'Notify Parent',
+        childDetailsTitle: 'Child Details',
+        childDetailsDesc: 'Key information for this student. For full details, please contact the school office.',
+        parentContactTitle: 'Parent/Guardian Contact',
+        noParentsLinked: 'No parents linked.',
+        medicalTitle: 'Allergies & Medical',
+        medicalNone: 'No known allergies or medical conditions.',
+        profileTitle: 'One Page Profile / IDP',
+        profileView: 'View Document',
+        profileNone: 'No profile document uploaded.',
+        reason: 'Reason',
+        date: 'Date'
+    },
+    cy: {
+        myClass: 'Fy Nosbarth',
+        welcome: 'Croeso, {name}. Dyma drosolwg o\'ch dosbarth heddiw.',
+        classList: 'Rhestr Ddosbarth',
+        upcomingAbsences: 'Absenoldebau i Ddod',
+        upcomingAbsencesDesc: 'Absenoldebau a adroddwyd ar gyfer heddiw a dyddiadau\'r dyfodol.',
+        noAbsences: 'Dim absenoldebau wedi\'u hadrodd ar gyfer eich dosbarth.',
+        nameHeader: 'Enw',
+        actionsHeader: 'Gweithredoedd',
+        viewDetails: 'Gweld Manylion',
+        notifyParent: 'Hysbysu Rhiant',
+        childDetailsTitle: 'Manylion y Plentyn',
+        childDetailsDesc: 'Gwybodaeth allweddol ar gyfer y myfyriwr hwn. Am fanylion llawn, cysylltwch â swyddfa\'r ysgol.',
+        parentContactTitle: 'Cyswllt Rhiant/Gwarcheidwad',
+        noParentsLinked: 'Dim rhieni wedi\'u cysylltu.',
+        medicalTitle: 'Alergeddau a Meddygol',
+        medicalNone: 'Dim alergeddau na chyflyrau meddygol hysbys.',
+        profileTitle: 'Proffil Un Dudalen / CDU',
+        profileView: 'Gweld y Ddogfen',
+        profileNone: 'Dim dogfen proffil wedi\'i huwchlwytho.',
+        reason: 'Rheswm',
+        date: 'Dyddiad'
+    }
+}
 
 export default function TeacherDashboard() {
+    const { language } = useLanguage();
+    const t = content[language];
     const [teacher, setTeacher] = useState<StaffMemberWithId | null>(null);
     const [myClass, setMyClass] = useState<ChildWithId[]>([]);
     const [absences, setAbsences] = useState<InboxMessageWithId[]>([]);
@@ -53,9 +105,6 @@ export default function TeacherDashboard() {
                     const relevantAbsences = allAbsences.filter(msg => {
                         if (msg.type !== 'absence') return false;
                         
-                        // Extract child ID from subject (this is brittle, a structured field would be better)
-                        // Assuming subject is "Absence Report for [Child Name]" and body contains "Child ID: [ID]"
-                        // Or we can just check if any of our kids' names are in the subject.
                         const child = teacherData.myClass.find(c => msg.subject.includes(c.name));
                         if (!child) return false;
 
@@ -94,21 +143,21 @@ export default function TeacherDashboard() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">My Class - {teacher?.team}</h1>
-                <p className="text-muted-foreground">Welcome, {teacher?.name}. Here's an overview of your class today.</p>
+                <h1 className="text-3xl font-bold tracking-tight">{t.myClass} - {teacher?.team}</h1>
+                <p className="text-muted-foreground">{t.welcome.replace('{name}', teacher?.name || '')}</p>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> Class List ({myClass.length})</CardTitle>
+                            <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> {t.classList} ({myClass.length})</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Name</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
+                                        <TableHead>{t.nameHeader}</TableHead>
+                                        <TableHead className="text-right">{t.actionsHeader}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -117,11 +166,11 @@ export default function TeacherDashboard() {
                                             <TableCell className="font-medium">{child.name}</TableCell>
                                             <TableCell className="text-right">
                                                 <Button variant="outline" size="sm" onClick={() => handleViewChild(child)}>
-                                                    <Info className="mr-2 h-4 w-4" /> View Details
+                                                    <Info className="mr-2 h-4 w-4" /> {t.viewDetails}
                                                 </Button>
                                                 <Button variant="default" size="sm" asChild className="ml-2">
                                                     <Link href={{ pathname: '/teacher/notify', query: { childId: child.id, childName: child.name } }}>
-                                                        <MessageSquare className="mr-2 h-4 w-4" /> Notify Parent
+                                                        <MessageSquare className="mr-2 h-4 w-4" /> {t.notifyParent}
                                                     </Link>
                                                 </Button>
                                             </TableCell>
@@ -135,8 +184,8 @@ export default function TeacherDashboard() {
                 <div>
                      <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" /> Upcoming Absences</CardTitle>
-                             <CardDescription>Absences reported for today and future dates.</CardDescription>
+                            <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" /> {t.upcomingAbsences}</CardTitle>
+                             <CardDescription>{t.upcomingAbsencesDesc}</CardDescription>
                         </CardHeader>
                         <CardContent>
                            {absences.length > 0 ? (
@@ -144,13 +193,13 @@ export default function TeacherDashboard() {
                                {absences.map(absence => (
                                    <div key={absence.id} className="p-3 rounded-md border text-sm">
                                        <p className="font-semibold">{absence.subject.replace('Absence Report for ', '')}</p>
-                                       <p className="text-muted-foreground">Date: {format(new Date(absence.body.split('Date of Absence: ')[1]?.split('\n')[0]), 'dd MMM yyyy')}</p>
-                                       <p className="text-muted-foreground mt-1">Reason: {absence.body.split('Reason: ')[1]?.split('\n---')[0]}</p>
+                                       <p className="text-muted-foreground">{t.date}: {format(new Date(absence.body.split('Date of Absence: ')[1]?.split('\n')[0]), 'dd MMM yyyy')}</p>
+                                       <p className="text-muted-foreground mt-1">{t.reason}: {absence.body.split('Reason: ')[1]?.split('\n---')[0]}</p>
                                    </div>
                                ))}
                             </div>
                            ) : (
-                               <p className="text-sm text-muted-foreground text-center py-4">No absences reported for your class.</p>
+                               <p className="text-sm text-muted-foreground text-center py-4">{t.noAbsences}</p>
                            )}
                         </CardContent>
                     </Card>
@@ -161,52 +210,49 @@ export default function TeacherDashboard() {
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>{selectedChild?.name}</DialogTitle>
-                         <DialogDescription>
-                            Key information for this student. For full details, please contact the school office.
-                        </DialogDescription>
+                         <DialogDescription>{t.childDetailsDesc}</DialogDescription>
                     </DialogHeader>
                     {selectedChild && (
                        <ScrollArea className="max-h-[60vh] pr-4">
                            <div className="space-y-4 py-4">
                                 <Card>
                                     <CardHeader>
-                                        <CardTitle className="text-base flex items-center gap-2"><User className="h-4 w-4" /> Parent/Guardian Contact</CardTitle>
+                                        <CardTitle className="text-base flex items-center gap-2"><User className="h-4 w-4" /> {t.parentContactTitle}</CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-2 text-sm">
                                         {selectedChild.linkedParents && selectedChild.linkedParents.length > 0 ? (
                                             selectedChild.linkedParents.map(parentLink => (
                                                 <div key={parentLink.parentId} className="p-2 bg-muted rounded-md">
-                                                    {/* This would be better with a parent data look-up */}
                                                     <p className="font-semibold">{parentLink.relationship}</p>
                                                     <p className="text-muted-foreground">Contact details available from the office.</p>
                                                 </div>
                                             ))
                                         ) : (
-                                            <p className="text-muted-foreground">No parents linked.</p>
+                                            <p className="text-muted-foreground">{t.noParentsLinked}</p>
                                         )}
                                     </CardContent>
                                 </Card>
                                  <Card>
                                     <CardHeader>
-                                        <CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> Allergies & Medical</CardTitle>
+                                        <CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> {t.medicalTitle}</CardTitle>
                                     </CardHeader>
                                     <CardContent className="text-sm">
-                                       <p className="text-muted-foreground">{selectedChild.allergies || 'No known allergies or medical conditions.'}</p>
+                                       <p className="text-muted-foreground">{selectedChild.allergies || t.medicalNone}</p>
                                     </CardContent>
                                 </Card>
                                  <Card>
                                     <CardHeader>
-                                        <CardTitle className="text-base flex items-center gap-2"><BookOpen className="h-4 w-4" /> One Page Profile / IDP</CardTitle>
+                                        <CardTitle className="text-base flex items-center gap-2"><BookOpen className="h-4 w-4" /> {t.profileTitle}</CardTitle>
                                     </CardHeader>
                                     <CardContent>
                                        {selectedChild.onePageProfileUrl ? (
                                             <Button variant="outline" asChild>
                                                 <a href={selectedChild.onePageProfileUrl} target="_blank" rel="noopener noreferrer">
-                                                    <LinkIcon className="mr-2 h-4 w-4" /> View Document
+                                                    <LinkIcon className="mr-2 h-4 w-4" /> {t.profileView}
                                                 </a>
                                             </Button>
                                        ) : (
-                                         <p className="text-sm text-muted-foreground">No profile document uploaded.</p>
+                                         <p className="text-sm text-muted-foreground">{t.profileNone}</p>
                                        )}
                                     </CardContent>
                                 </Card>
@@ -218,5 +264,3 @@ export default function TeacherDashboard() {
         </div>
     );
 }
-
-    

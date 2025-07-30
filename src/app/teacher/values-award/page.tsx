@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, ArrowLeft, Award, Check, Calendar } from 'lucide-react';
+import { Loader2, ArrowLeft, Award, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
@@ -27,19 +27,61 @@ import { supabase } from '@/lib/supabase';
 import { ChildWithId, StaffMemberWithId } from '@/lib/types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { format, startOfWeek, endOfWeek } from 'date-fns';
+import { format, startOfWeek } from 'date-fns';
+import { useLanguage } from '@/app/(public)/LanguageProvider';
 
-const valuesAwardFormSchema = z.object({
+const valuesAwardFormSchema = (t: any) => z.object({
   childIds: z.array(z.string()).refine((value) => value.length > 0, {
-    message: "Please select at least one student.",
+    message: t.childIds_message,
   }),
   message: z.string().min(10, {
-    message: "The message must be at least 10 characters.",
+    message: t.message_message,
   }),
 });
 
+const content = {
+    en: {
+        formSchema: {
+            childIds_message: "Please select at least one student.",
+            message_message: "The message must be at least 10 characters.",
+        },
+        title: 'Send Values Award',
+        description: 'Select multiple students from your class to send a pre-written award notification.',
+        backLink: 'Back to Dashboard',
+        selectTitle: '1. Select Students',
+        weekOf: 'Award for week commencing:',
+        messageTitle: '2. Notification Message',
+        messageDesc: 'This pre-written message will be sent. The `[STUDENT_NAME]` and `[TEACHER_NAME]` tags will be automatically replaced.',
+        submitButton: 'Send Award to {count} Student(s)',
+        toast: {
+            success: "A values award notification has been sent to the parents of {count} student(s).",
+            error: "Could not send the notifications. Please try again."
+        }
+    },
+    cy: {
+        formSchema: {
+            childIds_message: "Dewiswch o leiaf un myfyriwr.",
+            message_message: "Rhaid i'r neges fod o leiaf 10 nod.",
+        },
+        title: 'Anfon Gwobr Gwerthoedd',
+        description: 'Dewiswch nifer o fyfyrwyr o\'ch dosbarth i anfon hysbysiad gwobr wedi\'i ysgrifennu ymlaen llaw.',
+        backLink: 'Yn ôl i\'r Dangosfwrdd',
+        selectTitle: '1. Dewis Myfyrwyr',
+        weekOf: 'Gwobr am yr wythnos yn dechrau:',
+        messageTitle: '2. Neges Hysbysu',
+        messageDesc: 'Anfonir y neges hon sydd wedi\'i hysgrifennu ymlaen llaw. Bydd y tagiau `[ENW_MYFYRIWR]` a `[ENW_ATHRO]` yn cael eu disodli\'n awtomatig.',
+        submitButton: 'Anfon Gwobr i {count} Myfyriwr',
+        toast: {
+            success: "Mae hysbysiad gwobr gwerthoedd wedi\'i anfon at rieni {count} o fyfyrwyr.",
+            error: "Ni ellid anfon yr hysbysiadau. Rhowch gynnig arall arni."
+        }
+    }
+}
+
 
 export default function ValuesAwardPage() {
+  const { language } = useLanguage();
+  const t = content[language];
   const router = useRouter();
   const { toast } = useToast();
   const [teacher, setTeacher] = useState<StaffMemberWithId | null>(null);
@@ -50,17 +92,20 @@ export default function ValuesAwardPage() {
 
   const today = new Date();
   const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday
-  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
-  const weekString = `w/c ${format(weekStart, 'do MMMM yyyy')}`;
+  const locale = language === 'cy' ? require('date-fns/locale/cy') : require('date-fns/locale/en-GB');
+  
+  const weekString = `w/c ${format(weekStart, 'do MMMM yyyy', { locale })}`;
 
-  const defaultMessageTemplate = `Dear Parent/Guardian,\n\nWe are delighted to inform you that for the week of ${format(weekStart, 'do MMM')}, [STUDENT_NAME] has received a school values award for demonstrating exceptional kindness and respect. We are very proud!\n\nWell done,\n[TEACHER_NAME]`;
+  const defaultMessageTemplate = language === 'cy' 
+    ? `Annwyl Riant/Gwarcheidwad,\n\nRydym yn falch iawn o'ch hysbysu, am wythnos ${format(weekStart, 'do MMM', { locale })}, bod [ENW_MYFYRIWR] wedi derbyn gwobr gwerthoedd yr ysgol am ddangos caredigrwydd a pharch eithriadol. Rydym yn falch iawn!\n\nDa iawn,\n[ENW_ATHRO]`
+    : `Dear Parent/Guardian,\n\nWe are delighted to inform you that for the week of ${format(weekStart, 'do MMM')}, [STUDENT_NAME] has received a school values award for demonstrating exceptional kindness and respect. We are very proud!\n\nWell done,\n[TEACHER_NAME]`;
 
 
   useEffect(() => {
     const fetchTeacherData = async () => {
         setIsPageLoading(true);
         try {
-            let userId = 'mock-teacher-id-1'; // Default for non-supabase env
+            let userId = 'mock-teacher-id-1';
             if (isSupabaseConfigured) {
                 const { data: { session } } = await supabase.auth.getSession();
                 if (!session) { throw new Error("Not authenticated"); }
@@ -70,7 +115,7 @@ export default function ValuesAwardPage() {
             if (teacherData) {
                 setTeacher(teacherData.teacher);
                 setMyClass(teacherData.myClass);
-                form.setValue('message', defaultMessageTemplate.replace('[TEACHER_NAME]', teacherData.teacher.name));
+                form.setValue('message', defaultMessageTemplate.replace(/\[TEACHER_NAME\]|\[ENW_ATHRO\]/g, teacherData.teacher.name));
             }
         } catch (error) {
             console.error("Error fetching teacher data:", error);
@@ -85,17 +130,17 @@ export default function ValuesAwardPage() {
     };
     fetchTeacherData();
      // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toast, isSupabaseConfigured]);
+  }, [toast, isSupabaseConfigured, language]);
 
-  const form = useForm<z.infer<typeof valuesAwardFormSchema>>({
-    resolver: zodResolver(valuesAwardFormSchema),
+  const form = useForm<z.infer<ReturnType<typeof formSchema>>>({
+    resolver: zodResolver(formSchema(t.formSchema)),
     defaultValues: {
       childIds: [],
       message: defaultMessageTemplate,
     },
   });
 
-  async function onSubmit(values: z.infer<typeof valuesAwardFormSchema>) {
+  async function onSubmit(values: z.infer<ReturnType<typeof valuesAwardFormSchema>>) {
     setIsLoading(true);
 
     try {
@@ -104,12 +149,12 @@ export default function ValuesAwardPage() {
             const child = myClass.find(c => c.id === childId);
             if (!child) continue;
 
-            const personalizedMessage = message.replace(/\[STUDENT_NAME\]/g, child.name);
+            const personalizedMessage = message.replace(/\[STUDENT_NAME\]|\[ENW_MYFYRIWR\]/g, child.name);
             
             await db.addParentNotification({
                 childId: child.id,
                 childName: child.name,
-                parentId: 'parent-1', // Simplified: In reality, look up parent from child.linkedParents
+                parentId: 'parent-1',
                 teacherId: teacher?.id || 'teacher-1',
                 teacherName: teacher?.name || 'Teacher',
                 date: new Date().toISOString(),
@@ -120,8 +165,8 @@ export default function ValuesAwardPage() {
         }
         
         toast({
-            title: "Notifications Sent!",
-            description: `A values award notification has been sent to the parents of ${childIds.length} student(s).`,
+            title: t.toast.success.title,
+            description: t.toast.success.replace('{count}', String(childIds.length)),
         });
         
         router.push('/teacher/dashboard');
@@ -130,7 +175,7 @@ export default function ValuesAwardPage() {
         console.error("Failed to send notifications:", error);
         toast({
             title: "Submission Failed",
-            description: "Could not send the notifications. Please try again.",
+            description: t.toast.error,
             variant: 'destructive',
         });
     } finally {
@@ -146,22 +191,20 @@ export default function ValuesAwardPage() {
     <div className="space-y-6">
       <Link href="/teacher/dashboard" className="flex items-center text-sm text-muted-foreground hover:text-primary">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Dashboard
+          {t.backLink}
       </Link>
       <div>
-        <h1 className="text-3xl font-bold font-headline">Send Values Award</h1>
-        <p className="text-muted-foreground">
-           Select multiple students from your class to send a pre-written award notification.
-        </p>
+        <h1 className="text-3xl font-bold font-headline">{t.title}</h1>
+        <p className="text-muted-foreground">{t.description}</p>
       </div>
 
       <Card className="max-w-4xl">
          <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
                 <CardHeader>
-                    <CardTitle>1. Select Students</CardTitle>
+                    <CardTitle>{t.selectTitle}</CardTitle>
                      <CardDescription className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" /> Award for week commencing: <span className="font-semibold">{format(weekStart, 'EEEE, do MMMM yyyy')}</span>
+                        <Calendar className="h-4 w-4" /> {t.weekOf} <span className="font-semibold">{format(weekStart, 'EEEE, do MMMM yyyy', { locale })}</span>
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -214,10 +257,8 @@ export default function ValuesAwardPage() {
                 </CardContent>
 
                 <CardHeader>
-                    <CardTitle>2. Notification Message</CardTitle>
-                    <CardDescription>
-                        This pre-written message will be sent. The `[STUDENT_NAME]` and `[TEACHER_NAME]` tags will be automatically replaced.
-                    </CardDescription>
+                    <CardTitle>{t.messageTitle}</CardTitle>
+                    <CardDescription>{t.messageDesc}</CardDescription>
                 </CardHeader>
                 <CardContent>
                      <FormField
@@ -241,7 +282,7 @@ export default function ValuesAwardPage() {
                     <Button type="submit" disabled={isLoading || form.getValues('childIds').length === 0}>
                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         <Award className="mr-2 h-4 w-4" />
-                        Send Award to {form.watch('childIds').length} Student(s)
+                        {t.submitButton.replace('{count}', String(form.watch('childIds').length))}
                     </Button>
                 </div>
             </form>
@@ -250,6 +291,3 @@ export default function ValuesAwardPage() {
     </div>
   );
 }
-
-
-    

@@ -14,8 +14,44 @@ import { supabase } from '@/lib/supabase';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useLanguage } from '@/app/(public)/LanguageProvider';
+
+const content = {
+    en: {
+        title: 'Sent Messages',
+        description: 'A history of notifications you have sent to parents.',
+        newButton: 'Send New Notification',
+        sentItems: 'Sent Items',
+        filterPlaceholder: 'Filter by student...',
+        allStudents: 'All Students',
+        emptyTitle: 'No Sent Messages',
+        emptyAll: "You haven't sent any notifications yet.",
+        emptyFiltered: "No notifications found for this student.",
+        toParentOf: 'To Parent of:',
+        seen: 'Seen',
+        delivered: 'Delivered',
+        treatment: 'Treatment:'
+    },
+    cy: {
+        title: 'Negeseuon a Anfonwyd',
+        description: 'Hanes yr hysbysiadau rydych wedi\'u hanfon at rieni.',
+        newButton: 'Anfon Hysbysiad Newydd',
+        sentItems: 'Eitemau a Anfonwyd',
+        filterPlaceholder: 'Hidlo yn ôl myfyriwr...',
+        allStudents: 'Pob Myfyriwr',
+        emptyTitle: 'Dim Negeseuon a Anfonwyd',
+        emptyAll: "Nid ydych wedi anfon unrhyw hysbysiadau eto.",
+        emptyFiltered: "Ni chanfuwyd unrhyw hysbysiadau ar gyfer y myfyriwr hwn.",
+        toParentOf: 'At Riant:',
+        seen: 'Wedi\'i Weld',
+        delivered: 'Wedi\'i Ddanfon',
+        treatment: 'Triniaeth:'
+    }
+}
 
 export default function TeacherOutboxPage() {
+    const { language } = useLanguage();
+    const t = content[language];
     const [sentNotifications, setSentNotifications] = useState<ParentNotificationWithId[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [teacher, setTeacher] = useState<StaffMemberWithId | null>(null);
@@ -29,7 +65,7 @@ export default function TeacherOutboxPage() {
         const fetchSentNotifications = async () => {
             setIsLoading(true);
             try {
-                let userId = 'mock-teacher-id-1'; // Default for non-supabase env
+                let userId = 'mock-teacher-id-1';
                 if (isSupabaseConfigured) {
                     const { data: { session } } = await supabase.auth.getSession();
                     if (!session) throw new Error("Not authenticated");
@@ -87,12 +123,12 @@ export default function TeacherOutboxPage() {
         <div className="space-y-6">
              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Sent Messages</h1>
-                    <p className="text-muted-foreground">A history of notifications you have sent to parents.</p>
+                    <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
+                    <p className="text-muted-foreground">{t.description}</p>
                 </div>
                  <Button asChild>
                     <Link href="/teacher/dashboard">
-                        <MessageSquare className="mr-2 h-4 w-4" /> Send New Notification
+                        <MessageSquare className="mr-2 h-4 w-4" /> {t.newButton}
                     </Link>
                 </Button>
             </div>
@@ -100,14 +136,14 @@ export default function TeacherOutboxPage() {
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
-                         <CardTitle>Sent Items</CardTitle>
+                         <CardTitle>{t.sentItems}</CardTitle>
                          <div className="w-full max-w-xs">
                              <Select value={childFilter} onValueChange={setChildFilter}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Filter by student..." />
+                                    <SelectValue placeholder={t.filterPlaceholder} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">All Students</SelectItem>
+                                    <SelectItem value="all">{t.allStudents}</SelectItem>
                                     {myClass.map(child => (
                                         <SelectItem key={child.id} value={child.id}>{child.name}</SelectItem>
                                     ))}
@@ -128,7 +164,7 @@ export default function TeacherOutboxPage() {
                                                 <div className="flex justify-between items-start">
                                                     <div>
                                                         <p className="font-semibold">
-                                                        To Parent of: <span className="text-primary">{notif.childName}</span>
+                                                        {t.toParentOf} <span className="text-primary">{notif.childName}</span>
                                                         </p>
                                                         <Badge variant="outline" className="mt-1">{notif.type}</Badge>
                                                     </div>
@@ -136,14 +172,14 @@ export default function TeacherOutboxPage() {
                                                         {formatDistanceToNow(new Date(notif.date), { addSuffix: true })}
                                                         <br />
                                                         <span className={notif.isRead ? '' : 'font-bold text-primary'}>
-                                                            {notif.isRead ? 'Seen' : 'Delivered'}
+                                                            {notif.isRead ? t.seen : t.delivered}
                                                         </span>
                                                     </p>
                                                 </div>
                                                 
                                                 <p className="text-sm text-muted-foreground mt-4 whitespace-pre-wrap">{notif.notes}</p>
                                                 {notif.treatmentGiven && (
-                                                    <p className="text-sm text-muted-foreground mt-2"><strong>Treatment:</strong> {notif.treatmentGiven}</p>
+                                                    <p className="text-sm text-muted-foreground mt-2"><strong>{t.treatment}</strong> {notif.treatmentGiven}</p>
                                                 )}
                                             </div>
                                         </div>
@@ -154,9 +190,9 @@ export default function TeacherOutboxPage() {
                     ) : (
                         <Card className="text-center p-12 border-dashed">
                             <Send className="mx-auto h-12 w-12 text-muted-foreground" />
-                            <h2 className="mt-4 text-xl font-semibold">No Sent Messages</h2>
+                            <h2 className="mt-4 text-xl font-semibold">{t.emptyTitle}</h2>
                             <p className="mt-2 text-muted-foreground">
-                                {childFilter === 'all' ? "You haven't sent any notifications yet." : "No notifications found for this student."}
+                                {childFilter === 'all' ? t.emptyAll : t.emptyFiltered}
                             </p>
                         </Card>
                     )}
@@ -166,5 +202,3 @@ export default function TeacherOutboxPage() {
         </div>
     );
 }
-
-    

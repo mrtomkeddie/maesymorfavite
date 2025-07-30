@@ -33,18 +33,84 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { StaffMemberWithId } from '@/lib/types';
+import { useLanguage } from '@/app/(public)/LanguageProvider';
 
-const formSchema = z.object({
+const formSchema = (t: any) => z.object({
   type: z.enum(['Incident', 'Achievement', 'General'], {
-    required_error: "Please select a notification type.",
+    required_error: t.type_required,
   }),
   notes: z.string().min(10, {
-    message: "Notes must be at least 10 characters.",
+    message: t.notes_message,
   }),
   treatmentGiven: z.string().optional(),
 });
 
+const content = {
+    en: {
+        formSchema: {
+            type_required: "Please select a notification type.",
+            notes_message: "Notes must be at least 10 characters.",
+        },
+        title: "Send Parent Notification",
+        description: "Send a one-way notification to the parent/guardian of {childName}.",
+        backLink: "Back to Class List",
+        noChild: "No child selected.",
+        goBack: "Go back to dashboard",
+        form: {
+            title: "Notification Details",
+            description: "This will appear on the parent's dashboard immediately.",
+            typeLabel: "Notification Type",
+            typePlaceholder: "Select a type...",
+            typeAchievement: "Achievement",
+            typeIncident: "Incident (e.g., head bump)",
+            typeGeneral: "General Note",
+            notesLabel: "Notes",
+            notesPlaceholder: "Provide details about the achievement, incident, or general note...",
+            treatmentLabel: "Treatment Given (Optional)",
+            treatmentPlaceholder: "e.g., Cold compress applied, cleaned with wipe",
+            submitButton: "Send Notification"
+        },
+        toast: {
+            noChildError: "No child selected.",
+            success: "A notification has been sent to the parent/guardian of {childName}.",
+            error: "Could not send the notification. Please try again."
+        }
+    },
+    cy: {
+        formSchema: {
+            type_required: "Dewiswch fath o hysbysiad.",
+            notes_message: "Rhaid i'r nodiadau fod o leiaf 10 nod.",
+        },
+        title: "Anfon Hysbysiad at Riant",
+        description: "Anfonwch hysbysiad unffordd at riant/gwarcheidwad {childName}.",
+        backLink: "Yn ôl i Restr y Dosbarth",
+        noChild: "Ni ddewiswyd plentyn.",
+        goBack: "Ewch yn ôl i'r dangosfwrdd",
+        form: {
+            title: "Manylion yr Hysbysiad",
+            description: "Bydd hyn yn ymddangos ar ddangosfwrdd y rhiant ar unwaith.",
+            typeLabel: "Math o Hysbysiad",
+            typePlaceholder: "Dewiswch fath...",
+            typeAchievement: "Cyflawniad",
+            typeIncident: "Digwyddiad (e.e., bump pen)",
+            typeGeneral: "Nodyn Cyffredinol",
+            notesLabel: "Nodiadau",
+            notesPlaceholder: "Rhowch fanylion am y cyflawniad, y digwyddiad, neu'r nodyn cyffredinol...",
+            treatmentLabel: "Triniaeth a Roddwyd (Dewisol)",
+            treatmentPlaceholder: "e.e., Rhoddwyd cywasgiad oer, glanhawyd â chadach",
+            submitButton: "Anfon Hysbysiad"
+        },
+        toast: {
+            noChildError: "Ni ddewiswyd plentyn.",
+            success: "Mae hysbysiad wedi'i anfon at riant/gwarcheidwad {childName}.",
+            error: "Ni ellid anfon yr hysbysiad. Rhowch gynnig arall arni."
+        }
+    }
+}
+
 function NotifyPageContent() {
+  const { language } = useLanguage();
+  const t = content[language];
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -70,8 +136,8 @@ function NotifyPageContent() {
     fetchTeacher();
   }, [isSupabaseConfigured]);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<ReturnType<typeof formSchema>>>({
+    resolver: zodResolver(formSchema(t.formSchema)),
     defaultValues: {
       notes: "",
       treatmentGiven: "",
@@ -80,17 +146,16 @@ function NotifyPageContent() {
 
   const notificationType = form.watch('type');
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<ReturnType<typeof formSchema>>) {
     if (!childId || !childName) {
-        toast({ title: "Error", description: "No child selected.", variant: "destructive" });
+        toast({ title: "Error", description: t.toast.noChildError, variant: "destructive" });
         return;
     }
     
     setIsLoading(true);
 
     try {
-        // This logic is simplified. In a real app, you'd fetch parent and teacher details.
-        const parentId = 'parent-1'; // This should be dynamically fetched based on childId
+        const parentId = 'parent-1'; 
 
         await db.addParentNotification({
             childId,
@@ -107,7 +172,7 @@ function NotifyPageContent() {
         
         toast({
             title: "Notification Sent",
-            description: `A notification has been sent to the parent/guardian of ${childName}.`,
+            description: t.toast.success.replace('{childName}', childName),
         });
         
         router.push('/teacher/outbox');
@@ -116,7 +181,7 @@ function NotifyPageContent() {
         console.error("Failed to send notification:", error);
         toast({
             title: "Submission Failed",
-            description: "Could not send the notification. Please try again.",
+            description: t.toast.error,
             variant: 'destructive',
         });
     } finally {
@@ -127,8 +192,8 @@ function NotifyPageContent() {
   if (!childName) {
       return (
           <div className="text-center">
-              <p>No child selected.</p>
-              <Button asChild variant="link"><Link href="/teacher/dashboard">Go back to dashboard</Link></Button>
+              <p>{t.noChild}</p>
+              <Button asChild variant="link"><Link href="/teacher/dashboard">{t.goBack}</Link></Button>
           </div>
       )
   }
@@ -137,20 +202,20 @@ function NotifyPageContent() {
     <div className="space-y-6">
       <Link href="/teacher/dashboard" className="flex items-center text-sm text-muted-foreground hover:text-primary">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Class List
+          {t.backLink}
       </Link>
       <div>
-        <h1 className="text-3xl font-bold font-headline">Send Parent Notification</h1>
+        <h1 className="text-3xl font-bold font-headline">{t.title}</h1>
         <p className="text-muted-foreground">
-           Send a one-way notification to the parent/guardian of <span className="font-semibold text-primary">{childName}</span>.
+           {t.description.replace('{childName}', childName)}
         </p>
       </div>
 
       <Card className="max-w-2xl">
         <CardHeader>
-          <CardTitle>Notification Details</CardTitle>
+          <CardTitle>{t.form.title}</CardTitle>
           <CardDescription>
-            This will appear on the parent's dashboard immediately.
+            {t.form.description}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -161,17 +226,17 @@ function NotifyPageContent() {
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Notification Type</FormLabel>
+                    <FormLabel>{t.form.typeLabel}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a type..." />
+                          <SelectValue placeholder={t.form.typePlaceholder} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                          <SelectItem value="Achievement">Achievement</SelectItem>
-                          <SelectItem value="Incident">Incident (e.g., head bump)</SelectItem>
-                          <SelectItem value="General">General Note</SelectItem>
+                          <SelectItem value="Achievement">{t.form.typeAchievement}</SelectItem>
+                          <SelectItem value="Incident">{t.form.typeIncident}</SelectItem>
+                          <SelectItem value="General">{t.form.typeGeneral}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -184,10 +249,10 @@ function NotifyPageContent() {
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Notes</FormLabel>
+                    <FormLabel>{t.form.notesLabel}</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Provide details about the achievement, incident, or general note..."
+                        placeholder={t.form.notesPlaceholder}
                         {...field}
                       />
                     </FormControl>
@@ -202,10 +267,10 @@ function NotifyPageContent() {
                     name="treatmentGiven"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Treatment Given (Optional)</FormLabel>
+                        <FormLabel>{t.form.treatmentLabel}</FormLabel>
                         <FormControl>
                         <Input
-                            placeholder="e.g., Cold compress applied, cleaned with wipe"
+                            placeholder={t.form.treatmentPlaceholder}
                             {...field}
                         />
                         </FormControl>
@@ -217,7 +282,7 @@ function NotifyPageContent() {
 
               <Button type="submit" disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Send Notification
+                  {t.form.submitButton}
               </Button>
             </form>
           </Form>
@@ -234,5 +299,3 @@ export default function NotifyPage() {
         </Suspense>
     )
 }
-
-    
