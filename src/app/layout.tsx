@@ -5,7 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
 import { PT_Sans } from 'next/font/google';
 import { LanguageProvider } from './(public)/LanguageProvider';
-import { Drawer } from '@/components/ui/drawer';
+import { PublicHeader } from '@/components/layout/PublicHeader';
+import { PublicFooter } from '@/components/layout/PublicFooter';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -22,6 +23,7 @@ export const metadata: Metadata = {
     icon: '/icon.png',
     apple: '/mobile-icon.png',
   },
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
 };
 
 export default function RootLayout({
@@ -33,7 +35,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={cn("min-h-screen bg-background font-body antialiased", ptSans.variable)} suppressHydrationWarning={true}>
         <LanguageProvider>
-          {children}
+            <div className="flex min-h-screen flex-col">
+              <PublicHeader />
+              <main className="flex-1">{children}</main>
+              <PublicFooter />
+            </div>
           <Toaster />
         </LanguageProvider>
       </body>
