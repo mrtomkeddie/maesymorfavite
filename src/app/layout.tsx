@@ -5,8 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
 import { PT_Sans } from 'next/font/google';
 import { LanguageProvider } from './(public)/LanguageProvider';
-import { PublicHeader } from '@/components/layout/PublicHeader';
-import { PublicFooter } from '@/components/layout/PublicFooter';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -35,11 +33,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={cn("min-h-screen bg-background font-body antialiased", ptSans.variable)} suppressHydrationWarning={true}>
         <LanguageProvider>
-            <div className="flex min-h-screen flex-col">
-              <PublicHeader />
-              <main className="flex-1">{children}</main>
-              <PublicFooter />
-            </div>
+          {children}
           <Toaster />
         </LanguageProvider>
       </body>
