@@ -145,7 +145,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (isAuthenticated && userRole === 'admin') {
             setSession({ user: { id: `${userRole}-1` } } as Session);
         } else {
-             router.replace('/login');
+             if (pathname !== '/admin/login') {
+                router.replace('/admin/login');
+             }
         }
         setIsLoading(false);
         return;
