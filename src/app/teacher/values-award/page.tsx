@@ -196,7 +196,7 @@ export default function ValuesAwardPage() {
         <p className="text-muted-foreground">{t.description}</p>
       </div>
 
-      <Card className="max-w-4xl">
+      <Card>
          <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
                 <CardHeader>
