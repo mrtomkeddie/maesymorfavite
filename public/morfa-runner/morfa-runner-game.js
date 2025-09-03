@@ -188,9 +188,48 @@ document.addEventListener("keydown", e => {
   }
 });
 
-// Enhanced fullscreen support for mobile
+// Enhanced fullscreen support for mobile and PWA
+function isFullscreenSupported() {
+  return !!(document.fullscreenEnabled || 
+           document.webkitFullscreenEnabled || 
+           document.mozFullScreenEnabled || 
+           document.msFullscreenEnabled ||
+           gameContainer.requestFullscreen ||
+           gameContainer.webkitRequestFullscreen ||
+           gameContainer.mozRequestFullScreen ||
+           gameContainer.msRequestFullscreen);
+}
+
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+         (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform));
+}
+
+function isPWA() {
+  return window.matchMedia('(display-mode: standalone)').matches ||
+         window.navigator.standalone === true;
+}
+
 fullscreenButton.addEventListener("click", async () => {
   console.log('Fullscreen button clicked');
+  console.log('Mobile device:', isMobileDevice());
+  console.log('PWA mode:', isPWA());
+  console.log('Fullscreen supported:', isFullscreenSupported());
+  
+  // Special handling for mobile devices and PWAs
+  if (isMobileDevice() && isPWA()) {
+    alert('You are already in fullscreen mode! This app is running as a standalone application.');
+    return;
+  }
+  
+  if (!isFullscreenSupported()) {
+    if (isMobileDevice()) {
+      alert('For the best fullscreen experience on mobile, add this game to your home screen and open it from there!');
+    } else {
+      alert('Fullscreen is not supported in this browser. Try using Chrome, Firefox, or Safari.');
+    }
+    return;
+  }
   
   try {
     if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
@@ -201,17 +240,14 @@ fullscreenButton.addEventListener("click", async () => {
         await gameContainer.requestFullscreen();
         console.log('Fullscreen activated via requestFullscreen');
       } else if (gameContainer.webkitRequestFullscreen) {
-        gameContainer.webkitRequestFullscreen();
+        await gameContainer.webkitRequestFullscreen();
         console.log('Fullscreen activated via webkitRequestFullscreen');
       } else if (gameContainer.mozRequestFullScreen) {
-        gameContainer.mozRequestFullScreen();
+        await gameContainer.mozRequestFullScreen();
         console.log('Fullscreen activated via mozRequestFullScreen');
       } else if (gameContainer.msRequestFullscreen) {
-        gameContainer.msRequestFullscreen();
+        await gameContainer.msRequestFullscreen();
         console.log('Fullscreen activated via msRequestFullscreen');
-      } else {
-        console.log('Fullscreen API not supported');
-        alert('Fullscreen is not supported in this browser');
       }
     } else {
       console.log('Exiting fullscreen mode');
@@ -220,19 +256,23 @@ fullscreenButton.addEventListener("click", async () => {
         await document.exitFullscreen();
         console.log('Fullscreen exited via exitFullscreen');
       } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
+        await document.webkitExitFullscreen();
         console.log('Fullscreen exited via webkitExitFullscreen');
       } else if (document.mozCancelFullScreen) {
-        document.mozCancelFullScreen();
+        await document.mozCancelFullScreen();
         console.log('Fullscreen exited via mozCancelFullScreen');
       } else if (document.msExitFullscreen) {
-        document.msExitFullscreen();
+        await document.msExitFullscreen();
         console.log('Fullscreen exited via msExitFullscreen');
       }
     }
   } catch (error) {
     console.error('Fullscreen error:', error);
-    alert(`Fullscreen failed: ${error.message}`);
+    if (error.name === 'NotAllowedError') {
+      alert('Fullscreen was blocked. Please allow fullscreen access or try interacting with the page first.');
+    } else {
+      alert(`Fullscreen failed: ${error.message}`);
+    }
   }
 });
 
@@ -256,8 +296,20 @@ function updateFullscreenButton() {
   }
 }
 
-// Initialize button state on page load
-updateFullscreenButton();
+// Initialize fullscreen button state on page load
+function initializeFullscreenButton() {
+  if (!isFullscreenSupported() && !isPWA()) {
+    // Hide fullscreen button if not supported and not in PWA mode
+    fullscreenButton.style.display = 'none';
+    console.log('Fullscreen button hidden - not supported');
+  } else {
+    fullscreenButton.style.display = 'block';
+    updateFullscreenButton();
+  }
+}
+
+// Call initialization after functions are defined
+initializeFullscreenButton();
 
 // Enhanced mobile touch support
 function handleJump() {
