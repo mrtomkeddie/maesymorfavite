@@ -1,0 +1,206 @@
+
+
+import React, { useState, useMemo, useEffect } from 'react';
+import { useLanguage } from '@/contexts/LanguageProvider';
+import { useNavigate } from 'react-router-dom';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  Calendar,
+  Paperclip,
+  Filter,
+  ArrowRight
+} from 'lucide-react';
+import { calendarEvents, CalendarEvent } from '@/lib/mockCalendar';
+import { format } from 'date-fns';
+import { createICalFeed } from '@/lib/ical';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Link } from 'react-router-dom';
+import { parentChildrenYearGroups } from '@/lib/mockData';
+
+const content = {
+  en: {
+    title: 'School Calendar',
+    description: 'Upcoming events, holidays, and important dates for the school year.',
+    allDay: 'All Day',
+    noEventsList: 'No events found.',
+    subscribeButton: 'Subscribe to the School Calendar',
+    subscribeDescription: '(Events auto-update in your calendar app)',
+    attachments: 'Attachments',
+    filterLabel: "Only show events for my children",
+    detailsButton: "View Details",
+    tags: {
+      Holiday: 'Holiday',
+      INSET: 'INSET Day',
+      Event: 'School Event',
+      Trip: 'Trip',
+      'Parents Evening': 'Parents Evening'
+    }
+  },
+  cy: {
+    title: 'Calendr yr Ysgol',
+    description: 'Digwyddiadau, gwyliau, a dyddiadau pwysig ar gyfer y flwyddyn ysgol.',
+    allDay: 'Trwy\'r Dydd',
+    noEventsList: 'Ni chanfuwyd unrhyw ddigwyddiadau.',
+    subscribeButton: 'Tanysgrifiwch i Galendr yr Ysgol',
+    subscribeDescription: '(Mae digwyddiadau\'n diweddaru\'n awtomatig yn eich ap calendr)',
+    attachments: 'Atodiadau',
+    filterLabel: "Dangos digwyddiadau ar gyfer fy mhlant yn unig",
+    detailsButton: "Gweld Manylion",
+    tags: {
+      Holiday: 'Gwyliau',
+      INSET: 'Diwrnod HMS',
+      Event: 'Digwyddiad Ysgol',
+      Trip: 'Taith',
+      'Parents Evening': 'Noson Rieni'
+    }
+  },
+};
+
+const tagColors: Record<(typeof calendarEvents[0]['tags'][0]), string> = {
+    Holiday: 'bg-blue-100 text-blue-800 border-blue-200',
+    INSET: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    Event: 'bg-green-100 text-green-800 border-green-200',
+    Trip: 'bg-purple-100 text-purple-800 border-purple-200',
+    'Parents Evening': 'bg-pink-100 text-pink-800 border-pink-200'
+};
+
+export default function CalendarPage() {
+  const { language } = useLanguage();
+  const navigate = useNavigate();
+  const t = content[language];
+  const [isFiltered, setIsFiltered] = useState(false);
+
+  useEffect(() => {
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+  }, [navigate]);
+
+  const handleDownloadICalFeed = () => {
+    const icalData = createICalFeed(calendarEvents);
+    if (icalData) {
+      const blob = new Blob([icalData], { type: 'text/calendar;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'MaesYMorfa_School_Calendar.ics';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+  
+  const filteredEvents = useMemo(() => {
+    if (!isFiltered) {
+        return calendarEvents;
+    }
+    return calendarEvents.filter(event => {
+        if (!event.relevantTo || event.relevantTo.length === 0 || event.relevantTo.includes('All')) {
+            return true;
+        }
+        return parentChildrenYearGroups.some(year => event.relevantTo?.includes(year as any));
+    });
+  }, [isFiltered]);
+
+  const EventItem = ({ event }: { event: CalendarEvent }) => {
+    const newsSlug = event.title_en.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+
+    return (
+        <div className="relative rounded-lg border p-4 transition-all hover:shadow-md bg-card">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:gap-4">
+            <div className="mb-2 sm:mb-0">
+            <div className="text-center font-bold text-primary">
+                <div className="text-3xl">{format(new Date(event.start), 'dd')}</div>
+                <div className="text-sm uppercase">{format(new Date(event.start), 'MMM')}</div>
+            </div>
+            </div>
+            <div className="flex-grow">
+            <h3 className="font-bold text-lg">{event[language === 'en' ? 'title_en' : 'title_cy']}</h3>
+            <div className="text-sm text-muted-foreground mb-2">
+                {event.allDay ? t.allDay : `${format(new Date(event.start), 'p')} ${event.end ? `- ${format(new Date(event.end), 'p')}` : ''}`}
+            </div>
+            <p className="text-sm mb-3">
+                {event[language === 'en' ? 'description_en' : 'description_cy']}
+            </p>
+            <div className="flex flex-wrap gap-2">
+                {event.tags.map(tag => (
+                <Badge key={tag} className={cn('font-normal', tagColors[tag])}>{t.tags[tag]}</Badge>
+                ))}
+            </div>
+            
+            <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                {event.attachments.length > 0 && (
+                    <div className="mt-3">
+                    <h4 className="text-sm font-semibold mb-1 flex items-center gap-1"><Paperclip className="h-4 w-4" /> {t.attachments}</h4>
+                    <div className="flex flex-col items-start gap-1">
+                        {event.attachments.map(att => (
+                        <Button key={att.name} variant="link" size="sm" className="p-0 h-auto">
+                            <a href={att.url} download>{att.name}</a>
+                        </Button>
+                        ))}
+                    </div>
+                    </div>
+                )}
+                {event.linkedNewsPostId && (
+                    <Button variant="outline" size="sm" asChild>
+                        <Link to={`/news/${newsSlug}`}>
+                            {t.detailsButton} <ArrowRight className="ml-1 h-3 w-3" />
+                        </Link>
+                    </Button>
+                )}
+            </div>
+            </div>
+        </div>
+        </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold font-headline">{t.title}</h1>
+        <p className="text-muted-foreground">{t.description}</p>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Switch id="filter-events" checked={isFiltered} onCheckedChange={setIsFiltered} />
+          <Label htmlFor="filter-events" className="text-sm">{t.filterLabel}</Label>
+        </div>
+        
+        <Button onClick={handleDownloadICalFeed} variant="outline">
+          <Calendar className="mr-2 h-4 w-4" />
+          {t.subscribeButton}
+        </Button>
+      </div>
+      
+      <p className="text-xs text-muted-foreground">{t.subscribeDescription}</p>
+
+      <div className="space-y-4">
+        {filteredEvents.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">{t.noEventsList}</p>
+            </CardContent>
+          </Card>
+        ) : (
+          filteredEvents.map((event) => (
+            <EventItem key={event.id} event={event} />
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
