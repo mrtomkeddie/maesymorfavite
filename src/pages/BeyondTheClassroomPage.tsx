@@ -26,7 +26,7 @@ export default function BeyondTheClassroomPage() {
                 <div className="container mx-auto max-w-4xl px-8 space-y-8">
                     
                     <div className="mb-8">
-                         <Link to="/curriculum" className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors">
+                         <Link to="/curriculum" className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                             <ArrowLeft className="mr-2 h-4 w-4" /> {t.back}
                          </Link>
                     </div>

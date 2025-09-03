@@ -81,7 +81,7 @@ export function HomepageContent({ config, className = '', showUrgentBanner = tru
             
             <div className="mt-8">
               <Button asChild variant="outline">
-                <Link to="/news">{t.viewAllNews}</Link>
+                <Link to="/news" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>{t.viewAllNews}</Link>
               </Button>
             </div>
           </div>
@@ -108,7 +108,7 @@ export function HomepageContent({ config, className = '', showUrgentBanner = tru
 
             <div className="mt-8">
               <Button asChild variant="outline">
-                <Link to="/calendar">{t.viewFullCalendar}</Link>
+                <Link to="/calendar" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>{t.viewFullCalendar}</Link>
               </Button>
             </div>
           </div>
@@ -143,7 +143,7 @@ export function HomepageContent({ config, className = '', showUrgentBanner = tru
                       </p>
                     )}
                     <Button asChild variant="link" className="p-0 mt-2">
-                      <Link to={`/news/${item.slug}`}>
+                      <Link to={`/news/${item.slug}`} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                         {t.readMore} <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
@@ -160,7 +160,7 @@ export function HomepageContent({ config, className = '', showUrgentBanner = tru
           )}
           <div className="mt-8">
             <Button asChild variant="outline">
-              <Link to="/news">{t.viewAllNews}</Link>
+              <Link to="/news" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>{t.viewAllNews}</Link>
             </Button>
           </div>
         </div>
@@ -194,7 +194,7 @@ function NewsCard({ item, language, t }: { item: HomepageContentItem; language: 
           </div>
         )}
         <Button asChild variant="link" className="p-0 mt-4">
-          <Link to={`/news/${item.slug}`}>
+          <Link to={`/news/${item.slug}`} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             {t.readMore} <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
@@ -271,7 +271,7 @@ function UnifiedContentCard({ item, language, t }: { item: HomepageContentItem; 
         )}
         
         <Button asChild variant="link" size="sm" className="p-0 h-auto">
-          <Link to={linkTo}>
+          <Link to={linkTo} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             {isEvent ? t.viewDetails : t.readMore}
             <ArrowRight className="ml-1 h-3 w-3" />
           </Link>

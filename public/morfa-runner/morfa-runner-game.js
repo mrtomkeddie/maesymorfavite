@@ -134,6 +134,8 @@ imagesToLoad.forEach(img => {
   };
 });
 
+// Canvas and context initialized
+
 // Start the game loop immediately to show welcome screen
 loop();
 
@@ -186,14 +188,131 @@ document.addEventListener("keydown", e => {
   }
 });
 
-fullscreenButton.addEventListener("click", () => {
-  if (!document.fullscreenElement) {
-    gameContainer.requestFullscreen().catch(err => {
-      alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-    });
-  } else {
-    document.exitFullscreen();
+// Enhanced fullscreen support for mobile
+fullscreenButton.addEventListener("click", async () => {
+  console.log('Fullscreen button clicked');
+  
+  try {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+      console.log('Entering fullscreen mode');
+      
+      // Try different fullscreen methods for better browser support
+      if (gameContainer.requestFullscreen) {
+        await gameContainer.requestFullscreen();
+        console.log('Fullscreen activated via requestFullscreen');
+      } else if (gameContainer.webkitRequestFullscreen) {
+        gameContainer.webkitRequestFullscreen();
+        console.log('Fullscreen activated via webkitRequestFullscreen');
+      } else if (gameContainer.mozRequestFullScreen) {
+        gameContainer.mozRequestFullScreen();
+        console.log('Fullscreen activated via mozRequestFullScreen');
+      } else if (gameContainer.msRequestFullscreen) {
+        gameContainer.msRequestFullscreen();
+        console.log('Fullscreen activated via msRequestFullscreen');
+      } else {
+        console.log('Fullscreen API not supported');
+        alert('Fullscreen is not supported in this browser');
+      }
+    } else {
+      console.log('Exiting fullscreen mode');
+      
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+        console.log('Fullscreen exited via exitFullscreen');
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+        console.log('Fullscreen exited via webkitExitFullscreen');
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+        console.log('Fullscreen exited via mozCancelFullScreen');
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+        console.log('Fullscreen exited via msExitFullscreen');
+      }
+    }
+  } catch (error) {
+    console.error('Fullscreen error:', error);
+    alert(`Fullscreen failed: ${error.message}`);
   }
+});
+
+// Listen for fullscreen changes to update button state
+document.addEventListener('fullscreenchange', updateFullscreenButton);
+document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+document.addEventListener('mozfullscreenchange', updateFullscreenButton);
+document.addEventListener('MSFullscreenChange', updateFullscreenButton);
+
+function updateFullscreenButton() {
+  const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+  
+  if (isFullscreen) {
+    fullscreenButton.setAttribute('aria-label', 'Exit Fullscreen');
+    fullscreenButton.title = 'Exit Fullscreen';
+    console.log('Entered fullscreen mode');
+  } else {
+    fullscreenButton.setAttribute('aria-label', 'Enter Fullscreen');
+    fullscreenButton.title = 'Enter Fullscreen';
+    console.log('Exited fullscreen mode');
+  }
+}
+
+// Initialize button state on page load
+updateFullscreenButton();
+
+// Enhanced mobile touch support
+function handleJump() {
+  if (showingWelcome) {
+    showingWelcome = false;
+    startButton.style.display = "block";
+    return;
+  }
+  
+  if (!gameRunning) return;
+  
+  if (!player.jumping) {
+    // First jump
+    player.jumping = true;
+    player.jumpSpeed = -12;
+    player.canDoubleJump = true;
+    player.hasDoubleJumped = false;
+    playJumpSound();
+  } else if (player.canDoubleJump && !player.hasDoubleJumped) {
+    // Double jump
+    player.jumpSpeed = -10;
+    player.hasDoubleJumped = true;
+    player.canDoubleJump = false;
+    playJumpSound();
+  }
+}
+
+// Touch event handlers
+canvas.addEventListener("touchstart", (e) => {
+  e.preventDefault(); // Prevent scrolling and other default behaviors
+  handleJump();
+}, { passive: false });
+
+canvas.addEventListener("touchend", (e) => {
+  e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener("touchmove", (e) => {
+  e.preventDefault(); // Prevent scrolling
+}, { passive: false });
+
+// Enhanced click handler (keep existing functionality)
+canvas.addEventListener("click", (e) => {
+  e.preventDefault();
+  handleJump();
+});
+
+// Prevent context menu on long press
+canvas.addEventListener("contextmenu", (e) => {
+  e.preventDefault();
+});
+
+// Prevent double-tap zoom
+canvas.addEventListener("gesturestart", (e) => {
+  e.preventDefault();
 });
 
 startButton.addEventListener("click", () => {

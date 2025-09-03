@@ -95,7 +95,7 @@ export function PublicFooter() {
         {/* Mobile Layout - Logo, Social Media, Copyright only */}
         <div className="block md:hidden">
           <div className="flex flex-col items-center text-center space-y-6">
-            <Link to="/">
+            <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
               <img src="/logo-white-footer.png" alt="Maes Y Morfa logo" className="h-12 w-auto" />
             </Link>
             {socialLinks.length > 0 && (
@@ -119,7 +119,7 @@ export function PublicFooter() {
         <div className="hidden md:block">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5">
             <div className="col-span-1 lg:col-span-2 mb-8 md:mb-0">
-              <Link to="/">
+              <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                 <img src="/logo-white-footer.png" alt="Maes Y Morfa logo" className="h-12 w-auto" />
               </Link>
               <div className="text-sm text-background/70 mt-4 space-y-1 whitespace-pre-line">
@@ -152,7 +152,11 @@ export function PublicFooter() {
                 <ul className="space-y-2">
                   {group.links.map((link) => (
                     <li key={link.label}>
-                      <Link to={link.href} className="text-sm text-background/70 hover:text-background hover:underline">
+                      <Link 
+                        to={link.href} 
+                        className="text-sm text-background/70 hover:text-background hover:underline"
+                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                      >
                         {link.label}
                       </Link>
                     </li>

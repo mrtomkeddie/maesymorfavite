@@ -114,7 +114,7 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
     <SidebarProvider defaultOpen={true}>
       <Sidebar variant="sidebar" collapsible="icon" className="hidden lg:flex">
         <SidebarHeader className="border-b p-4">
-          <Link to="/teacher/dashboard" className="flex items-center gap-2">
+          <Link to="/teacher/dashboard" className="flex items-center gap-2" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             <img src="/icon.png" alt="School logo" width={28} height={28} className="w-7 h-7" />
             <span className="text-lg font-extrabold tracking-tighter text-foreground group-data-[collapsible=icon]:hidden">
               {t.title}
@@ -130,7 +130,7 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
                   isActive={location.pathname.startsWith(item.href)}
                   tooltip={{ children: item.label }}
                 >
-                  <Link to={item.href}>
+                  <Link to={item.href} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                     <item.icon />
                     <span>{item.label}</span>
                   </Link>
@@ -157,7 +157,7 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
               size="sm"
               className="w-full justify-start group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2 h-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200 border border-transparent hover:border-destructive/20"
             >
-              <Link to="/logout" className="flex items-center gap-2">
+              <Link to="/logout" className="flex items-center gap-2" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                 <LogOut className="h-4 w-4" />
                 <span className="group-data-[collapsible=icon]:hidden font-medium">{t.account.logout}</span>
               </Link>
@@ -190,7 +190,7 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
                     size="sm"
                     className="w-full justify-start h-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                   >
-                    <Link to="/logout" className="flex items-center gap-2">
+                    <Link to="/logout" className="flex items-center gap-2" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                       <LogOut className="h-4 w-4" />
                       <span className="font-medium">{t.account.logout}</span>
                     </Link>

@@ -66,7 +66,7 @@ export default function PublicHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-20 max-w-7xl items-center justify-between px-8">
         <div className="flex items-center gap-x-8">
-            <Link to="/" className="flex items-center gap-2 font-bold shrink-0">
+            <Link to="/" className="flex items-center gap-2 font-bold shrink-0" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
               <img src="/logo-header.png" alt="Maes Y Morfa logo" className="h-14 w-auto max-h-14" />
             </Link>
         </div>
@@ -91,7 +91,7 @@ export default function PublicHeader() {
             <SheetContent side="right" className="w-[22rem] bg-background p-0 text-foreground" closeIcon={false}>
               <div className="flex h-full flex-col">
                 <div className="flex h-20 items-center justify-between border-b border-border/40 px-6">
-                    <Link to="/" className="flex items-center gap-3">
+                    <Link to="/" className="flex items-center gap-3" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                         <img src="/logo-header.png" alt="Maes Y Morfa logo" className="h-14 w-auto max-h-14" />
                     </Link>
                     <SheetClose asChild>
@@ -107,7 +107,7 @@ export default function PublicHeader() {
                         const Icon = link.icon;
                         return (
                             <SheetClose asChild key={link.href}>
-                                <Link to={link.href} className="flex items-center gap-4 rounded-lg p-3 text-lg font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground">
+                                <Link to={link.href} className="flex items-center gap-4 rounded-lg p-3 text-lg font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                                     <Icon className="h-6 w-6 text-primary" />
                                     <span>{link.label}</span>
                                 </Link>
@@ -118,7 +118,7 @@ export default function PublicHeader() {
                  <div className="space-y-2 border-t border-border/40 p-6">
                      <SheetClose asChild>
                         <Button asChild className="w-full text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
-                           <Link to={t.kidsCorner.href}>
+                           <Link to={t.kidsCorner.href} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                                 <t.kidsCorner.icon className="mr-2 h-4 w-4" />
                                 {t.kidsCorner.label}
                            </Link>
@@ -128,14 +128,14 @@ export default function PublicHeader() {
                       <>
                         <SheetClose asChild>
                           <Button asChild className="w-full">
-                            <Link to={getDashboardPath(userRole)}>
+                            <Link to={getDashboardPath(userRole)} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                               <LayoutDashboard className="mr-2 h-4 w-4" /> {t.dashboard}
                             </Link>
                           </Button>
                         </SheetClose>
                         <SheetClose asChild>
                           <Button asChild variant="destructive" className="w-full">
-                            <Link to="/logout">
+                            <Link to="/logout" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                               <LogOut className="mr-2 h-4 w-4" /> {t.logout}
                             </Link>
                           </Button>
@@ -144,13 +144,13 @@ export default function PublicHeader() {
                     ) : (
                       <SheetClose asChild>
                         <Button asChild className="w-full">
-                          <Link to="/login">{t.portal}</Link>
+                          <Link to="/login" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>{t.portal}</Link>
                         </Button>
                       </SheetClose>
                     )}
                     <SheetClose asChild>
                         <Button asChild variant="outline" className="w-full">
-                            <Link to="/staff/login">{t.staffLogin}</Link>
+                            <Link to="/staff/login" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>{t.staffLogin}</Link>
                         </Button>
                     </SheetClose>
                  </div>

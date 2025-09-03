@@ -69,6 +69,7 @@ export function MobileNavigation({
                       item.onClick();
                     } else if (item.href) {
                       window.location.href = item.href;
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
                     }
                     setOpen(false);
                   }}
