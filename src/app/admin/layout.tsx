@@ -35,6 +35,7 @@ import {
   Mail,
   Camera,
   Utensils,
+  Megaphone,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -61,8 +62,7 @@ const content = {
         system: 'System',
     },
     contentManagement: {
-      news: 'News & Alerts',
-      calendar: 'Calendar',
+      announcements: 'Announcements',
       staff: 'Staff',
       gallery: 'Photo Gallery',
       documents: 'Documents',
@@ -94,8 +94,7 @@ const content = {
         system: 'System',
     },
     contentManagement: {
-      news: 'Newyddion a Hysbysiadau',
-      calendar: 'Calendr',
+      announcements: 'Cyhoeddiadau',
       staff: 'Staff',
       gallery: 'Oriel Ffotograffau',
       documents: 'Dogfennau',
@@ -204,8 +203,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   const contentManagementItems = [
-    { href: '/admin/news', label: t.contentManagement.news, icon: Newspaper },
-    { href: '/admin/calendar', label: t.contentManagement.calendar, icon: Calendar },
+    { href: '/admin/announcements', label: t.contentManagement.announcements, icon: Megaphone },
     { href: '/admin/staff', label: t.contentManagement.staff, icon: Users },
     { href: '/admin/gallery', label: t.contentManagement.gallery, icon: Camera },
     { href: '/admin/documents', label: t.contentManagement.documents, icon: FileText },
