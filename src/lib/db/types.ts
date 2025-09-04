@@ -1,5 +1,5 @@
-import * as firebaseProvider from './firebase';
+import * as mockProvider from './firebase';
 
-// This type defines the interface for our database provider.
+// This type represents the interface of a database provider.
 // It should include all the functions that are exported from `src/lib/db/firebase.ts`.
-export type DatabaseProvider = typeof firebaseProvider;
+export type DatabaseProvider = typeof mockProvider;

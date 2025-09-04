@@ -1,11 +1,9 @@
 
-// Firebase imports removed for mock implementation
-// removed unused import of firestoreDb from ../firebase/config
+// Mock database implementation for development and testing
 import type { NewsPost } from "@/lib/mockNews";
 import type { CalendarEvent } from "@/lib/mockCalendar";
 import type { StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, LinkedParent, InboxMessage, InboxMessageWithId, Photo, PhotoWithId, DailyMenu, WeeklyMenu, UserWithRole, UserRole, ParentNotification, ParentNotificationWithId } from "@/lib/types";
 import { yearGroups } from "@/components/admin/ChildForm";
-// removed unused import of QueryDocumentSnapshot from firebase/firestore
 import { news as mockNewsData } from '@/lib/mockNews';
 import { calendarEvents as mockCalendarEvents } from '@/lib/mockCalendar';
 import { generateMockData, parentChildren } from '@/lib/mockData';
