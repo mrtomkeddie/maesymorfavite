@@ -27,6 +27,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import dynamic from 'next/dynamic';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const AnnouncementForm = dynamic(() => import('@/components/admin/AnnouncementForm').then(mod => mod.AnnouncementForm), {
   loading: () => <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin"/></div>,
@@ -43,6 +44,7 @@ export default function AnnouncementsAdminPage() {
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
   const [itemToDelete, setItemToDelete] = useState<Announcement | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
 
   const { toast } = useToast();
 
@@ -73,11 +75,16 @@ export default function AnnouncementsAdminPage() {
 
   const filteredAnnouncements = useMemo(() => {
     let result = [...announcements];
+    
+    if (typeFilter !== 'all') {
+      result = result.filter(n => n.type === typeFilter);
+    }
+    
     if (searchQuery) {
       result = result.filter(n => n.title_en.toLowerCase().includes(searchQuery.toLowerCase()));
     }
     return result;
-  }, [announcements, searchQuery]);
+  }, [announcements, searchQuery, typeFilter]);
 
   const handleFormSuccess = () => {
     setIsDialogOpen(false);
@@ -169,6 +176,16 @@ export default function AnnouncementsAdminPage() {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
+                     <Select value={typeFilter} onValueChange={setTypeFilter}>
+                        <SelectTrigger className="w-full sm:w-[150px]">
+                            <SelectValue placeholder="Filter by type..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Types</SelectItem>
+                            <SelectItem value="news">News</SelectItem>
+                            <SelectItem value="event">Event</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
           </CardHeader>
@@ -275,5 +292,3 @@ export default function AnnouncementsAdminPage() {
     </Dialog>
   );
 }
-
-    
