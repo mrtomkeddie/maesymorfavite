@@ -50,6 +50,8 @@ const messageFormSchema = z.object({
   message: z.string().min(10, { message: "Message must be at least 10 characters." }),
 });
 
+type MessageFormValues = z.infer<typeof messageFormSchema>;
+
 const ContactAdminSection = ({ articleTitle, t }: { articleTitle: string, t: typeof content['en'] }) => {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
@@ -60,12 +62,12 @@ const ContactAdminSection = ({ articleTitle, t }: { articleTitle: string, t: typ
         setIsParent(authStatus);
     }, []);
     
-    const form = useForm<z.infer<typeof messageFormSchema>>({
+    const form = useForm<MessageFormValues>({
         resolver: zodResolver(messageFormSchema),
         defaultValues: { message: "" },
     });
 
-    async function onSubmit(values: z.infer<typeof messageFormSchema>>) {
+    async function onSubmit(values: MessageFormValues) {
         setIsLoading(true);
         const parentInfo = { name: "Jane Doe", email: "parent@example.com" }; // Mocked parent
 
