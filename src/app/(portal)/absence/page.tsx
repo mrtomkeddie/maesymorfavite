@@ -29,7 +29,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { CalendarIcon, Loader2, Upload } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/db';
 import { parentChildren as mockChildren } from '@/lib/mockData';
@@ -67,6 +67,8 @@ const content = {
       documentLabel: "Upload a Document (Optional)",
       documentDescription: "e.g., a doctor's note or appointment confirmation.",
       submitButton: "Submit Report",
+      todayButton: "Today",
+      yesterdayButton: "Yesterday",
     },
     success: {
         title: "Absence Reported Successfully",
@@ -97,6 +99,8 @@ const content = {
       documentLabel: "Uwchlwytho Dogfen (Dewisol)",
       documentDescription: "e.e., nodyn meddyg neu gadarnhad apwyntiad.",
       submitButton: "Cyflwyno'r Adroddiad",
+      todayButton: "Heno",
+      yesterdayButton: "Ddoe",
     },
     success: {
         title: "Absenoldeb Wedi'i Riportio'n Llwyddiannus",
@@ -228,6 +232,24 @@ Submitted by: ${parentInfo.name} (${parentInfo.email})
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>{t.form.dateLabel}</FormLabel>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => form.setValue('absenceDate', new Date())}
+                        >
+                            {t.form.todayButton}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => form.setValue('absenceDate', subDays(new Date(), 1))}
+                        >
+                            {t.form.yesterdayButton}
+                        </Button>
+                    </div>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
