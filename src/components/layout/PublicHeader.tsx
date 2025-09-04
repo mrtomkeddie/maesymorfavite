@@ -99,42 +99,47 @@ export function PublicHeader() {
                         </Button>
                     </SheetClose>
                 </div>
-                 <div className="flex flex-1 flex-col gap-2 p-6">
+                 <div className="flex-1 overflow-y-auto">
                    <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                    {navLinks.map((link) => {
-                        const Icon = link.icon;
-                        return (
-                            <SheetClose asChild key={link.href}>
-                                <Link href={link.href} className="flex items-center gap-4 rounded-lg p-3 text-lg font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground">
-                                    <Icon className="h-6 w-6 text-primary" />
-                                    <span>{link.label}</span>
-                                </Link>
-                            </SheetClose>
-                        )
-                    })}
+                    <nav className="flex flex-col p-4">
+                        {navLinks.map((link, index) => {
+                            const Icon = link.icon;
+                            return (
+                                <SheetClose asChild key={link.href}>
+                                    <Link 
+                                      href={link.href} 
+                                      className="flex items-center gap-4 border-b p-4 text-lg font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground"
+                                    >
+                                        <Icon className="h-6 w-6 text-primary" />
+                                        <span>{link.label}</span>
+                                    </Link>
+                                </SheetClose>
+                            )
+                        })}
+                   </nav>
                  </div>
-                 <div className="space-y-2 border-t border-border/40 p-6">
+                 <div className="space-y-3 border-t border-border/40 p-4">
                      <SheetClose asChild>
-                        <Button asChild className="w-full text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+                        <Button asChild size="lg" className="w-full text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
                            <Link href={t.kidsCorner.href}>
-                                <t.kidsCorner.icon className="mr-2 h-4 w-4" />
+                                <t.kidsCorner.icon className="mr-2 h-5 w-5" />
                                 {t.kidsCorner.label}
                            </Link>
                         </Button>
                     </SheetClose>
                      <SheetClose asChild>
                          {isClient && isParent ? (
-                             <Button asChild className="w-full">
-                                <Link href="/dashboard"> <LayoutDashboard className="mr-2 h-4 w-4" /> {t.dashboard}</Link>
+                             <Button asChild size="lg" className="w-full">
+                                <Link href="/dashboard"> <LayoutDashboard className="mr-2 h-5 w-5" /> {t.dashboard}</Link>
                              </Button>
                          ) : (
-                             <Button asChild className="w-full">
+                             <Button asChild size="lg" className="w-full">
                                 <Link href="/login">{t.portal}</Link>
                              </Button>
                          )}
                      </SheetClose>
                     <SheetClose asChild>
-                        <Button asChild variant="outline" className="w-full">
+                        <Button asChild size="lg" variant="outline" className="w-full">
                             <Link href="/staff/login">{t.staffLogin}</Link>
                         </Button>
                     </SheetClose>
