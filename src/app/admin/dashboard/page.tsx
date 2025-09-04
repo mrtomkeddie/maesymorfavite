@@ -30,7 +30,7 @@ const content = {
             goTo: "Go to {topic} page",
         },
         topics: [
-            { id: 'announcement', title: 'News & Events', icon: Megaphone, href: '/admin/announcements',
+            { id: 'announcement', title: 'Announcements', icon: Megaphone, href: '/admin/announcements',
               instructions: [
                 "Go to the 'Announcements' page from the sidebar.",
                 "Click the 'Add Announcement' button.",
@@ -113,7 +113,7 @@ const content = {
             goTo: "Ewch i dudalen {topic}",
         },
         topics: [
-            { id: 'announcement', title: 'Newyddion a Digwyddiadau', icon: Megaphone, href: '/admin/announcements',
+            { id: 'announcement', title: 'Cyhoeddiadau', icon: Megaphone, href: '/admin/announcements',
               instructions: [
                 "Ewch i'r dudalen 'Cyhoeddiadau' o'r bar ochr.",
                 "Cliciwch y botwm 'Ychwanegu Cyhoeddiad'.",
