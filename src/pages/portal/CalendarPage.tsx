@@ -33,9 +33,16 @@ const content = {
     description: 'Upcoming events, holidays, and important dates for the school year.',
     allDay: 'All Day',
     noEventsList: 'No events found.',
-    subscribeButton: 'Subscribe to the School Calendar',
-    subscribeDescription: '(Events auto-update in your calendar app)',
+    subscribeButton: 'Subscribe to School Calendar',
+    subscribeDescription: 'Subscribe to the school calendar on your device. New events and changes will automatically appear in your calendar app.',
     attachments: 'Attachments',
+    instructionsTitle: 'Subscription Instructions',
+    iphoneTitle: 'iPhone/iPad',
+    iphoneInstructions: 'Click the button above, then choose "Add Subscription" in your Calendar app.',
+    androidTitle: 'Android',
+    androidInstructions: 'Copy the URL and paste it in your calendar app (Google Calendar, Samsung Calendar, etc).',
+    desktopTitle: 'Desktop',
+    desktopInstructions: 'Copy the URL and add it as a "New Calendar" in Outlook, Apple Calendar, or Google Calendar.',
     filterLabel: "Only show events for my children",
     detailsButton: "View Details",
     tags: {
@@ -51,9 +58,16 @@ const content = {
     description: 'Digwyddiadau, gwyliau, a dyddiadau pwysig ar gyfer y flwyddyn ysgol.',
     allDay: 'Trwy\'r Dydd',
     noEventsList: 'Ni chanfuwyd unrhyw ddigwyddiadau.',
-    subscribeButton: 'Tanysgrifiwch i Galendr yr Ysgol',
-    subscribeDescription: '(Mae digwyddiadau\'n diweddaru\'n awtomatig yn eich ap calendr)',
+    subscribeButton: 'Tanysgrifio i Galendr yr Ysgol',
+    subscribeDescription: 'Tanysgrifiwch i galendr yr ysgol ar eich dyfais. Bydd digwyddiadau newydd a newidiadau\'n ymddangos yn awtomatig yn eich ap calendr.',
     attachments: 'Atodiadau',
+    instructionsTitle: 'Cyfarwyddiadau Tanysgrifio',
+    iphoneTitle: 'iPhone/iPad',
+    iphoneInstructions: 'Cliciwch y botwm uchod, yna dewiswch "Ychwanegu Tanysgrifiad" yn eich ap Calendr.',
+    androidTitle: 'Android',
+    androidInstructions: 'Copïwch yr URL a\'i ludo yn eich ap calendr (Google Calendar, Samsung Calendar, ayb).',
+    desktopTitle: 'Cyfrifiadur',
+    desktopInstructions: 'Copïwch yr URL a\'i ychwanegu fel "Calendr Newydd" yn Outlook, Apple Calendar, neu Google Calendar.',
     filterLabel: "Dangos digwyddiadau ar gyfer fy mhlant yn unig",
     detailsButton: "Gweld Manylion",
     tags: {
@@ -88,16 +102,34 @@ export default function CalendarPage() {
     }
   }, [navigate]);
 
-  const handleDownloadICalFeed = () => {
-    const icalData = createICalFeed(calendarEvents);
-    if (icalData) {
-      const blob = new Blob([icalData], { type: 'text/calendar;charset=utf-8' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'MaesYMorfa_School_Calendar.ics';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+  const handleSubscribeToCalendar = async () => {
+    try {
+      // Get the base URL for the calendar subscription
+      const baseUrl = window.location.origin;
+      const subscriptionUrl = `${baseUrl}/.netlify/functions/calendar`;
+      
+      // Copy the subscription URL to clipboard
+      await navigator.clipboard.writeText(subscriptionUrl);
+      
+      // Show success message
+      alert(language === 'cy' 
+        ? 'Mae URL tanysgrifiad y calendr wedi\'i gopïo i\'r clipfwrdd. Gallwch ei ludo yn eich ap calendr i danysgrifio.'
+        : 'Calendar subscription URL copied to clipboard. You can paste this in your calendar app to subscribe.'
+      );
+      
+      // For mobile devices, try to open the URL directly
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        const calendarUrl = `webcal://${window.location.host}/.netlify/functions/calendar`;
+        window.open(calendarUrl, '_blank');
+      }
+    } catch (error) {
+      console.error('Error handling calendar subscription:', error);
+      // Fallback: show the URL in an alert if clipboard fails
+      const subscriptionUrl = `${window.location.origin}/.netlify/functions/calendar`;
+      alert(language === 'cy'
+        ? `Copïwch yr URL hwn i\'ch ap calendr: ${subscriptionUrl}`
+        : `Copy this URL to your calendar app: ${subscriptionUrl}`
+      );
     }
   };
   
@@ -179,13 +211,28 @@ export default function CalendarPage() {
           <Label htmlFor="filter-events" className="text-sm">{t.filterLabel}</Label>
         </div>
         
-        <Button onClick={handleDownloadICalFeed} variant="outline">
+        <Button onClick={handleSubscribeToCalendar} variant="outline">
           <Calendar className="mr-2 h-4 w-4" />
           {t.subscribeButton}
         </Button>
       </div>
       
-      <p className="text-xs text-muted-foreground">{t.subscribeDescription}</p>
+      <p className="text-xs text-muted-foreground mb-4">{t.subscribeDescription}</p>
+      
+      <div className="bg-muted/50 p-4 rounded-lg">
+        <h4 className="font-medium mb-2">{t.instructionsTitle}</h4>
+        <div className="space-y-2 text-sm text-muted-foreground">
+          <div>
+            <strong>{t.iphoneTitle}:</strong> {t.iphoneInstructions}
+          </div>
+          <div>
+            <strong>{t.androidTitle}:</strong> {t.androidInstructions}
+          </div>
+          <div>
+            <strong>{t.desktopTitle}:</strong> {t.desktopInstructions}
+          </div>
+        </div>
+      </div>
 
       <div className="space-y-4">
         {filteredEvents.length === 0 ? (
