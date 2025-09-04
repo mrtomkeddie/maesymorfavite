@@ -2,7 +2,7 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Newspaper, Calendar, Users, FileText, Settings, BookUser, Users2, ArrowRight, Lightbulb, TrendingUp, Loader2 } from "lucide-react";
+import { Newspaper, Calendar, Users, FileText, Settings, BookUser, Users2, ArrowRight, Lightbulb, TrendingUp, Loader2, Megaphone } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
@@ -30,26 +30,17 @@ const content = {
             goTo: "Go to {topic} page",
         },
         topics: [
-            { id: 'news', title: 'News & Alerts', icon: Newspaper, href: '/admin/news',
+            { id: 'announcement', title: 'News & Events', icon: Megaphone, href: '/admin/announcements',
               instructions: [
-                "Go to the 'News & Alerts' page from the sidebar.",
-                "Click the 'Add News Post' button to open the form.",
-                "Fill in the title and body content for the announcement.",
-                "Mark it as 'Urgent' if it's a critical alert, like a school closure.",
-                "Click 'Create Post' to publish it to the website."
+                "Go to the 'Announcements' page from the sidebar.",
+                "Click the 'Add Announcement' button.",
+                "Fill in a title.",
+                "To make a calendar event, add a date.",
+                "To make a news post, add some body text.",
+                "To create both, fill in all fields.",
+                "Check 'Urgent' for a homepage banner alert."
               ],
-              tip: "If your urgent alert doesn't show on the homepage, make sure the 'Urgent' switch is turned on and you have saved the post."
-            },
-            { id: 'calendar', title: 'Calendar Events', icon: Calendar, href: '/admin/calendar',
-               instructions: [
-                "Navigate to the 'Calendar' section.",
-                "Click 'Add Event' to create a new calendar entry.",
-                "Enter the event title, select a date, and add a description.",
-                "You can optionally attach a file, like a permission slip.",
-                "Check 'Show on Homepage' to also display this on the public homepage.",
-                "Click 'Create Event' to save it."
-              ],
-              tip: "An event won't appear on the public site until it's saved. If you attach a file, it won't be available until you save the event."
+              tip: "You can create a news post, a calendar event, or both from the same form. Just fill in the relevant fields!"
             },
             { id: 'staff', title: 'Staff Directory', icon: Users, href: '/admin/staff',
               instructions: [
@@ -122,26 +113,17 @@ const content = {
             goTo: "Ewch i dudalen {topic}",
         },
         topics: [
-            { id: 'news', title: 'Newyddion a Hysbysiadau', icon: Newspaper, href: '/admin/news',
+            { id: 'announcement', title: 'Newyddion a Digwyddiadau', icon: Megaphone, href: '/admin/announcements',
               instructions: [
-                "Ewch i'r dudalen 'Newyddion a Hysbysiadau' o'r bar ochr.",
-                "Cliciwch y botwm 'Ychwanegu Newyddion' i agor y ffurflen.",
-                "Llenwch y teitl a'r cynnwys testun ar gyfer y cyhoeddiad.",
-                "Nodwch ei fod yn 'Frys' os yw'n rhybudd hanfodol, fel cau ysgol.",
-                "Cliciwch 'Creu Post' i'w gyhoeddi ar y wefan."
+                "Ewch i'r dudalen 'Cyhoeddiadau' o'r bar ochr.",
+                "Cliciwch y botwm 'Ychwanegu Cyhoeddiad'.",
+                "Llenwch deitl.",
+                "I greu digwyddiad calendr, ychwanegwch ddyddiad.",
+                "I greu cofnod newyddion, ychwanegwch rywfaint o destun corff.",
+                "I greu'r ddau, llenwch yr holl feysydd.",
+                "Ticiwch 'Brys' am rybudd baner ar y dudalen gartref."
               ],
-              tip: "Os nad yw'ch rhybudd brys yn ymddangos ar y dudalen gartref, gwnewch yn siŵr bod y switsh 'Brys' wedi'i droi ymlaen a'ch bod wedi cadw'r cofnod."
-            },
-            { id: 'calendar', title: 'Digwyddiadau Calendr', icon: Calendar, href: '/admin/calendar',
-               instructions: [
-                "Llywiwch i'r adran 'Calendr'.",
-                "Cliciwch 'Ychwanegu Digwyddiad' i greu cofnod calendr newydd.",
-                "Rhowch deitl y digwyddiad, dewiswch ddyddiad, ac ychwanegwch ddisgrifiad.",
-                "Gallwch atodi ffeil yn ddewisol, fel slip caniatâd.",
-                "Ticiwch 'Dangos ar y Tudalen Cartref' i ddangos hwn ar y dudalen gartref gyhoeddus hefyd.",
-                "Cliciwch 'Creu Digwyddiad' i'w gadw."
-              ],
-              tip: "Ni fydd digwyddiad yn ymddangos ar y wefan gyhoeddus nes ei fod wedi'i gadw. Os byddwch yn atodi ffeil, ni fydd ar gael nes i chi gadw'r digwyddiad."
+              tip: "Gallwch greu cofnod newyddion, digwyddiad calendr, neu'r ddau o'r un ffurflen. Llenwch y meysydd perthnasol!"
             },
             { id: 'staff', title: 'Cyfeirlyfr Staff', icon: Users, href: '/admin/staff',
               instructions: [
