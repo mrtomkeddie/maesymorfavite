@@ -17,8 +17,6 @@ import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/db';
 import type { SiteSettings } from '@/lib/types';
 
-export const revalidate = 60; // Revalidate this page at most once every 60 seconds
-
 const content = {
   en: {
     title: "Contact Us",

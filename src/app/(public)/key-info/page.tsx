@@ -10,8 +10,6 @@ import { useEffect, useState, Suspense } from 'react';
 import { db } from '@/lib/db';
 import type { DocumentWithId } from '@/lib/types';
 
-export const revalidate = 60; // Revalidate this page at most once every 60 seconds
-
 const content = {
   en: {
     title: "Key Information",

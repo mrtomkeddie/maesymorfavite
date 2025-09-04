@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useLanguage } from '@/app/(public)/LanguageProvider';
@@ -17,7 +18,6 @@ import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/db';
-
 
 const content = {
     en: {
@@ -65,7 +65,7 @@ const ContactAdminSection = ({ articleTitle, t }: { articleTitle: string, t: typ
         defaultValues: { message: "" },
     });
 
-    async function onSubmit(values: z.infer<typeof messageFormSchema>) {
+    async function onSubmit(values: z.infer<typeof messageFormSchema>>) {
         setIsLoading(true);
         const parentInfo = { name: "Jane Doe", email: "parent@example.com" }; // Mocked parent
 

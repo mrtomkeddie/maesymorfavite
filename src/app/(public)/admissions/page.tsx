@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Phone, Mail, Download, ExternalLink, HelpCircle, School } from "lucide-react";
 import { Suspense } from "react";
 
-export const revalidate = 60; // Revalidate this page at most once every 60 seconds
-
 const content = {
   en: {
     title: "Admissions",

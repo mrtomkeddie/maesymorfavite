@@ -10,8 +10,6 @@ import { ArrowRight, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from "react";
 
-export const revalidate = 60; // Revalidate this page at most once every 60 seconds
-
 const content = {
     en: {
         title: 'News & Announcements',
