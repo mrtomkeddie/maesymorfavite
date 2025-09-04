@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -37,18 +38,36 @@ const absenceFormSchema = (t: any) => z.object({
   childId: z.string({
     required_error: t.childId.required_error,
   }),
+  isMultiDay: z.boolean().default(false),
   day: z.string().min(1, { message: "Day is required" }),
   month: z.string().min(1, { message: "Month is required" }),
   year: z.string().min(1, { message: "Year is required" }),
+  endDay: z.string().optional(),
+  endMonth: z.string().optional(),
+  endYear: z.string().optional(),
   reason: z.string().min(10, {
     message: t.reason.message,
   }),
   document: z.any().optional(),
 }).refine((data) => {
-  const date = new Date(parseInt(data.year), parseInt(data.month) - 1, parseInt(data.day));
-  return date.getDate() == parseInt(data.day) && date.getMonth() == parseInt(data.month) - 1;
+  const startDate = new Date(parseInt(data.year), parseInt(data.month) - 1, parseInt(data.day));
+  const isValidStart = startDate.getDate() == parseInt(data.day) && startDate.getMonth() == parseInt(data.month) - 1;
+  
+  if (!data.isMultiDay) {
+    return isValidStart;
+  }
+  
+  // For multi-day, validate end date
+  if (!data.endDay || !data.endMonth || !data.endYear) {
+    return false;
+  }
+  
+  const endDate = new Date(parseInt(data.endYear), parseInt(data.endMonth) - 1, parseInt(data.endDay));
+  const isValidEnd = endDate.getDate() == parseInt(data.endDay) && endDate.getMonth() == parseInt(data.endMonth) - 1;
+  
+  return isValidStart && isValidEnd && endDate >= startDate;
 }, {
-  message: "Please enter a valid date",
+  message: "Please enter valid dates. End date must be after or equal to start date.",
   path: ["day"]
 });
 
@@ -63,6 +82,10 @@ const content = {
       childPlaceholder: "Select your child",
       dateLabel: "Date of Absence",
       datePlaceholder: "Pick a date",
+      multiDayLabel: "Multiple Days?",
+      multiDayDescription: "Check this if your child will be absent for more than one day",
+      startDateLabel: "Start Date",
+      endDateLabel: "End Date (Last day of absence)",
       dayLabel: "Day",
       monthLabel: "Month",
       yearLabel: "Year",
@@ -101,6 +124,10 @@ const content = {
       childPlaceholder: "Dewiswch eich plentyn",
       dateLabel: "Dyddiad yr Absenoldeb",
       datePlaceholder: "Dewiswch ddyddiad",
+      multiDayLabel: "Dyddiau Lluosog?",
+      multiDayDescription: "Ticiwch hwn os bydd eich plentyn yn absennol am fwy nag un diwrnod",
+      startDateLabel: "Dyddiad Cychwyn",
+      endDateLabel: "Dyddiad Diwedd (Diwrnod olaf yr absenoldeb)",
       dayLabel: "Diwrnod",
       monthLabel: "Mis",
       yearLabel: "Blwyddyn",
@@ -152,7 +179,11 @@ export default function AbsencePage() {
       reason: "",
       day: "",
       month: "",
-      year: ""
+      year: "",
+      isMultiDay: false,
+      endDay: "",
+      endMonth: "",
+      endYear: ""
     }
   });
 
@@ -177,16 +208,24 @@ export default function AbsencePage() {
   async function onSubmit(values: z.infer<ReturnType<typeof absenceFormSchema>>) {
     setIsLoading(true);
     
-    // Convert dropdown values to date
-    const absenceDate = new Date(parseInt(values.year), parseInt(values.month) - 1, parseInt(values.day));
+    // Convert dropdown values to date(s)
+    const startDate = new Date(parseInt(values.year), parseInt(values.month) - 1, parseInt(values.day));
+    const endDate = values.isMultiDay && values.endDay && values.endMonth && values.endYear 
+      ? new Date(parseInt(values.endYear), parseInt(values.endMonth) - 1, parseInt(values.endDay))
+      : startDate;
     
     // In a real app, you'd get the logged-in parent's info
     const parentInfo = { name: "Jane Doe", email: "parent@example.com" };
     const childName = mockChildren.find(c => c.id === values.childId)?.name || 'Unknown Child';
 
+    // Generate date range for message
+    const dateRange = values.isMultiDay && startDate.getTime() !== endDate.getTime()
+      ? `${format(startDate, 'PPP', { locale })} to ${format(endDate, 'PPP', { locale })}`
+      : format(startDate, 'PPP', { locale });
+
     const messageBody = `
 Child: ${childName}
-Date of Absence: ${format(absenceDate, 'PPP', { locale })}
+Date(s) of Absence: ${dateRange}
 Reason: ${values.reason}
 ---
 Submitted by: ${parentInfo.name} (${parentInfo.email})
@@ -195,16 +234,20 @@ Submitted by: ${parentInfo.name} (${parentInfo.email})
     try {
         await db.addInboxMessage({
             type: 'absence',
-            subject: `Absence Report for ${childName}`,
+            subject: `Absence Report for ${childName}${values.isMultiDay ? ' (Multiple Days)' : ''}`,
             body: messageBody,
             sender: parentInfo,
             isRead: false,
             createdAt: new Date().toISOString(),
         });
         
+        const dayCount = values.isMultiDay 
+          ? Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+          : 1;
+        
         toast({
             title: t.success.title,
-            description: t.success.description.replace('{childName}', childName),
+            description: `${t.success.description.replace('{childName}', childName)}${dayCount > 1 ? ` (${dayCount} days)` : ''}`,
             variant: 'default',
         });
         
@@ -267,9 +310,31 @@ Submitted by: ${parentInfo.name} (${parentInfo.email})
                 )}
               />
 
+              {/* Multi-day checkbox */}
+              <FormField
+                control={form.control}
+                name="isMultiDay"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>{t.form.multiDayLabel}</FormLabel>
+                      <FormDescription>
+                        {t.form.multiDayDescription}
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
               {/* Date selection with dropdown selectors */}
               <div className="space-y-3">
-                <FormLabel>{t.form.dateLabel}</FormLabel>
+                <FormLabel>{form.watch('isMultiDay') ? t.form.startDateLabel : t.form.dateLabel}</FormLabel>
                 
                 {/* Quick date buttons */}
                 <div className="flex flex-wrap gap-2">
@@ -376,12 +441,97 @@ Submitted by: ${parentInfo.name} (${parentInfo.email})
                             ))}
                           </SelectContent>
                         </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                 </div>
               </div>
+
+              {/* End date selection (only shown for multi-day) */}
+              {form.watch('isMultiDay') && (
+                <div className="space-y-3">
+                  <FormLabel>{t.form.endDateLabel}</FormLabel>
+                  
+                  {/* End date dropdown selectors */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="endDay"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t.form.dayLabel}</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder={t.form.dayPlaceholder} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {days.map((day) => (
+                                <SelectItem key={day} value={day.toString()}>
+                                  {day}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="endMonth"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t.form.monthLabel}</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder={t.form.monthPlaceholder} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {months.map((month) => (
+                                <SelectItem key={month.value} value={month.value}>
+                                  {month.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="endYear"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t.form.yearLabel}</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder={t.form.yearPlaceholder} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {years.map((year) => (
+                                <SelectItem key={year} value={year.toString()}>
+                                  {year}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              )}
               {/* End stacked fields */}
 
               <div className="space-y-6">
