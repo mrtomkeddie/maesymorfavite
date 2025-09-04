@@ -224,6 +224,17 @@ export default function DashboardPage() {
         </div>
         <LanguageToggle />
       </div>
+
+       <Card className="lg:hidden mb-6">
+        <CardHeader>
+            <CardTitle>{t.actions}</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <Button asChild className="w-full justify-start">
+            <Link href="/absence"><ClipboardCheck className="mr-2 h-4 w-4" /> {t.reportAbsence}</Link>
+            </Button>
+        </CardContent>
+        </Card>
       
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
         
@@ -283,7 +294,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="lg:col-span-1 space-y-6">
-          <Card>
+          <Card className="hidden lg:block">
             <CardHeader>
               <CardTitle>{t.actions}</CardTitle>
             </CardHeader>
@@ -368,3 +379,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
