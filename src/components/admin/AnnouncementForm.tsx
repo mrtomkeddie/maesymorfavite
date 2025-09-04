@@ -41,7 +41,6 @@ const formSchema = z.object({
   body_en: z.string().optional(),
   date: z.date().optional(),
   isUrgent: z.boolean().default(false),
-  showOnHomepage: z.boolean().default(false),
   relevantTo: z.array(z.string()).refine(value => value.some(item => item), {
       message: "You have to select at least one year group.",
   }),
@@ -67,7 +66,6 @@ export function AnnouncementForm({ onSuccess, existingAnnouncement }: Announceme
       body_en: (existingAnnouncement?.type === 'news' ? existingAnnouncement.body_en : existingAnnouncement?.description_en) || '',
       date: existingAnnouncement?.type === 'event' ? new Date(existingAnnouncement.start) : undefined,
       isUrgent: existingAnnouncement?.isUrgent || false,
-      showOnHomepage: existingAnnouncement?.showOnHomepage || false,
       relevantTo: existingAnnouncement?.relevantTo || ['All'],
       attachment: undefined,
     },
@@ -101,7 +99,7 @@ export function AnnouncementForm({ onSuccess, existingAnnouncement }: Announceme
             start: values.date!.toISOString(),
             allDay: true,
             isUrgent: values.isUrgent,
-            showOnHomepage: values.showOnHomepage,
+            showOnHomepage: values.relevantTo.includes('All'),
             relevantTo: values.relevantTo,
             attachmentUrl,
             attachmentName,
@@ -203,11 +201,7 @@ export function AnnouncementForm({ onSuccess, existingAnnouncement }: Announceme
                   <Calendar
                     mode="single"
                     selected={field.value}
-                    onSelect={(date) => {
-                      field.onChange(date);
-                      // Also show on homepage if date is picked
-                      form.setValue('showOnHomepage', true);
-                    }}
+                    onSelect={field.onChange}
                     initialFocus
                   />
                 </PopoverContent>
@@ -311,17 +305,6 @@ export function AnnouncementForm({ onSuccess, existingAnnouncement }: Announceme
                     </FormDescription>
                 </div>
                 <FormField control={form.control} name="isUrgent" render={({ field }) => (
-                    <FormItem><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>
-                )} />
-            </div>
-             <div className="flex items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                    <FormLabel>Show Event on Homepage</FormLabel>
-                    <FormDescription>
-                        Display this event in the "Upcoming Events" section of the homepage.
-                    </FormDescription>
-                </div>
-                <FormField control={form.control} name="showOnHomepage" render={({ field }) => (
                     <FormItem><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>
                 )} />
             </div>

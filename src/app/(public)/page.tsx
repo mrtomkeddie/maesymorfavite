@@ -84,7 +84,7 @@ export default function HomePage() {
   today.setHours(0, 0, 0, 0);
 
   const upcomingEvents = calendarEvents
-    .filter(event => new Date(event.start) >= today)
+    .filter(event => new Date(event.start) >= today && event.relevantTo?.includes('All'))
     .slice(0, 3);
 
   return (
