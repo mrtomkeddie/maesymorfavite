@@ -24,7 +24,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Upload, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -38,13 +37,19 @@ const absenceFormSchema = (t: any) => z.object({
   childId: z.string({
     required_error: t.childId.required_error,
   }),
-  absenceDate: z.date({
-    required_error: t.absenceDate.required_error,
-  }),
+  day: z.string().min(1, { message: "Day is required" }),
+  month: z.string().min(1, { message: "Month is required" }),
+  year: z.string().min(1, { message: "Year is required" }),
   reason: z.string().min(10, {
     message: t.reason.message,
   }),
   document: z.any().optional(),
+}).refine((data) => {
+  const date = new Date(parseInt(data.year), parseInt(data.month) - 1, parseInt(data.day));
+  return date.getDate() == parseInt(data.day) && date.getMonth() == parseInt(data.month) - 1;
+}, {
+  message: "Please enter a valid date",
+  path: ["day"]
 });
 
 const content = {
@@ -58,6 +63,12 @@ const content = {
       childPlaceholder: "Select your child",
       dateLabel: "Date of Absence",
       datePlaceholder: "Pick a date",
+      dayLabel: "Day",
+      monthLabel: "Month",
+      yearLabel: "Year",
+      dayPlaceholder: "Select day",
+      monthPlaceholder: "Select month",
+      yearPlaceholder: "Select year",
       todayButton: "Today",
       yesterdayButton: "Yesterday",
       reasonLabel: "Reason for Absence",
@@ -90,6 +101,12 @@ const content = {
       childPlaceholder: "Dewiswch eich plentyn",
       dateLabel: "Dyddiad yr Absenoldeb",
       datePlaceholder: "Dewiswch ddyddiad",
+      dayLabel: "Diwrnod",
+      monthLabel: "Mis",
+      yearLabel: "Blwyddyn",
+      dayPlaceholder: "Dewiswch ddiwrnod",
+      monthPlaceholder: "Dewiswch fis",
+      yearPlaceholder: "Dewiswch flwyddyn",
       todayButton: "Heddiw",
       yesterdayButton: "Ddoe",
       reasonLabel: "Rheswm dros Absenoldeb",
@@ -133,11 +150,35 @@ export default function AbsencePage() {
     resolver: zodResolver(schema),
     defaultValues: {
       reason: "",
+      day: "",
+      month: "",
+      year: ""
     }
   });
 
+  // Generate options for dropdowns
+  const days = Array.from({ length: 31 }, (_, i) => i + 1);
+  const months = [
+    { value: "1", label: language === 'cy' ? "Ionawr" : "January" },
+    { value: "2", label: language === 'cy' ? "Chwefror" : "February" },
+    { value: "3", label: language === 'cy' ? "Mawrth" : "March" },
+    { value: "4", label: language === 'cy' ? "Ebrill" : "April" },
+    { value: "5", label: language === 'cy' ? "Mai" : "May" },
+    { value: "6", label: language === 'cy' ? "Mehefin" : "June" },
+    { value: "7", label: language === 'cy' ? "Gorffennaf" : "July" },
+    { value: "8", label: language === 'cy' ? "Awst" : "August" },
+    { value: "9", label: language === 'cy' ? "Medi" : "September" },
+    { value: "10", label: language === 'cy' ? "Hydref" : "October" },
+    { value: "11", label: language === 'cy' ? "Tachwedd" : "November" },
+    { value: "12", label: language === 'cy' ? "Rhagfyr" : "December" }
+  ];
+  const years = Array.from({ length: 6 }, (_, i) => currentYear - 5 + i);
+
   async function onSubmit(values: z.infer<ReturnType<typeof absenceFormSchema>>) {
     setIsLoading(true);
+    
+    // Convert dropdown values to date
+    const absenceDate = new Date(parseInt(values.year), parseInt(values.month) - 1, parseInt(values.day));
     
     // In a real app, you'd get the logged-in parent's info
     const parentInfo = { name: "Jane Doe", email: "parent@example.com" };
@@ -145,7 +186,7 @@ export default function AbsencePage() {
 
     const messageBody = `
 Child: ${childName}
-Date of Absence: ${format(values.absenceDate, 'PPP', { locale })}
+Date of Absence: ${format(absenceDate, 'PPP', { locale })}
 Reason: ${values.reason}
 ---
 Submitted by: ${parentInfo.name} (${parentInfo.email})
@@ -226,87 +267,121 @@ Submitted by: ${parentInfo.name} (${parentInfo.email})
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="absenceDate"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>{t.form.dateLabel}</FormLabel>
+              {/* Date selection with dropdown selectors */}
+              <div className="space-y-3">
+                <FormLabel>{t.form.dateLabel}</FormLabel>
+                
+                {/* Quick date buttons */}
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const today = new Date();
+                      form.setValue('day', today.getDate().toString());
+                      form.setValue('month', (today.getMonth() + 1).toString());
+                      form.setValue('year', today.getFullYear().toString());
+                    }}
+                    className="text-sm hover:bg-red-50 hover:text-red-900 hover:border-red-300"
+                  >
+                    {t.form.todayButton}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const yesterday = new Date();
+                      yesterday.setDate(yesterday.getDate() - 1);
+                      form.setValue('day', yesterday.getDate().toString());
+                      form.setValue('month', (yesterday.getMonth() + 1).toString());
+                      form.setValue('year', yesterday.getFullYear().toString());
+                    }}
+                    className="text-sm hover:bg-red-50 hover:text-red-900 hover:border-red-300"
+                  >
+                    {t.form.yesterdayButton}
+                  </Button>
+                </div>
 
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => field.onChange(new Date())}
-                        className="text-sm hover:bg-red-50 hover:text-red-900 hover:border-red-300"
-                      >
-                        {t.form.todayButton}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const yesterday = new Date()
-                          yesterday.setDate(yesterday.getDate() - 1)
-                          field.onChange(yesterday)
-                        }}
-                        className="text-sm hover:bg-red-50 hover:text-red-900 hover:border-red-300"
-                      >
-                        {t.form.yesterdayButton}
-                      </Button>
-                    </div>
+                {/* Date dropdown selectors */}
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="day"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t.form.dayLabel}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t.form.dayPlaceholder} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {days.map((day) => (
+                              <SelectItem key={day} value={day.toString()}>
+                                {day}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    {/* Embedded calendar with refined styling and alignment */}
-                    <div className="rounded-xl border bg-card p-3 shadow-sm mx-auto w-full max-w-sm">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                        showOutsideDays
-                        captionLayout="dropdown-buttons"
-                        fromYear={currentYear - 5}
-                        toYear={currentYear + 1}
-                        className="rounded-md mx-auto"
-                        classNames={{
-                          months: "flex justify-center",
-                          month: "space-y-3",
-                          caption: "flex items-center justify-center relative",
-                          caption_label: "text-base font-semibold",
-                          nav: "flex items-center",
-                          nav_button:
-                            "h-8 w-8 bg-transparent hover:bg-muted rounded-md border text-foreground",
-                          nav_button_previous: "absolute left-1",
-                          nav_button_next: "absolute right-1",
+                  <FormField
+                    control={form.control}
+                    name="month"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t.form.monthLabel}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t.form.monthPlaceholder} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {months.map((month) => (
+                              <SelectItem key={month.value} value={month.value}>
+                                {month.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                          table: "w-full border-collapse",
-                          head_row: "grid grid-cols-7",
-                          head_cell:
-                            "w-10 h-10 text-muted-foreground text-[0.8rem] font-medium flex items-center justify-center",
-                          row: "grid grid-cols-7 gap-1",
-                          cell: "relative p-0",
-
-                          day:
-                            "h-10 w-10 inline-flex items-center justify-center rounded-md text-sm font-medium hover:bg-red-50 hover:text-red-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400",
-                          day_selected: "bg-red-600 text-white hover:bg-red-700 focus:bg-red-700",
-                          day_today: "ring-1 ring-red-300",
-                          day_outside: "text-muted-foreground/40 opacity-50",
-                          day_disabled: "text-muted-foreground/40",
-                          day_hidden: "invisible"
-                        }}
-                      />
-                    </div>
-
-                    <p className="text-sm text-muted-foreground text-center">
-                      {field.value ? format(field.value, 'PPP', { locale }) : t.form.datePlaceholder}
-                    </p>
-
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="year"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t.form.yearLabel}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t.form.yearPlaceholder} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {years.map((year) => (
+                              <SelectItem key={year} value={year.toString()}>
+                                {year}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
               {/* End stacked fields */}
 
               <div className="space-y-6">
