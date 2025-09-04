@@ -16,11 +16,20 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   LayoutDashboard,
   LogOut,
   Loader2,
   Send,
-  Award
+  Award,
+  ChevronUp,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -177,29 +186,32 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
                     </SidebarMenuButton>
                     </SidebarMenuItem>
                 ))}
-                 <SidebarSeparator />
-                 <SidebarMenuItem>
-                    <SidebarMenuButton
-                        onClick={handleLogout}
-                        tooltip={{ children: t.account.logout }}
-                    >
-                        <LogOut />
-                        <span>{t.account.logout}</span>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter>
-            <div className="flex w-full cursor-pointer items-center gap-3 p-2 transition-colors group-data-[collapsible=icon]:justify-center">
-                <Avatar className="size-8">
-                    <AvatarImage src="https://placehold.co/40x40.png" data-ai-hint="person avatar" />
-                    <AvatarFallback>T</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col text-sm group-data-[collapsible=icon]:hidden flex-grow">
-                    <span className="font-semibold">{session.user?.email || 'Teacher'}</span>
-                    <span className="text-muted-foreground">{t.account.role}</span>
-                </div>
-            </div>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                     <div className="flex w-full cursor-pointer items-center gap-3 p-2 transition-colors group-data-[collapsible=icon]:justify-center hover:bg-muted rounded-md">
+                        <Avatar className="size-8">
+                            <AvatarImage src="https://placehold.co/40x40.png" data-ai-hint="person avatar" />
+                            <AvatarFallback>T</AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col text-sm group-data-[collapsible=icon]:hidden flex-grow text-left">
+                            <span className="font-semibold">{session.user?.email || 'Teacher'}</span>
+                            <span className="text-muted-foreground">{t.account.role}</span>
+                        </div>
+                        <ChevronUp className="h-4 w-4 text-muted-foreground group-data-[collapsible=icon]:hidden" />
+                    </div>
+                </DropdownMenuTrigger>
+                 <DropdownMenuContent className="w-[calc(var(--sidebar-width)_-_1rem)] mb-2" side="top" align="center">
+                    <DropdownMenuLabel>{t.account.title}</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>{t.account.logout}</span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
