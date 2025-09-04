@@ -19,14 +19,24 @@ export default function LogoutHandler() {
         console.warn('Supabase signout failed:', error);
       }
 
+      // Capture role before clearing storage so we can route correctly
+      const lastRole = localStorage.getItem('userRole');
+
       // Clear localStorage for both Supabase and mock auth
       localStorage.removeItem('isAuthenticated');
       localStorage.removeItem('userRole');
       // Also clear persisted email to avoid stale user context after logout
       localStorage.removeItem('userEmail');
 
-      // Redirect to login page
-      navigate('/login', { replace: true });
+      // Redirect based on previous role
+      if (lastRole === 'parent') {
+        navigate('/login', { replace: true });
+      } else if (lastRole === 'teacher') {
+        navigate('/teacher/login', { replace: true });
+      } else {
+        // Default (admin or unknown) -> public homepage
+        navigate('/', { replace: true });
+      }
     };
 
     handleLogout();

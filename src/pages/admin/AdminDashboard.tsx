@@ -2,13 +2,13 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Newspaper, Calendar, Users, FileText, Settings, BookUser, Users2, TrendingUp, Loader2, Archive } from "lucide-react";
+import { Newspaper, Calendar, Users, FileText, Settings, BookUser, Users2, TrendingUp, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { useLanguage } from "@/contexts/LanguageProvider";
-import { contentLifecycleService, getContentLifecycleStatus, runContentLifecycleNow } from "@/lib/contentLifecycleService";
+
 
 const content = {
     en: {
@@ -18,29 +18,15 @@ const content = {
             pupils: "Total Pupils",
             parents: "Parent Accounts",
             documents: "Documents",
-            archived: "Archived Items",
+
         },
-        lifecycle: {
-            title: "Content Lifecycle Management",
-            description: "Automatic archiving and cleanup of expired content",
-            status: "Status",
-            running: "Running",
-            stopped: "Stopped",
-            lastRun: "Last Run",
-            nextRun: "Next Run",
-            runNow: "Run Now",
-            start: "Start Service",
-            stop: "Stop Service",
-            archivedCount: "Items Archived",
-            recentlyArchived: "Recently Archived",
-        },
+
         quickActions: {
             title: "Quick Actions",
             description: "Jump directly to common tasks. Each page includes interactive tutorials to guide you.",
         },
         topics: [
-            { title: 'News & Alerts' },
-            { title: 'Calendar Events' },
+            { title: 'Announcements' },
             { title: 'Staff Directory' },
             { title: 'Parent Accounts' },
             { title: 'Child Profiles' },
@@ -54,29 +40,15 @@ const content = {
             pupils: "Cyfanswm Disgyblion",
             parents: "Cyfrifon Rhieni",
             documents: "Dogfennau",
-            archived: "Eitemau wedi'u Harchifo",
+
         },
-        lifecycle: {
-            title: "Rheoli Cylchred Bywyd Cynnwys",
-            description: "Archifo awtomatig a glanhau cynnwys sydd wedi dod i ben",
-            status: "Statws",
-            running: "Yn Rhedeg",
-            stopped: "Wedi Stopio",
-            lastRun: "Rhediad Diwethaf",
-            nextRun: "Rhediad Nesaf",
-            runNow: "Rhedeg Nawr",
-            start: "Dechrau Gwasanaeth",
-            stop: "Stopio Gwasanaeth",
-            archivedCount: "Eitemau wedi'u Harchifo",
-            recentlyArchived: "Wedi'u Harchifo'n Ddiweddar",
-        },
+
         quickActions: {
             title: "Gweithredoedd Cyflym",
             description: "Neidiwch yn uniongyrchol i dasgau cyffredin. Mae pob tudalen yn cynnwys tiwtorialau rhyngweithiol i'ch arwain.",
         },
         topics: [
-            { title: 'Newyddion a Hysbysiadau' },
-            { title: 'Digwyddiadau Calendr' },
+            { title: 'Cyhoeddiadau' },
             { title: 'Cyfeirlyfr Staff' },
             { title: 'Cyfrifon Rhieni' },
             { title: 'Proffiliau Plant' },
@@ -96,64 +68,19 @@ export default function AdminDashboard() {
     const t = content[language];
     
     const quickActionItems = [
-        { id: 'news', title: t.topics[0].title, description: language === 'en' ? 'Create announcements' : 'Creu cyhoeddiadau', icon: Newspaper, href: '/admin/news' },
-        { id: 'calendar', title: t.topics[1].title, description: language === 'en' ? 'Add events' : 'Ychwanegu digwyddiadau', icon: Calendar, href: '/admin/calendar' },
-        { id: 'staff', title: t.topics[2].title, description: language === 'en' ? 'Manage staff' : 'Rheoli staff', icon: Users, href: '/admin/staff' },
-        { id: 'parents', title: t.topics[3].title, description: language === 'en' ? 'Add parent accounts' : 'Ychwanegu cyfrifon rhieni', icon: Users2, href: '/admin/parents' },
-        { id: 'children', title: t.topics[4].title, description: language === 'en' ? 'Enrol students' : 'Cofrestru myfyrwyr', icon: BookUser, href: '/admin/children' },
-        { id: 'documents', title: t.topics[5].title, description: language === 'en' ? 'Upload files' : 'Llwytho ffeiliau', icon: FileText, href: '/admin/documents' },
+        { id: 'announcements', title: t.topics[0].title, description: language === 'en' ? 'Create announcements' : 'Creu cyhoeddiadau', icon: Newspaper, href: '/admin/announcements' },
+        { id: 'staff', title: t.topics[1].title, description: language === 'en' ? 'Manage staff' : 'Rheoli staff', icon: Users, href: '/admin/staff' },
+        { id: 'parents', title: t.topics[2].title, description: language === 'en' ? 'Add parent accounts' : 'Ychwanegu cyfrifon rhieni', icon: Users2, href: '/admin/parents' },
+        { id: 'children', title: t.topics[3].title, description: language === 'en' ? 'Enrol students' : 'Cofrestru myfyrwyr', icon: BookUser, href: '/admin/children' },
+        { id: 'documents', title: t.topics[4].title, description: language === 'en' ? 'Upload files' : 'Llwytho ffeiliau', icon: FileText, href: '/admin/documents' },
     ];
 
     const [stats, setStats] = useState<{label: string, value: number | null, icon: React.ElementType}[]>([
         { label: t.stats.pupils, value: null, icon: BookUser },
         { label: t.stats.parents, value: null, icon: Users2 },
         { label: t.stats.documents, value: null, icon: FileText },
-        { label: t.stats.archived, value: null, icon: Archive },
     ]);
-    const [lifecycleStatus, setLifecycleStatus] = useState({ isRunning: false, nextRun: undefined });
-    const [lifecycleStats, setLifecycleStats] = useState({ totalArchived: 0, recentlyArchived: 0 });
-    const [isRunningLifecycle, setIsRunningLifecycle] = useState(false);
 
-    const handleRunLifecycle = async () => {
-        setIsRunningLifecycle(true);
-        try {
-            await runContentLifecycleNow();
-            await loadLifecycleData();
-        } catch (error) {
-            console.error('Failed to run lifecycle management:', error);
-        } finally {
-            setIsRunningLifecycle(false);
-        }
-    };
-
-    const handleStartService = async () => {
-        try {
-            contentLifecycleService.start();
-            await loadLifecycleData();
-        } catch (error) {
-            console.error('Failed to start lifecycle service:', error);
-        }
-    };
-
-    const handleStopService = async () => {
-        try {
-            contentLifecycleService.stop();
-            await loadLifecycleData();
-        } catch (error) {
-            console.error('Failed to stop lifecycle service:', error);
-        }
-    };
-
-    const loadLifecycleData = async () => {
-        try {
-            const status = getContentLifecycleStatus();
-            const stats = await contentLifecycleService.getStats();
-            setLifecycleStatus(status);
-            setLifecycleStats(stats);
-        } catch (error) {
-            console.error('Failed to load lifecycle data:', error);
-        }
-    };
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -175,8 +102,7 @@ export default function AdminDashboard() {
         };
 
         fetchStats();
-        loadLifecycleData();
-    }, [t.stats.pupils, t.stats.parents, t.stats.documents, t.stats.archived]);
+    }, [t.stats.pupils, t.stats.parents, t.stats.documents]);
 
     return (
         <div className="space-y-6">

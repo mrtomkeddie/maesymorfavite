@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
 
 interface AuthContextValue {
   isAuthenticated: boolean;
@@ -20,7 +19,6 @@ function getAuthSnapshot() {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const location = useLocation();
   const [{ isAuthenticated, userRole, userEmail }, setAuth] = useState(getAuthSnapshot());
 
   const refresh = () => setAuth(getAuthSnapshot());
@@ -75,11 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Also refresh when route changes (same-tab updates after navigations)
-  useEffect(() => {
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname]);
+
 
   const value = useMemo<AuthContextValue>(() => ({
     isAuthenticated,

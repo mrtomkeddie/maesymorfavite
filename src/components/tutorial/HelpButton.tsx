@@ -157,7 +157,7 @@ export function HelpButton({
                           className={`ml-3 flex items-center space-x-1 px-3 py-1 text-xs font-medium rounded-md transition-colors ${
                             isCompleted 
                               ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                              : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                              : 'bg-red-100 text-red-700 hover:bg-red-200'
                           }`}
                         >
                           <Play className="w-3 h-3" />
@@ -185,8 +185,8 @@ export function HelpButton({
       {/* Help button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-105 ${
-          isOpen ? 'ring-4 ring-blue-200' : ''
+        className={`p-3 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-105 ${
+          isOpen ? 'ring-4 ring-red-200' : ''
         }`}
         title={t.help}
       >

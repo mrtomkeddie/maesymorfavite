@@ -50,26 +50,35 @@ import { useAuth } from '@/contexts/AuthProvider';
 // Lightweight language toggle for the admin header (mirrors Portal/Teacher)
 const AdminLanguageToggle = () => {
   const { language, setLanguage } = useLanguage();
-  const labels = { en: { cy: 'Cymraeg', en: 'English' }, cy: { cy: 'Cymraeg', en: 'English' } } as const;
-  const t = labels[language as 'en' | 'cy'];
+  const texts = {
+    en: { lang1: 'Cymraeg', lang2: 'English' },
+    cy: { lang1: 'Cymraeg', lang2: 'English' }
+  };
+  
+  const t = texts[language];
+  
   return (
     <div className="flex items-center gap-1 border rounded-full p-1 text-sm bg-background">
-      <Button
-        variant={language === 'cy' ? 'default' : 'ghost'}
-        size="sm"
-        className={`rounded-full px-3 py-1 h-auto text-xs ${language === 'cy' ? 'bg-accent hover:bg-accent/80 text-accent-foreground' : ''}`}
+      <Button 
+        variant={language === 'cy' ? 'default' : 'ghost'} 
+        size="sm" 
+        className={`rounded-full px-3 py-1 h-auto text-xs ${
+          language === 'cy' ? 'bg-red-100 hover:bg-red-200 text-red-900' : ''
+        }`} 
         onClick={() => setLanguage('cy')}
       >
-        {t.cy}
+        {t.lang1}
       </Button>
-      <div className="w-px h-4 bg-border" />
-      <Button
-        variant={language === 'en' ? 'default' : 'ghost'}
-        size="sm"
-        className={`rounded-full px-3 py-1 h-auto text-xs ${language === 'en' ? 'bg-accent hover:bg-accent/80 text-accent-foreground' : ''}`}
+      <div className="w-px h-4 bg-border"></div>
+      <Button 
+        variant={language === 'en' ? 'default' : 'ghost'} 
+        size="sm" 
+        className={`rounded-full px-3 py-1 h-auto text-xs ${
+          language === 'en' ? 'bg-red-100 hover:bg-red-200 text-red-900' : ''
+        }`} 
         onClick={() => setLanguage('en')}
       >
-        {t.en}
+        {t.lang2}
       </Button>
     </div>
   );
@@ -88,8 +97,7 @@ const content = {
       system: 'System',
     },
     contentManagement: {
-      news: 'News & Alerts',
-      calendar: 'Calendar',
+      announcements: 'Announcements',
       staff: 'Staff',
       gallery: 'Photo Gallery',
       documents: 'Documents',
@@ -122,8 +130,7 @@ const content = {
       system: 'System',
     },
     contentManagement: {
-      news: 'Newyddion a Hysbysiadau',
-      calendar: 'Calendr',
+      announcements: 'Cyhoeddiadau',
       staff: 'Staff',
       gallery: 'Oriel Ffotograffau',
       documents: 'Dogfennau',
@@ -161,8 +168,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   ];
 
   const contentManagementItems = [
-    { href: '/admin/news', label: t.contentManagement.news, icon: Newspaper },
-    { href: '/admin/calendar', label: t.contentManagement.calendar, icon: Calendar },
+    { href: '/admin/announcements', label: t.contentManagement.announcements, icon: Newspaper },
     { href: '/admin/staff', label: t.contentManagement.staff, icon: Users },
     { href: '/admin/gallery', label: t.contentManagement.gallery, icon: Camera },
     { href: '/admin/documents', label: t.contentManagement.documents, icon: FileText },

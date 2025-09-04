@@ -207,7 +207,7 @@ function NewsCard({ item, language, t }: { item: HomepageContentItem; language: 
 function EventCard({ item, language }: { item: HomepageContentItem; language: string }) {
   return (
     <div className="flex items-start gap-4">
-      <div className="text-center font-bold text-primary border-r pr-4">
+      <div className="text-center font-bold text-red-500 border-r pr-4">
         <div className="text-2xl">{format(item.date, 'dd')}</div>
         <div className="text-xs uppercase">{format(item.date, 'MMM')}</div>
       </div>

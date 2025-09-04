@@ -222,6 +222,20 @@ export default function DashboardPage() {
         </div>
       </div>
       
+      {/* Quick Actions - Show at top on mobile, sidebar on desktop */}
+      <div className="lg:hidden mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t.actions}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full justify-start">
+              <Link to="/absence"><ClipboardCheck className="mr-2 h-4 w-4" /> {t.reportAbsence}</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+      
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
         
         <div className="lg:col-span-2 space-y-6">
@@ -280,7 +294,8 @@ export default function DashboardPage() {
         </div>
 
         <div className="lg:col-span-1 space-y-6">
-          <Card>
+          {/* Quick Actions - Hidden on mobile, shown in sidebar on desktop */}
+          <Card className="hidden lg:block">
             <CardHeader>
               <CardTitle>{t.actions}</CardTitle>
             </CardHeader>

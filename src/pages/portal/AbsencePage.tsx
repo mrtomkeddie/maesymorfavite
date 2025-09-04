@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -25,9 +25,8 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, Loader2, Upload } from 'lucide-react';
+import { Upload, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/db';
@@ -59,6 +58,8 @@ const content = {
       childPlaceholder: "Select your child",
       dateLabel: "Date of Absence",
       datePlaceholder: "Pick a date",
+      todayButton: "Today",
+      yesterdayButton: "Yesterday",
       reasonLabel: "Reason for Absence",
       reasonPlaceholder: "e.g., Unwell with a cold.",
       documentLabel: "Upload a Document (Optional)",
@@ -89,6 +90,8 @@ const content = {
       childPlaceholder: "Dewiswch eich plentyn",
       dateLabel: "Dyddiad yr Absenoldeb",
       datePlaceholder: "Dewiswch ddyddiad",
+      todayButton: "Heddiw",
+      yesterdayButton: "Ddoe",
       reasonLabel: "Rheswm dros Absenoldeb",
       reasonPlaceholder: "e.e., Yn sâl gydag annwyd.",
       documentLabel: "Uwchlwytho Dogfen (Dewisol)",
@@ -117,11 +120,19 @@ export default function AbsencePage() {
   const [isLoading, setIsLoading] = useState(false);
   const t = content[language];
   const locale = language === 'cy' ? cy : undefined;
+  const currentYear = new Date().getFullYear();
+
+  // Stabilize and memoize messages + schema with safe fallback
+  const messages = useMemo(
+    () => (content[language]?.formSchema ?? content.en.formSchema),
+    [language]
+  );
+  const schema = useMemo(() => absenceFormSchema(messages), [messages]);
 
   const form = useForm<z.infer<ReturnType<typeof absenceFormSchema>>>({
-    resolver: zodResolver(absenceFormSchema(t.formSchema)),
+    resolver: zodResolver(schema),
     defaultValues: {
-        reason: "",
+      reason: "",
     }
   });
 
@@ -179,7 +190,7 @@ Submitted by: ${parentInfo.name} (${parentInfo.email})
         </p>
       </div>
 
-      <Card className="max-w-2xl mx-auto">
+      <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle>{t.form.title}</CardTitle>
           <CardDescription>
@@ -189,6 +200,7 @@ Submitted by: ${parentInfo.name} (${parentInfo.email})
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              {/* Make Child + Date fields full-width and stacked */}
               <FormField
                 control={form.control}
                 name="childId"
@@ -218,84 +230,131 @@ Submitted by: ${parentInfo.name} (${parentInfo.email})
                 control={form.control}
                 name="absenceDate"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
+                  <FormItem className="space-y-3">
                     <FormLabel>{t.form.dateLabel}</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={'outline'}
-                            className={cn(
-                              'w-full md:w-[240px] pl-3 text-left font-normal',
-                              !field.value && 'text-muted-foreground'
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, 'PPP', { locale })
-                            ) : (
-                              <span>{t.form.datePlaceholder}</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                          locale={locale}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
-              <FormField
-                control={form.control}
-                name="reason"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t.form.reasonLabel}</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder={t.form.reasonPlaceholder}
-                        {...field}
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => field.onChange(new Date())}
+                        className="text-sm hover:bg-red-50 hover:text-red-900 hover:border-red-300"
+                      >
+                        {t.form.todayButton}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const yesterday = new Date()
+                          yesterday.setDate(yesterday.getDate() - 1)
+                          field.onChange(yesterday)
+                        }}
+                        className="text-sm hover:bg-red-50 hover:text-red-900 hover:border-red-300"
+                      >
+                        {t.form.yesterdayButton}
+                      </Button>
+                    </div>
+
+                    {/* Embedded calendar with refined styling and alignment */}
+                    <div className="rounded-xl border bg-card p-3 shadow-sm mx-auto w-full max-w-sm">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                        showOutsideDays
+                        captionLayout="dropdown-buttons"
+                        fromYear={currentYear - 5}
+                        toYear={currentYear + 1}
+                        className="rounded-md mx-auto"
+                        classNames={{
+                          months: "flex justify-center",
+                          month: "space-y-3",
+                          caption: "flex items-center justify-center relative",
+                          caption_label: "text-base font-semibold",
+                          nav: "flex items-center",
+                          nav_button:
+                            "h-8 w-8 bg-transparent hover:bg-muted rounded-md border text-foreground",
+                          nav_button_previous: "absolute left-1",
+                          nav_button_next: "absolute right-1",
+
+                          table: "w-full border-collapse",
+                          head_row: "grid grid-cols-7",
+                          head_cell:
+                            "w-10 h-10 text-muted-foreground text-[0.8rem] font-medium flex items-center justify-center",
+                          row: "grid grid-cols-7 gap-1",
+                          cell: "relative p-0",
+
+                          day:
+                            "h-10 w-10 inline-flex items-center justify-center rounded-md text-sm font-medium hover:bg-red-50 hover:text-red-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400",
+                          day_selected: "bg-red-600 text-white hover:bg-red-700 focus:bg-red-700",
+                          day_today: "ring-1 ring-red-300",
+                          day_outside: "text-muted-foreground/40 opacity-50",
+                          day_disabled: "text-muted-foreground/40",
+                          day_hidden: "invisible"
+                        }}
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                    </div>
 
-              <FormField
-                control={form.control}
-                name="document"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t.form.documentLabel}</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                          <Input type="file" className="pl-12" onChange={(e) => field.onChange(e.target.files && e.target.files[0])} />
-                          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                              <Upload className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                      </div>
-                    </FormControl>
-                    <FormDescription>
-                      {t.form.documentDescription}
-                    </FormDescription>
+                    <p className="text-sm text-muted-foreground text-center">
+                      {field.value ? format(field.value, 'PPP', { locale }) : t.form.datePlaceholder}
+                    </p>
+
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              {/* End stacked fields */}
+
+              <div className="space-y-6">
+                {/* Reason and Document unchanged */}
+                <FormField
+                  control={form.control}
+                  name="reason"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t.form.reasonLabel}</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder={t.form.reasonPlaceholder}
+                          className="resize-none min-h-[120px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="document"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t.form.documentLabel}</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                            <Input type="file" className="pl-12" onChange={(e) => field.onChange(e.target.files && e.target.files[0])} />
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <Upload className="h-5 w-5 text-muted-foreground" />
+                            </div>
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        {t.form.documentDescription}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <Button type="submit" disabled={isLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {t.form.submitButton}
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {t.form.submitButton}
               </Button>
             </form>
           </Form>

@@ -8,7 +8,7 @@ import { getSupabaseClient } from '@/lib/supabase';
 import type { NewsPost, NewsPostWithId, CalendarEvent, CalendarEventWithId, StaffMember, StaffMemberWithId, Document, DocumentWithId, Parent, ParentWithId, Child, ChildWithId, SiteSettings, InboxMessage, InboxMessageWithId, Photo, PhotoWithId, WeeklyMenu, UserWithRole, UserRole, ParentNotification, ParentNotificationWithId } from '@/lib/types';
 import { news as mockNews } from '@/lib/mockNews';
 import { yearGroups } from '@/components/admin/ChildForm';
-import { contentLifecycleManager } from '@/lib/contentLifecycle';
+// Content lifecycle import removed - only homepage filtering remains
 
 
 
@@ -1073,134 +1073,6 @@ export const getCollectionCount = async (collectionName: string): Promise<number
     return count || 0;
 };
 
-// === CONTENT LIFECYCLE MANAGEMENT ===
+// Content lifecycle management removed - only homepage filtering remains active
 
-/**
- * Run automatic content lifecycle management
- */
-export const runContentLifecycleCleanup = async (): Promise<{
-    archivedNews: number;
-    archivedEvents: number;
-    errors: string[];
-}> => {
-    const errors: string[] = [];
-    let archivedNews = 0;
-    let archivedEvents = 0;
-
-    try {
-        // Get all news and events
-        const allNews = await getNews();
-        const allEvents = await getCalendarEvents();
-
-        // Check for content that needs archiving
-        for (const newsPost of allNews) {
-            if (contentLifecycleManager.shouldArchiveNews(newsPost) || 
-                (newsPost.isUrgent && contentLifecycleManager.shouldArchiveUrgentAlert(newsPost))) {
-                try {
-                    // Archive by updating the post with archived flag
-                    await updateNews(newsPost.id, { 
-                        archived: true, 
-                        archivedAt: new Date().toISOString() 
-                    });
-                    contentLifecycleManager.archiveNews(newsPost, newsPost.isUrgent ? 'expired' : 'manual');
-                    archivedNews++;
-                } catch (error) {
-                    errors.push(`Failed to archive news ${newsPost.id}: ${error}`);
-                }
-            }
-        }
-
-        for (const event of allEvents) {
-            if (contentLifecycleManager.shouldArchiveEvent(event)) {
-                try {
-                    // Archive by updating the event with archived flag
-                    await updateCalendarEvent(event.id, { 
-                        archived: true, 
-                        archivedAt: new Date().toISOString() 
-                    }, false);
-                    contentLifecycleManager.archiveEvent(event, 'past_event');
-                    archivedEvents++;
-                } catch (error) {
-                    errors.push(`Failed to archive event ${event.id}: ${error}`);
-                }
-            }
-        }
-
-        console.log(`Content lifecycle cleanup completed: ${archivedNews} news, ${archivedEvents} events archived`);
-    } catch (error) {
-        errors.push(`Content lifecycle cleanup failed: ${error}`);
-    }
-
-    return { archivedNews, archivedEvents, errors };
-};
-
-/**
- * Get content lifecycle statistics for admin dashboard
- */
-export const getContentLifecycleStats = async () => {
-    try {
-        const allNews = await getNews();
-        const allEvents = await getCalendarEvents();
-        
-        const stats = contentLifecycleManager.getLifecycleStats();
-        
-        // Count content that needs archiving
-        const newsNeedingArchival = allNews.filter(post => 
-            contentLifecycleManager.shouldArchiveNews(post) || 
-            (post.isUrgent && contentLifecycleManager.shouldArchiveUrgentAlert(post))
-        );
-        
-        const eventsNeedingArchival = allEvents.filter(event => 
-            contentLifecycleManager.shouldArchiveEvent(event)
-        );
-
-        return {
-            ...stats,
-            needingArchival: {
-                news: newsNeedingArchival.length,
-                events: eventsNeedingArchival.length,
-                total: newsNeedingArchival.length + eventsNeedingArchival.length
-            },
-            contentDetails: {
-                newsNeedingArchival,
-                eventsNeedingArchival
-            }
-        };
-    } catch (error) {
-        console.error('Failed to get content lifecycle stats:', error);
-        return contentLifecycleManager.getLifecycleStats();
-    }
-};
-
-/**
- * Update content lifecycle configuration
- */
-export const updateContentLifecycleConfig = async (config: Partial<any>) => {
-    contentLifecycleManager.updateConfig(config);
-    console.log('Content lifecycle configuration updated:', config);
-};
-
-/**
- * Get archived content for admin review
- */
-export const getArchivedContent = async (type?: 'news' | 'event') => {
-    return contentLifecycleManager.getArchivedContent(type);
-};
-
-/**
- * Restore archived content
- */
-export const restoreArchivedContent = async (id: string): Promise<boolean> => {
-    try {
-        const restored = contentLifecycleManager.restoreContent(id);
-        if (restored) {
-            // Update the database to remove archived flag
-            // This would need to determine if it's news or event and call appropriate update
-            console.log(`Content ${id} restored from archive`);
-        }
-        return restored;
-    } catch (error) {
-        console.error(`Failed to restore content ${id}:`, error);
-        return false;
-    }
-};
+// restoreArchivedContent function removed - admin archiving functionality no longer available

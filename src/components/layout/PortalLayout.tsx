@@ -46,7 +46,7 @@ const PortalLanguageToggle = () => {
       <Button
         variant={language === 'cy' ? 'default' : 'ghost'}
         size="sm"
-        className={`rounded-full px-3 py-1 h-auto text-xs ${language === 'cy' ? 'bg-accent hover:bg-accent/80 text-accent-foreground' : ''}`}
+        className={`rounded-full px-3 py-1 h-auto text-xs ${language === 'cy' ? 'bg-red-100 hover:bg-red-200 text-red-900' : ''}`}
         onClick={() => setLanguage('cy')}
       >
         {t.cy}
@@ -55,7 +55,7 @@ const PortalLanguageToggle = () => {
       <Button
         variant={language === 'en' ? 'default' : 'ghost'}
         size="sm"
-        className={`rounded-full px-3 py-1 h-auto text-xs ${language === 'en' ? 'bg-accent hover:bg-accent/80 text-accent-foreground' : ''}`}
+        className={`rounded-full px-3 py-1 h-auto text-xs ${language === 'en' ? 'bg-red-100 hover:bg-red-200 text-red-900' : ''}`}
         onClick={() => setLanguage('en')}
       >
         {t.en}

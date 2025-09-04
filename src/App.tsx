@@ -25,6 +25,7 @@ import AdminNews from './pages/admin/AdminNews'
 import AdminDocuments from './pages/admin/AdminDocuments'
 import AdminSettings from './pages/admin/AdminSettings'
 import CalendarPage from './pages/admin/CalendarPage';
+import AdminAnnouncements from './pages/admin/AdminAnnouncements';
 import UsersPage from './pages/admin/UsersPage';
 import GalleryPage from './pages/admin/GalleryPage';
 import AdminInboxPage from './pages/admin/AdminInboxPage';
@@ -42,7 +43,7 @@ import AdminChildren from './pages/admin/AdminChildren'
 import AdminParents from './pages/admin/AdminParents'
 import AdminStaff from './pages/admin/AdminStaff'
 import AdminMenu from './pages/admin/AdminMenu'
-import ContentLifecyclePage from './pages/admin/ContentLifecyclePage'
+// ContentLifecyclePage removed - admin archiving functionality no longer available
 // Protected route and logout handler
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import LogoutHandler from '@/components/auth/LogoutHandler'
@@ -96,6 +97,13 @@ function App() {
           <ProtectedRoute allowedRoles={["admin"]} redirectTo="/admin/login">
             <AdminLayout>
               <AdminDashboard />
+            </AdminLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/announcements" element={
+          <ProtectedRoute allowedRoles={["admin"]} redirectTo="/admin/login">
+            <AdminLayout>
+              <AdminAnnouncements />
             </AdminLayout>
           </ProtectedRoute>
         } />

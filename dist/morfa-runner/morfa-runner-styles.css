@@ -5,6 +5,11 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden; /* Prevents any scrollbars */
+  touch-action: manipulation; /* Improves touch responsiveness */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .game-container {
@@ -15,14 +20,18 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
+  touch-action: manipulation;
 }
 
 canvas {
   display: block;
-  /* Make canvas responsive while maintaining aspect ratio */
-  width: 100%;
-  height: 100%;
+  /* Fixed dimensions to match canvas element */
+  width: 900px;
+  height: 400px;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
+  touch-action: manipulation;
 }
 
 #startButton {
@@ -30,21 +39,24 @@ canvas {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  padding: 12px 24px;
-  font-size: 20px;
+  padding: 16px 32px; /* Larger for mobile */
+  font-size: 24px; /* Larger for mobile */
   background: #e11d48;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   display: none;
   color: white;
   font-weight: bold;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
   transition: background-color 0.2s;
   z-index: 10;
+  min-width: 120px;
+  min-height: 60px;
+  touch-action: manipulation;
 }
 
-#startButton:hover {
+#startButton:hover, #startButton:active {
   background: #be185d;
 }
 
@@ -57,6 +69,7 @@ canvas {
   text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
   font-weight: bold;
   z-index: 10;
+  pointer-events: none;
 }
 
 /* Fullscreen Button */
@@ -67,18 +80,42 @@ canvas {
   background: rgba(0, 0, 0, 0.4);
   border: none;
   color: white;
-  padding: 8px;
-  border-radius: 5px;
+  padding: 12px; /* Larger for mobile */
+  border-radius: 8px;
   cursor: pointer;
   line-height: 0;
   z-index: 10;
+  min-width: 48px;
+  min-height: 48px;
+  touch-action: manipulation;
 }
 
-#fullscreenButton:hover {
+#fullscreenButton:hover, #fullscreenButton:active {
     background: rgba(0, 0, 0, 0.6);
 }
 
 #fullscreenButton svg {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  #startButton {
+    padding: 20px 40px;
+    font-size: 28px;
+    min-width: 140px;
+    min-height: 70px;
+  }
+  
+  #fullscreenButton {
+    padding: 16px;
+    min-width: 56px;
+    min-height: 56px;
+  }
+  
+  #fullscreenButton svg {
+    width: 24px;
+    height: 24px;
+  }
 }

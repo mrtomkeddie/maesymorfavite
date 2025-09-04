@@ -9,7 +9,7 @@ import { yearGroups } from "@/components/admin/ChildForm";
 import { news as mockNewsData } from '@/lib/mockNews';
 import { calendarEvents as mockCalendarEvents } from '@/lib/mockCalendar';
 import { generateMockData, parentChildren } from '@/lib/mockData';
-import { contentLifecycleManager } from '@/lib/contentLifecycle';
+// Content lifecycle import removed - only homepage filtering remains
 
 // === IN-MEMORY STORES FOR PERSISTENT MOCK DATA ===
 let mockNewsStore: NewsPostWithId[] = [];
@@ -950,95 +950,6 @@ export const getCollectionCount = async (collectionName: string): Promise<number
     }
 }
 
-// Lifecycle management functions (in-memory mock)
-export const runContentLifecycleCleanup = async (): Promise<{ archivedNews: number; archivedEvents: number; errors: string[] }> => {
-    initializeStores();
-    const errors: string[] = [];
-    let archivedNews = 0;
-    let archivedEvents = 0;
+// Admin archiving functions removed - only homepage filtering remains
 
-    try {
-        // Iterate over copies to avoid mutation issues while archiving
-        const allNews = [...mockNewsStore];
-        const allEvents = [...mockCalendarStore];
-
-        for (const newsPost of allNews) {
-            if (contentLifecycleManager.shouldArchiveNews(newsPost) || (newsPost.isUrgent && contentLifecycleManager.shouldArchiveUrgentAlert(newsPost))) {
-                try {
-                    contentLifecycleManager.archiveNews(newsPost, newsPost.isUrgent ? 'expired' : 'manual');
-                    archivedNews++;
-                } catch (e: any) {
-                    errors.push(`Failed to archive news ${newsPost.id}: ${e?.message || e}`);
-                }
-            }
-        }
-
-        for (const event of allEvents) {
-            if (contentLifecycleManager.shouldArchiveEvent(event)) {
-                try {
-                    contentLifecycleManager.archiveEvent(event, 'past_event');
-                    archivedEvents++;
-                } catch (e: any) {
-                    errors.push(`Failed to archive event ${event.id}: ${e?.message || e}`);
-                }
-            }
-        }
-    } catch (e: any) {
-        errors.push(`Content lifecycle cleanup failed: ${e?.message || e}`);
-    }
-
-    return { archivedNews, archivedEvents, errors };
-};
-
-export const getContentLifecycleStats = async () => {
-    initializeStores();
-    try {
-        const allNews = [...mockNewsStore];
-        const allEvents = [...mockCalendarStore];
-
-        const stats = contentLifecycleManager.getLifecycleStats();
-
-        const newsNeedingArchival = allNews.filter(post =>
-            contentLifecycleManager.shouldArchiveNews(post) || (post.isUrgent && contentLifecycleManager.shouldArchiveUrgentAlert(post))
-        );
-        const eventsNeedingArchival = allEvents.filter(event => contentLifecycleManager.shouldArchiveEvent(event));
-
-        return {
-            ...stats,
-            needingArchival: {
-                news: newsNeedingArchival.length,
-                events: eventsNeedingArchival.length,
-                total: newsNeedingArchival.length + eventsNeedingArchival.length,
-            },
-            contentDetails: {
-                newsNeedingArchival,
-                eventsNeedingArchival,
-            },
-        };
-    } catch (e) {
-        console.error('Failed to get content lifecycle stats (mock):', e);
-        return contentLifecycleManager.getLifecycleStats();
-    }
-};
-
-export const updateContentLifecycleConfig = async (config: Partial<any>) => {
-    contentLifecycleManager.updateConfig(config);
-    console.log('Mock content lifecycle configuration updated:', config);
-};
-
-export const getArchivedContent = async (type?: 'news' | 'event') => {
-    return contentLifecycleManager.getArchivedContent(type);
-};
-
-export const restoreArchivedContent = async (id: string): Promise<boolean> => {
-    try {
-        const restored = contentLifecycleManager.restoreContent(id);
-        if (restored) {
-            console.log(`Mock: Content ${id} restored from archive`);
-        }
-        return restored;
-    } catch (e) {
-        console.error(`Mock: Failed to restore content ${id}:`, e);
-        return false;
-    }
-};
+// Admin archiving functions removed - only homepage filtering remains

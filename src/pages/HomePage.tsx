@@ -77,7 +77,7 @@ export default function HomePage() {
       )}
 
       {/* Hero Section */}
-      <section className="relative w-full h-[480px] md:h-[560px] flex items-center justify-center text-center text-white overflow-hidden">
+      <section className="relative w-full h-screen flex items-center justify-center text-center text-white overflow-hidden">
         <img
           src="https://i.postimg.cc/RFZsjTxj/Chat-GPT-Image-Jul-25-2025-08-43-22-AM.png"
           alt="A vibrant classroom with children learning"

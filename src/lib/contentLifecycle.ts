@@ -5,37 +5,26 @@ export interface ContentLifecycleConfig {
   urgentAlertExpiryDays: number;
   eventArchiveDays: number;
   newsArchiveDays: number;
-  autoCleanupEnabled: boolean;
 }
 
 export const defaultLifecycleConfig: ContentLifecycleConfig = {
   urgentAlertExpiryDays: 7, // Urgent alerts expire after 7 days
   eventArchiveDays: 1, // Events are archived 1 day after they end
   newsArchiveDays: 90, // News posts are archived after 90 days
-  autoCleanupEnabled: true
 };
-
-export interface ArchivedContent {
-  id: string;
-  type: 'news' | 'event';
-  archivedAt: Date;
-  originalData: NewsPost | CalendarEvent;
-  reason: 'expired' | 'past_event' | 'manual';
-}
 
 export class ContentLifecycleManager {
   private config: ContentLifecycleConfig;
-  private archivedContent: ArchivedContent[] = [];
 
   constructor(config: ContentLifecycleConfig = defaultLifecycleConfig) {
     this.config = config;
   }
 
   /**
-   * Check if an urgent news post should be archived
+   * Check if an urgent news post should be filtered from homepage
    */
   shouldArchiveUrgentAlert(post: NewsPost): boolean {
-    if (!post.isUrgent || !this.config.autoCleanupEnabled) return false;
+    if (!post.isUrgent) return false;
     
     const postDate = new Date(post.date);
     const expiryDate = new Date(postDate);
@@ -45,11 +34,9 @@ export class ContentLifecycleManager {
   }
 
   /**
-   * Check if a news post should be archived
+   * Check if a news post should be filtered from homepage
    */
   shouldArchiveNews(post: NewsPost): boolean {
-    if (!this.config.autoCleanupEnabled) return false;
-    
     const postDate = new Date(post.date);
     const archiveDate = new Date(postDate);
     archiveDate.setDate(archiveDate.getDate() + this.config.newsArchiveDays);
@@ -58,11 +45,9 @@ export class ContentLifecycleManager {
   }
 
   /**
-   * Check if an event should be archived
+   * Check if an event should be filtered from homepage
    */
   shouldArchiveEvent(event: CalendarEvent): boolean {
-    if (!this.config.autoCleanupEnabled) return false;
-    
     const eventEndDate = new Date(event.end || event.start);
     const archiveDate = new Date(eventEndDate);
     archiveDate.setDate(archiveDate.getDate() + this.config.eventArchiveDays);
@@ -71,150 +56,33 @@ export class ContentLifecycleManager {
   }
 
   /**
-   * Archive a news post
-   */
-  archiveNews(post: NewsPost, reason: ArchivedContent['reason'] = 'expired'): void {
-    const archived: ArchivedContent = {
-      id: post.id,
-      type: 'news',
-      archivedAt: new Date(),
-      originalData: post,
-      reason
-    };
-    
-    this.archivedContent.push(archived);
-  }
-
-  /**
-   * Archive an event
-   */
-  archiveEvent(event: CalendarEvent, reason: ArchivedContent['reason'] = 'past_event'): void {
-    const archived: ArchivedContent = {
-      id: event.id,
-      type: 'event',
-      archivedAt: new Date(),
-      originalData: event,
-      reason
-    };
-    
-    this.archivedContent.push(archived);
-  }
-
-  /**
-   * Filter active news posts (non-archived)
+   * Filter news posts for homepage display (removes expired content)
    */
   filterActiveNews(newsPosts: NewsPost[]): NewsPost[] {
     return newsPosts.filter(post => {
-      // Check if already archived
-      const isArchived = this.archivedContent.some(archived => 
-        archived.id === post.id && archived.type === 'news'
-      );
+      // Always show published news on dedicated pages
+      if (!post.published) return false;
       
-      if (isArchived) return false;
-      
-      // Check if should be archived now
-      if (this.shouldArchiveNews(post)) {
-        this.archiveNews(post);
-        return false;
+      // For homepage filtering, check if content should be archived
+      if (post.isUrgent) {
+        return !this.shouldArchiveUrgentAlert(post);
+      } else {
+        return !this.shouldArchiveNews(post);
       }
-      
-      // For urgent alerts, check expiry
-      if (post.isUrgent && this.shouldArchiveUrgentAlert(post)) {
-        this.archiveNews(post, 'expired');
-        return false;
-      }
-      
-      return true;
     });
   }
 
   /**
-   * Filter active events (non-archived)
+   * Filter events for homepage display (removes past events)
    */
   filterActiveEvents(events: CalendarEvent[]): CalendarEvent[] {
     return events.filter(event => {
-      // Check if already archived
-      const isArchived = this.archivedContent.some(archived => 
-        archived.id === event.id && archived.type === 'event'
-      );
+      // Always show published events on dedicated pages
+      if (!event.published) return false;
       
-      if (isArchived) return false;
-      
-      // Check if should be archived now
-      if (this.shouldArchiveEvent(event)) {
-        this.archiveEvent(event);
-        return false;
-      }
-      
-      return true;
+      // For homepage filtering, check if event should be archived
+      return !this.shouldArchiveEvent(event);
     });
-  }
-
-  /**
-   * Get archived content
-   */
-  getArchivedContent(type?: 'news' | 'event'): ArchivedContent[] {
-    if (type) {
-      return this.archivedContent.filter(item => item.type === type);
-    }
-    return [...this.archivedContent];
-  }
-
-  /**
-   * Restore archived content
-   */
-  restoreContent(id: string): boolean {
-    const index = this.archivedContent.findIndex(item => item.id === id);
-    if (index !== -1) {
-      this.archivedContent.splice(index, 1);
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Permanently delete archived content older than specified days
-   */
-  cleanupArchivedContent(olderThanDays: number = 365): number {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
-    
-    const initialCount = this.archivedContent.length;
-    this.archivedContent = this.archivedContent.filter(
-      item => item.archivedAt > cutoffDate
-    );
-    
-    return initialCount - this.archivedContent.length;
-  }
-
-  /**
-   * Get lifecycle statistics
-   */
-  getLifecycleStats() {
-    const now = new Date();
-    const stats = {
-      totalArchived: this.archivedContent.length,
-      archivedNews: this.archivedContent.filter(item => item.type === 'news').length,
-      archivedEvents: this.archivedContent.filter(item => item.type === 'event').length,
-      expiredUrgentAlerts: this.archivedContent.filter(
-        item => item.type === 'news' && item.reason === 'expired'
-      ).length,
-      recentlyArchived: this.archivedContent.filter(
-        item => {
-          const daysSinceArchived = (now.getTime() - item.archivedAt.getTime()) / (1000 * 60 * 60 * 24);
-          return daysSinceArchived <= 7;
-        }
-      ).length
-    };
-    
-    return stats;
-  }
-
-  /**
-   * Update lifecycle configuration
-   */
-  updateConfig(newConfig: Partial<ContentLifecycleConfig>): void {
-    this.config = { ...this.config, ...newConfig };
   }
 
   /**
@@ -222,6 +90,13 @@ export class ContentLifecycleManager {
    */
   getConfig(): ContentLifecycleConfig {
     return { ...this.config };
+  }
+
+  /**
+   * Update configuration
+   */
+  updateConfig(newConfig: Partial<ContentLifecycleConfig>): void {
+    this.config = { ...this.config, ...newConfig };
   }
 }
 
