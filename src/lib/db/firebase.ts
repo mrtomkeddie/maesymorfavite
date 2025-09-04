@@ -20,28 +20,50 @@ const generateMockNews = () => mockNewsData.map((post, index) => ({
     id: `mock_news_${index}`,
 }));
 
+let mockNewsStore = generateMockNews();
+
 export const getNews = async (): Promise<NewsPostWithId[]> => {
-    return Promise.resolve(generateMockNews());
+    return Promise.resolve(mockNewsStore);
 };
 
 export const addNews = async (newsData: Omit<NewsPost, 'id' | 'attachments' | 'slug'>): Promise<string> => {
     console.log("Mock addNews:", newsData);
-    return Promise.resolve(`mock_news_${Date.now()}`);
+     if (newsData.isUrgent) {
+        mockNewsStore.forEach(post => post.isUrgent = false);
+    }
+    const newPost = { 
+        ...newsData,
+        id: `mock_news_${Date.now()}`,
+        slug: newsData.title_en.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
+        attachments: [],
+    } as NewsPostWithId
+    mockNewsStore.unshift(newPost);
+    return Promise.resolve(newPost.id);
 };
 
 export const updateNews = async (id: string, newsData: Partial<Omit<NewsPost, 'id' | 'attachments'>>) => {
     console.log(`Mock updateNews (id: ${id}):`, newsData);
+    if (newsData.isUrgent) {
+        mockNewsStore.forEach(post => {
+            if (post.id !== id) post.isUrgent = false;
+        });
+    }
+    const index = mockNewsStore.findIndex(p => p.id === id);
+    if (index !== -1) {
+        mockNewsStore[index] = { ...mockNewsStore[index], ...newsData };
+    }
     return Promise.resolve();
 };
 
 export const deleteNews = async (id: string) => {
     console.log(`Mock deleteNews (id: ${id})`);
+    mockNewsStore = mockNewsStore.filter(p => p.id !== id);
     return Promise.resolve();
 };
 
 export const getPaginatedNews = async (limitNum = 20, lastDoc?: any): Promise<{ data: NewsPostWithId[], lastDoc?: any }> => {
     console.log('Using mock getPaginatedNews');
-    const allNews = generateMockNews();
+    const allNews = mockNewsStore;
     const page = lastDoc ? lastDoc.page + 1 : 0;
     const start = page * limitNum;
     const end = start + limitNum;
