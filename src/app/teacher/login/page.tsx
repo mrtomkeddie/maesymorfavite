@@ -1,10 +1,34 @@
 
+'use client';
+
 import { LoginForm } from "@/components/auth/LoginForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import Image from 'next/image';
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { supabase, getUserRole } from "@/lib/supabase";
+
 
 export default function TeacherLoginPage() {
+  const router = useRouter();
+  const isSupabaseConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  useEffect(() => {
+    const checkSession = async () => {
+      if (!isSupabaseConfigured) return;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const role = await getUserRole(session.user.id);
+        if (role === 'teacher') {
+          router.push('/teacher/dashboard');
+        }
+      }
+    };
+    checkSession();
+  }, [router, isSupabaseConfigured]);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
        <div className="absolute top-4 left-4">
