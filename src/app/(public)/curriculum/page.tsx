@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useLanguage } from './../LanguageProvider';
@@ -6,6 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Mail, BookOpen, Leaf, Puzzle, Users } from "lucide-react";
 import Link from 'next/link';
+import { Suspense } from "react";
+
+export const revalidate = 60; // Revalidate this page at most once every 60 seconds
 
 const content = {
   en: {

@@ -12,10 +12,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/db';
 import type { SiteSettings } from '@/lib/types';
+
+export const revalidate = 60; // Revalidate this page at most once every 60 seconds
 
 const content = {
   en: {

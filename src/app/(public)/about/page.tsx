@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,9 @@ import { useLanguage } from './../LanguageProvider';
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Suspense } from "react";
+
+export const revalidate = 60; // Revalidate this page at most once every 60 seconds
 
 const content = {
   en: {

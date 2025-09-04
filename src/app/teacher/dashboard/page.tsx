@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { db } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
 import type { ChildWithId, StaffMemberWithId, InboxMessageWithId, ParentNotificationWithId } from '@/lib/types';
@@ -16,6 +17,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
 import { useLanguage } from '@/app/(public)/LanguageProvider';
 import { AlertTriangle, BookOpen, Link as LinkIcon } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const content = {
     en: {
@@ -74,7 +76,7 @@ const content = {
     }
 }
 
-export default function TeacherDashboard() {
+function TeacherDashboardContent() {
     const { language } = useLanguage();
     const t = content[language];
     const [teacher, setTeacher] = useState<StaffMemberWithId | null>(null);
@@ -159,18 +161,18 @@ export default function TeacherDashboard() {
 
     if (isLoading) {
         return (
-            <div className="flex h-64 w-full items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
+             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                    <Card><CardHeader><Skeleton className="h-6 w-48"/></CardHeader><CardContent><Skeleton className="h-48 w-full"/></CardContent></Card>
+                    <Card><CardHeader><Skeleton className="h-6 w-48"/></CardHeader><CardContent><Skeleton className="h-48 w-full"/></CardContent></Card>
+                </div>
+                <Card><CardHeader><Skeleton className="h-6 w-48"/></CardHeader><CardContent><Skeleton className="h-32 w-full"/></CardContent></Card>
+             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">{t.myClass} - {teacher?.team}</h1>
-                <p className="text-muted-foreground">{t.welcome.replace('{name}', teacher?.name || '')}</p>
-            </div>
+        <>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
                     <Card>
@@ -335,6 +337,41 @@ export default function TeacherDashboard() {
                     </ScrollArea>
                 </DialogContent>
             </Dialog>
+        </>
+    );
+}
+
+
+export default function TeacherDashboard() {
+    const [teacherName, setTeacherName] = useState('');
+    const { language } = useLanguage();
+    const t = content[language];
+    
+    useEffect(() => {
+        const fetchTeacherName = async () => {
+             const { data: { session } } = await supabase.auth.getSession();
+             if (session) {
+                const teacherData = await db.getTeacherAndClass(session.user.id);
+                if (teacherData) {
+                    setTeacherName(teacherData.teacher.name);
+                }
+             } else {
+                 setTeacherName('Teacher');
+             }
+        }
+        fetchTeacherName();
+    }, []);
+
+    return (
+        <div className="space-y-6">
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight">{t.myClass}</h1>
+                <p className="text-muted-foreground">{t.welcome.replace('{name}', teacherName)}</p>
+            </div>
+             <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin text-primary" />}>
+                <TeacherDashboardContent />
+            </Suspense>
         </div>
     );
 }
+

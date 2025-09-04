@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -13,7 +14,7 @@ import { ClipboardCheck, Utensils, ArrowRight, UserCheck, Percent, Pizza, Salad,
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { parentChildren } from '@/lib/mockData';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { db } from '@/lib/db';
 import type { DailyMenu, WeeklyMenu, ParentNotificationWithId } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -99,8 +100,7 @@ const MenuDrawerContent = dynamic(() => import('@/components/portal/MenuDrawerCo
   loading: () => <LoadingMenuComponent />,
 });
 
-
-export default function DashboardPage() {
+function DashboardContent() {
   const [todayMenu, setTodayMenu] = useState<DailyMenu | null>(null);
   const [weeklyMenu, setWeeklyMenu] = useState<WeeklyMenu | null>(null);
   const [isLoadingMenu, setIsLoadingMenu] = useState(true);
@@ -160,15 +160,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold font-headline">{t.welcome}</h1>
-          <p className="text-muted-foreground">{t.description}</p>
-        </div>
-        <LanguageToggle />
-      </div>
-
+    <>
        <Card className="lg:hidden mb-6">
         <CardHeader>
             <CardTitle>{t.actions}</CardTitle>
@@ -320,10 +312,71 @@ export default function DashboardPage() {
         </div>
 
       </div>
-    </div>
+    </>
   );
 }
 
-    
+const DashboardSkeleton = () => (
+    <div className="space-y-8">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div>
+                <Skeleton className="h-9 w-64 mb-2" />
+                <Skeleton className="h-5 w-80" />
+            </div>
+            <Skeleton className="h-9 w-32 rounded-full" />
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+            <div className="lg:col-span-2 space-y-6">
+                <Card>
+                    <CardHeader><Skeleton className="h-6 w-48" /></CardHeader>
+                    <CardContent className="space-y-4">
+                        <Skeleton className="h-24 w-full" />
+                        <Skeleton className="h-24 w-full" />
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
+                    <CardContent className="space-y-4">
+                        <Skeleton className="h-32 w-full" />
+                        <Skeleton className="h-32 w-full" />
+                    </CardContent>
+                </Card>
+            </div>
+            <div className="lg:col-span-1 space-y-6">
+                <Card>
+                    <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
+                    <CardContent><Skeleton className="h-10 w-full" /></CardContent>
+                </Card>
+                <Card>
+                    <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
+                    <CardContent className="space-y-4">
+                        <Skeleton className="h-8 w-3/4" />
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-2/3" />
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    </div>
+);
 
+
+export default function DashboardPage() {
+    const { language } = useLanguage();
+    const t = content[language];
     
+    return (
+        <div className="space-y-8">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold font-headline">{t.welcome}</h1>
+                    <p className="text-muted-foreground">{t.description}</p>
+                </div>
+                <LanguageToggle />
+            </div>
+            <Suspense fallback={<DashboardSkeleton />}>
+                <DashboardContent />
+            </Suspense>
+        </div>
+    );
+}
