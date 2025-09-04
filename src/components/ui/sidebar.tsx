@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -524,8 +523,8 @@ const sidebarMenuButtonVariants = cva(
         destructive: "text-destructive-foreground data-[active=true]:bg-destructive/10 data-[active=true]:text-destructive hover:bg-destructive/10 hover:text-destructive [&>svg]:text-destructive-foreground data-[active=true]:[&>svg]:text-destructive",
       },
       size: {
-        default: "h-8 text-sm",
-        sm: "h-7 text-xs",
+        default: "h-10 text-sm md:h-8",
+        sm: "h-9 text-xs md:h-7",
         lg: "h-12 text-sm group-data-[collapsible=icon]:!p-0",
       },
     },
