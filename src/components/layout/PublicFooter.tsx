@@ -12,6 +12,7 @@ import type { SiteSettings } from '@/lib/types';
 const content = {
     en: {
         schoolInfo: 'Maes Y Morfa Primary School',
+        schoolMotto: 'Primary Community School',
         quickLinks: {
             title: 'Quick Links',
             links: [
@@ -36,10 +37,12 @@ const content = {
                 {label: 'Privacy Policy', href: '#'},
                 {label: 'Cookie Policy', href: '#'},
             ]
-        }
+        },
+        copyright: `© ${new Date().getFullYear()} Maes Y Morfa Primary School. All Rights Reserved.`
     },
     cy: {
         schoolInfo: 'Ysgol Gynradd Maes Y Morfa',
+        schoolMotto: 'Ysgol Gymunedol Gynradd',
         quickLinks: {
             title: 'Cysylltiadau Cyflym',
             links: [
@@ -64,7 +67,8 @@ const content = {
                 {label: 'Polisi Preifatrwydd', href: '#'},
                 {label: 'Polisi Cwcis', href: '#'},
             ]
-        }
+        },
+        copyright: `© ${new Date().getFullYear()} Ysgol Gynradd Maes Y Morfa. Cedwir Pob Hawl.`
     }
 };
 
@@ -94,56 +98,87 @@ export function PublicFooter() {
 
   return (
     <footer className="bg-foreground text-background">
-      <div className="container mx-auto max-w-7xl px-8 py-16">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5">
-            <div className="col-span-1 lg:col-span-2 mb-8 md:mb-0">
-                 <Link href="/">
-                    <Image src="/logo-white-footer.png" alt="Maes Y Morfa logo" width={1640} height={403} className="h-12 w-auto" />
-                </Link>
-                <div className="text-sm text-background/70 mt-4 space-y-1 whitespace-pre-line">
-                    {settings ? (
-                       <>
-                        <p>{settings.address}</p>
-                        <p>{settings.phone}</p>
-                        <p>{settings.email}</p>
-                       </>
-                    ) : (
-                       <>
-                         <div className="h-5 w-48 bg-gray-600 animate-pulse rounded-md mt-1"></div>
-                         <div className="h-5 w-32 bg-gray-600 animate-pulse rounded-md mt-1"></div>
-                       </>
+      <div className="container mx-auto max-w-7xl px-8 py-12">
+        {/* Desktop Footer */}
+        <div className="hidden md:block">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5">
+                <div className="col-span-1 lg:col-span-2 mb-8 md:mb-0">
+                    <Link href="/">
+                        <Image src="/logo-white-footer.png" alt="Maes Y Morfa logo" width={1640} height={403} className="h-12 w-auto" />
+                    </Link>
+                    <div className="text-sm text-background/70 mt-4 space-y-1 whitespace-pre-line">
+                        {settings ? (
+                        <>
+                            <p>{settings.address}</p>
+                            <p>{settings.phone}</p>
+                            <p>{settings.email}</p>
+                        </>
+                        ) : (
+                        <>
+                            <div className="h-5 w-48 bg-gray-600 animate-pulse rounded-md mt-1"></div>
+                            <div className="h-5 w-32 bg-gray-600 animate-pulse rounded-md mt-1"></div>
+                        </>
+                        )}
+                    </div>
+                    {socialLinks.length > 0 && (
+                        <div className="flex items-center gap-4 mt-6">
+                            {socialLinks.map(({ platform, url, icon: Icon }) => (
+                            <a key={platform} href={url!} target="_blank" rel="noopener noreferrer" aria-label={`Follow us on ${platform}`}>
+                                <Icon className="h-6 w-6 text-background/70 hover:text-background transition-colors" />
+                            </a>
+                            ))}
+                        </div>
                     )}
                 </div>
-                 {socialLinks.length > 0 && (
-                    <div className="flex items-center gap-4 mt-6">
-                        {socialLinks.map(({ platform, url, icon: Icon }) => (
-                           <a key={platform} href={url!} target="_blank" rel="noopener noreferrer" aria-label={`Follow us on ${platform}`}>
-                             <Icon className="h-6 w-6 text-background/70 hover:text-background transition-colors" />
-                           </a>
-                        ))}
+                {footerLinkGroups.map((group) => (
+                    <div key={group.title} className="space-y-4 lg:col-span-1">
+                        <h4 className="font-bold text-base">{group.title}</h4>
+                        <ul className="space-y-2">
+                            {group.links.map((link) => (
+                            <li key={link.label}>
+                                <Link href={link.href} className="text-sm text-background/70 hover:text-background hover:underline">
+                                    {link.label}
+                                </Link>
+                            </li>
+                            ))}
+                        </ul>
                     </div>
-                )}
+                ))}
             </div>
-            {footerLinkGroups.map((group) => (
-                <div key={group.title} className="space-y-4 lg:col-span-1">
-                    <h4 className="font-bold text-base">{group.title}</h4>
-                    <ul className="space-y-2">
-                        {group.links.map((link) => (
-                           <li key={link.label}>
-                               <Link href={link.href} className="text-sm text-background/70 hover:text-background hover:underline">
-                                   {link.label}
-                               </Link>
-                           </li>
-                        ))}
-                    </ul>
+            <div className="mt-12 flex flex-col items-center justify-center gap-6 border-t border-background/20 pt-8 md:flex-row">
+                <p className="text-center text-sm text-background/60">
+                   {t.copyright}
+                </p>
+            </div>
+        </div>
+
+         {/* Mobile Footer */}
+         <div className="md:hidden text-center">
+            <div className="flex flex-col items-center gap-4">
+                <Link href="/" className="flex flex-col items-center gap-2">
+                    <Image src="/logo-white-footer.png" alt="Maes Y Morfa logo" width={1640} height={403} className="h-14 w-auto" />
+                    <span className="sr-only">{t.schoolInfo}</span>
+                </Link>
+                <div className="text-sm text-background/70">{t.schoolMotto}</div>
+            </div>
+
+            {socialLinks.length > 0 && (
+                <div className="flex items-center justify-center gap-6 mt-8">
+                    {socialLinks.map(({ platform, url, icon: Icon }) => (
+                        <a key={platform} href={url!} target="_blank" rel="noopener noreferrer" aria-label={`Follow us on ${platform}`}>
+                            <Icon className="h-7 w-7 text-background/70 hover:text-background transition-colors" />
+                        </a>
+                    ))}
                 </div>
-            ))}
-        </div>
-        <div className="mt-12 flex flex-col items-center justify-center gap-6 border-t border-background/20 pt-8 md:flex-row">
-          <p className="text-center text-sm text-background/60">
-            © {new Date().getFullYear()} {t.schoolInfo}. All Rights Reserved.
-          </p>
-        </div>
+            )}
+            
+            <div className="mt-8 border-t border-background/20 pt-8">
+                 <p className="text-center text-sm text-background/60">
+                   {t.copyright}
+                </p>
+            </div>
+         </div>
+
       </div>
     </footer>
   );
