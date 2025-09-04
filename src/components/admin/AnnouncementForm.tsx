@@ -48,6 +48,8 @@ const formSchema = z.object({
   attachment: z.any().optional(),
 });
 
+type AnnouncementFormValues = z.infer<typeof formSchema>;
+
 interface AnnouncementFormProps {
   onSuccess: () => void;
   existingAnnouncement?: Announcement | null;
@@ -58,7 +60,7 @@ export function AnnouncementForm({ onSuccess, existingAnnouncement }: Announceme
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<AnnouncementFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title_en: existingAnnouncement?.title_en || '',
@@ -71,7 +73,7 @@ export function AnnouncementForm({ onSuccess, existingAnnouncement }: Announceme
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>>) => {
+  const onSubmit = async (values: AnnouncementFormValues) => {
     setIsLoading(true);
 
     try {
