@@ -26,7 +26,11 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { AnnouncementForm } from '@/components/admin/AnnouncementForm';
+import dynamic from 'next/dynamic';
+
+const AnnouncementForm = dynamic(() => import('@/components/admin/AnnouncementForm').then(mod => mod.AnnouncementForm), {
+  loading: () => <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin"/></div>,
+});
 
 
 type Announcement = (NewsPostWithId & { type: 'news' }) | (CalendarEventWithId & { type: 'event' });
@@ -271,3 +275,5 @@ export default function AnnouncementsAdminPage() {
     </Dialog>
   );
 }
+
+    

@@ -31,6 +31,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
+import dynamic from 'next/dynamic';
+
+const DynamicChildForm = dynamic(() => import('@/components/admin/ChildForm').then(mod => mod.ChildForm), {
+  loading: () => <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin"/></div>,
+});
+
+const DynamicCsvImportDialog = dynamic(() => import('@/components/admin/CsvImportDialog').then(mod => mod.CsvImportDialog), {
+    loading: () => <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin"/></div>,
+});
+
 
 export default function ChildrenAdminPage() {
   const [children, setChildren] = useState<ChildWithId[]>([]);
@@ -208,7 +218,7 @@ export default function ChildrenAdminPage() {
                               Upload a CSV file to bulk-add children. Make sure the CSV columns match the required format.
                           </DialogDescription>
                       </DialogHeader>
-                      <CsvImportDialog<Child>
+                      <DynamicCsvImportDialog<Child>
                           onSuccess={handleImportSuccess}
                           requiredFields={['name', 'yearGroup']}
                           templateUrl="/templates/children_template.csv"
@@ -418,7 +428,7 @@ export default function ChildrenAdminPage() {
                   Fill in the details for the child and link their parents.
               </DialogDescription>
           </DialogHeader>
-          <ChildForm
+          <DynamicChildForm
               onSuccess={handleFormSuccess}
               existingChild={selectedChild}
               allParents={parents}
@@ -427,3 +437,5 @@ export default function ChildrenAdminPage() {
     </Dialog>
   );
 }
+
+    

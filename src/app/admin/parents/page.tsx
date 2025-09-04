@@ -27,6 +27,11 @@ import { ParentForm } from '@/components/admin/ParentForm';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import dynamic from 'next/dynamic';
+
+const DynamicParentForm = dynamic(() => import('@/components/admin/ParentForm').then(mod => mod.ParentForm), {
+  loading: () => <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin"/></div>,
+});
 
 export default function ParentsAdminPage() {
   const [parents, setParents] = useState<ParentWithId[]>([]);
@@ -298,7 +303,7 @@ export default function ParentsAdminPage() {
               Fill in the details for the parent account.
             </DialogDescription>
           </DialogHeader>
-          <ParentForm
+          <DynamicParentForm
             onSuccess={handleFormSuccess}
             existingParent={selectedParent}
             allChildren={children}
@@ -307,3 +312,5 @@ export default function ParentsAdminPage() {
     </Dialog>
   );
 }
+
+    

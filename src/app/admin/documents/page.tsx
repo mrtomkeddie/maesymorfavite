@@ -27,6 +27,11 @@ import { DocumentForm, documentCategories } from '@/components/admin/DocumentFor
 import { QueryDocumentSnapshot } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import dynamic from 'next/dynamic';
+
+const DynamicDocumentForm = dynamic(() => import('@/components/admin/DocumentForm').then(mod => mod.DocumentForm), {
+  loading: () => <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin"/></div>,
+});
 
 export default function DocumentsAdminPage() {
   const [documents, setDocuments] = useState<DocumentWithId[]>([]);
@@ -246,7 +251,7 @@ export default function DocumentsAdminPage() {
             Fill in the details below. The file will be available to parents once saved.
           </DialogDescription>
         </DialogHeader>
-        <DocumentForm
+        <DynamicDocumentForm
           onSuccess={handleFormSuccess}
           existingDocument={selectedDocument}
         />
@@ -254,3 +259,5 @@ export default function DocumentsAdminPage() {
     </Dialog>
   );
 }
+
+    

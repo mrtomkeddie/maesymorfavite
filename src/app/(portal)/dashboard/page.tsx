@@ -26,6 +26,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useLanguage } from '@/app/(public)/LanguageProvider';
 import { cy, enGB } from 'date-fns/locale';
+import dynamic from 'next/dynamic';
 
 const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
@@ -84,76 +85,19 @@ const content = {
   }
 };
 
-
-const MenuDialogContent = ({ weeklyMenu, isLoadingMenu, t }: { weeklyMenu: WeeklyMenu | null, isLoadingMenu: boolean, t: typeof content.en }) => (
-    <>
-        <DialogHeader>
-            <DialogTitle>{t.menuTitle}</DialogTitle>
-            <DialogDescription>{t.menuDesc}</DialogDescription>
-        </DialogHeader>
-        <div className="pt-4">
-            {isLoadingMenu ? (
-                <div className="flex justify-center items-center h-48">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-            ) : (
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-[100px]">{t.day}</TableHead>
-                            <TableHead>{t.mainCourse}</TableHead>
-                            <TableHead>{t.vegAlt}</TableHead>
-                            <TableHead>{t.dessertCourse}</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {days.map(day => (
-                            <TableRow key={day}>
-                                <TableCell className="font-medium capitalize">{day}</TableCell>
-                                <TableCell>{weeklyMenu?.[day]?.main || t.notAvailable}</TableCell>
-                                <TableCell>{weeklyMenu?.[day]?.alt || t.notAvailable}</TableCell>
-                                <TableCell>{weeklyMenu?.[day]?.dessert || t.notAvailable}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            )}
-        </div>
-    </>
+const LoadingMenuComponent = () => (
+    <div className="flex justify-center items-center h-48">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
 );
 
-const MenuDrawerContent = ({ weeklyMenu, isLoadingMenu, t }: { weeklyMenu: WeeklyMenu | null, isLoadingMenu: boolean, t: typeof content.en }) => (
-    <>
-        <DrawerHeader className="text-left">
-            <DrawerTitle>{t.menuTitle}</DrawerTitle>
-            <DrawerDescription>{t.menuDesc}</DrawerDescription>
-        </DrawerHeader>
-        <div className="px-4">
-            {isLoadingMenu ? (
-                <div className="flex justify-center items-center h-48">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-            ) : (
-                 <ScrollArea className="h-[60vh]">
-                    <div className="space-y-4">
-                        {days.map(day => (
-                             <Card key={day}>
-                                <CardHeader>
-                                    <CardTitle className="capitalize">{day}</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-2 text-sm">
-                                    <p><strong>{t.lunchMain}:</strong> {weeklyMenu?.[day]?.main || t.notAvailable}</p>
-                                    <p><strong>{t.lunchAlt}:</strong> {weeklyMenu?.[day]?.alt || t.notAvailable}</p>
-                                    <p><strong>{t.lunchDessert}:</strong> {weeklyMenu?.[day]?.dessert || t.notAvailable}</p>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                </ScrollArea>
-            )}
-        </div>
-    </>
-);
+const MenuDialogContent = dynamic(() => import('@/components/portal/MenuDialogContent'), {
+  loading: () => <LoadingMenuComponent />,
+});
+
+const MenuDrawerContent = dynamic(() => import('@/components/portal/MenuDrawerContent'), {
+  loading: () => <LoadingMenuComponent />,
+});
 
 
 export default function DashboardPage() {
@@ -354,7 +298,7 @@ export default function DashboardPage() {
                                 </Button>
                             </DrawerTrigger>
                             <DrawerContent>
-                                <MenuDrawerContent weeklyMenu={weeklyMenu} isLoadingMenu={isLoadingMenu} t={t}/>
+                                <MenuDrawerContent weeklyMenu={weeklyMenu} isLoadingMenu={isLoadingMenu} t={t} days={days} />
                             </DrawerContent>
                         </Drawer>
                     ) : (
@@ -365,7 +309,7 @@ export default function DashboardPage() {
                                 </Button>
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-3xl">
-                                <MenuDialogContent weeklyMenu={weeklyMenu} isLoadingMenu={isLoadingMenu} t={t} />
+                                <MenuDialogContent weeklyMenu={weeklyMenu} isLoadingMenu={isLoadingMenu} t={t} days={days} />
                             </DialogContent>
                         </Dialog>
                     )}
@@ -379,5 +323,7 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
 
     

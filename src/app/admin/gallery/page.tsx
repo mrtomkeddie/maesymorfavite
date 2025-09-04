@@ -24,7 +24,11 @@ import { QueryDocumentSnapshot } from 'firebase/firestore';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { PhotoForm } from '@/components/admin/PhotoForm';
+import dynamic from 'next/dynamic';
+
+const PhotoForm = dynamic(() => import('@/components/admin/PhotoForm').then(mod => mod.PhotoForm), {
+  loading: () => <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin"/></div>,
+});
 
 
 export default function GalleryAdminPage() {
@@ -212,3 +216,5 @@ export default function GalleryAdminPage() {
     </Dialog>
   );
 }
+
+    

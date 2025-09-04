@@ -51,6 +51,11 @@ import { StaffForm } from '@/components/admin/StaffForm';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
+import dynamic from 'next/dynamic';
+
+const DynamicStaffForm = dynamic(() => import('@/components/admin/StaffForm').then(mod => mod.StaffForm), {
+  loading: () => <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin"/></div>,
+});
 
 export default function StaffAdminPage() {
   const [staff, setStaff] = useState<StaffMemberWithId[]>([]);
@@ -288,8 +293,10 @@ export default function StaffAdminPage() {
             Fill in the details for the staff member. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
-        <StaffForm onSuccess={handleFormSuccess} existingStaff={selectedStaff} />
+        <DynamicStaffForm onSuccess={handleFormSuccess} existingStaff={selectedStaff} />
       </DialogContent>
     </Dialog>
   );
 }
+
+    
