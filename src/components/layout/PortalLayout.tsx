@@ -34,7 +34,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import { useAuth } from '@/contexts/AuthProvider';
-import { MobileNavigation, NavigationItem } from './MobileNavigation';
+import { BottomNavigation } from './BottomNavigation';
 
 // Lightweight language toggle for the portal header (uses the existing context)
 const PortalLanguageToggle = () => {
@@ -115,13 +115,7 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
     { href: '/absence', label: t.menu.absence, icon: ClipboardCheck },
   ];
 
-  // Prepare navigation items for mobile menu
-  const allNavigationItems: NavigationItem[] = menuItems.map(item => ({
-    title: item.label,
-    href: item.href,
-    icon: item.icon,
-    isActive: location.pathname.startsWith(item.href)
-  }));
+  // No need for mobile navigation items preparation anymore
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -182,44 +176,26 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <main className="p-4 md:p-6 lg:p-8">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-4">
-              <MobileNavigation 
-                  items={allNavigationItems}
-                  title={t.title}
-                >
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-                    <Avatar className="size-9">
-                      <AvatarImage src="https://placehold.co/40x40.png" />
-                      <AvatarFallback className="bg-primary/10 text-primary font-medium text-sm">PP</AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col text-sm">
-                      <span className="font-semibold text-foreground">{userEmail || 'parent@example.com'}</span>
-                      <span className="text-muted-foreground text-xs font-medium">{t.account.role}</span>
-                    </div>
-                  </div>
-                  <Button
-                    asChild
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start h-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                  >
-                    <Link to="/logout" className="flex items-center gap-2">
-                      <LogOut className="h-4 w-4" />
-                      <span className="font-medium">{t.account.logout}</span>
-                    </Link>
-                  </Button>
-                </div>
-              </MobileNavigation>
+        <main className="p-4 md:p-6 lg:p-8 pb-20 md:pb-8">
+          <div className="flex justify-between items-center mb-4 md:hidden">
+            <div className="flex items-center gap-3">
+              <Avatar className="size-8">
+                <AvatarImage src="https://placehold.co/40x40.png" />
+                <AvatarFallback className="bg-primary/10 text-primary font-medium text-sm">PP</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col text-sm">
+                <span className="font-semibold text-foreground text-sm">{userEmail || 'parent@example.com'}</span>
+                <span className="text-muted-foreground text-xs">{t.account.role}</span>
+              </div>
             </div>
-            <div className="ml-auto">
-              <PortalLanguageToggle />
-            </div>
+            <PortalLanguageToggle />
+          </div>
+          <div className="hidden md:flex justify-end items-center mb-4">
+            <PortalLanguageToggle />
           </div>
           {children}
         </main>
+        <BottomNavigation />
       </SidebarInset>
     </SidebarProvider>
   );

@@ -8,11 +8,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ClipboardCheck, Utensils, ArrowRight, UserCheck, Percent, Pizza, Salad, Loader2, Bell, Megaphone, Trophy } from 'lucide-react';
+import { ClipboardCheck, Utensils, ArrowRight, UserCheck, Percent, Pizza, Salad, Loader2, Bell, Megaphone, Trophy, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { parentChildren } from '@/lib/mockData';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { db } from '@/lib/db';
 import type { DailyMenu, WeeklyMenu, ParentNotificationWithId } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -24,6 +24,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import { cy, enGB } from 'date-fns/locale';
+import { MobileCard, QuickActionCard, NotificationCard, InfoCard } from '@/components/ui/mobile-card';
+import { ReportAbsenceFAB } from '@/components/ui/floating-action-button';
+import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 
 const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
@@ -53,6 +56,8 @@ const content = {
     notAvailable: "Not available",
     notAvailableToday: "Not available today",
     loading: "Loading...",
+    pullToRefresh: "Pull to refresh",
+    refreshing: "Refreshing...",
   },
   cy: {
     welcome: "Croeso'n ôl, Jane!",
@@ -79,6 +84,8 @@ const content = {
     notAvailable: "Dim ar gael",
     notAvailableToday: "Dim ar gael heddiw",
     loading: "Yn llwytho...",
+    pullToRefresh: "Tynnwch i adnewyddu",
+    refreshing: "Yn adnewyddu...",
   }
 };
 
@@ -166,45 +173,50 @@ export default function DashboardPage() {
   const t = content[language];
   const locale = language === 'cy' ? cy : enGB;
 
+  // Refresh function for pull-to-refresh
+  const refreshData = useCallback(async () => {
+    setIsLoadingMenu(true);
+    try {
+      const [fullMenu, fetchedNotifications] = await Promise.all([
+        db.getWeeklyMenu(),
+        db.getNotificationsForParent(parentId)
+      ]);
+      
+      if (fullMenu) {
+        setWeeklyMenu(fullMenu);
+        const today = new Date().toLocaleString('en-US', { weekday: 'long' }).toLowerCase();
+        const currentDayMenu = fullMenu[today] || { main: t.notAvailableToday, alt: t.notAvailableToday, dessert: t.notAvailableToday };
+        setTodayMenu(currentDayMenu);
+      } else {
+        setTodayMenu({ main: t.notAvailable, alt: t.notAvailable, dessert: t.notAvailable });
+      }
+      
+      setNotifications(fetchedNotifications);
+      
+      const counts: Record<string, number> = {};
+      for (const child of parentChildren) {
+        const count = await db.getValuesAwardCount(child.id);
+        counts[child.id] = count;
+      }
+      setAwardCounts(counts);
+    } catch (error) {
+      console.error('Failed to refresh data', error);
+    } finally {
+      setIsLoadingMenu(false);
+    }
+  }, [parentId, t.notAvailable, t.notAvailableToday]);
+
+  // Pull-to-refresh hook
+  const { isPulling, isRefreshing, pullDistance, canRefresh, bindContainer, pullIndicatorStyle } = usePullToRefresh({
+    onRefresh: refreshData,
+    threshold: 80,
+    enabled: isMobile
+  });
+
 
   useEffect(() => {
-    const fetchMenu = async () => {
-      try {
-        const fullMenu = await db.getWeeklyMenu();
-        if (fullMenu) {
-            setWeeklyMenu(fullMenu);
-            const today = new Date().toLocaleString('en-US', { weekday: 'long' }).toLowerCase();
-            const currentDayMenu = fullMenu[today] || { main: t.notAvailableToday, alt: t.notAvailableToday, dessert: t.notAvailableToday };
-            setTodayMenu(currentDayMenu);
-        } else {
-             setTodayMenu({ main: t.notAvailable, alt: t.notAvailable, dessert: t.notAvailable });
-        }
-      } catch (error) {
-        console.error("Failed to fetch lunch menu", error);
-        setTodayMenu({ main: t.notAvailable, alt: t.notAvailable, dessert: t.notAvailable });
-      } finally {
-        setIsLoadingMenu(false);
-      }
-    };
-
-    const fetchNotifications = async () => {
-        const fetchedNotifications = await db.getNotificationsForParent(parentId);
-        setNotifications(fetchedNotifications);
-    };
-    
-    const fetchAwardCounts = async () => {
-        const counts: Record<string, number> = {};
-        for (const child of parentChildren) {
-            const count = await db.getValuesAwardCount(child.id);
-            counts[child.id] = count;
-        }
-        setAwardCounts(counts);
-    };
-
-    fetchMenu();
-    fetchNotifications();
-    fetchAwardCounts();
-  }, [parentId, t.notAvailable, t.notAvailableToday]);
+    refreshData();
+  }, [refreshData]);
  
   const notificationIcons = {
     'Achievement': <Trophy className="h-6 w-6 text-yellow-500" />,
@@ -214,83 +226,145 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 smooth-scroll" ref={bindContainer}>
+      {/* Pull-to-refresh indicator */}
+      {(isPulling || isRefreshing) && (
+        <div 
+          className="flex items-center justify-center py-4 text-sm text-muted-foreground pull-to-refresh"
+          style={pullIndicatorStyle}
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing || canRefresh ? 'animate-spin' : ''}`} />
+          {isRefreshing ? t.refreshing : canRefresh ? t.pullToRefresh : t.pullToRefresh}
+        </div>
+      )}
+      
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold font-headline">{t.welcome}</h1>
-          <p className="text-muted-foreground">{t.description}</p>
+          <h1 className="text-2xl md:text-3xl font-bold font-headline">{t.welcome}</h1>
+          <p className="text-muted-foreground mobile-text-base">{t.description}</p>
         </div>
       </div>
       
-      {/* Quick Actions - Show at top on mobile, sidebar on desktop */}
-      <div className="lg:hidden mb-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t.actions}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full justify-start">
-              <Link to="/absence"><ClipboardCheck className="mr-2 h-4 w-4" /> {t.reportAbsence}</Link>
-            </Button>
-          </CardContent>
-        </Card>
+      {/* Quick Actions - Mobile optimized */}
+      <div className="md:hidden mb-6">
+        <QuickActionCard
+          title={t.reportAbsence}
+          description="Quickly report your child's absence"
+          icon={ClipboardCheck}
+          href="/portal/absence"
+        />
       </div>
+      
+      {/* Floating Action Button for mobile */}
+      <ReportAbsenceFAB />
       
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
         
         <div className="lg:col-span-2 space-y-6">
             
             {notifications.length > 0 && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>{t.notifications}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {notifications.slice(0, 3).map(notif => (
-                            <div key={notif.id} className="flex items-start gap-4 p-4 rounded-lg border">
-                                <div className="mt-1">{notificationIcons[notif.type]}</div>
-                                <div>
-                                    <p className="font-semibold">{notif.childName}: {notif.type}</p>
-                                    <p className="text-sm text-muted-foreground">{notif.notes}</p>
-                                    <p className="text-xs text-muted-foreground mt-1">{formatDistanceToNow(new Date(notif.date), { addSuffix: true, locale })} from {notif.teacherName}</p>
+                isMobile ? (
+                    <div className="space-y-3">
+                        <h2 className="text-lg font-semibold flex items-center gap-2">
+                            <Bell className="h-5 w-5" />
+                            {t.notifications}
+                        </h2>
+                        <div className="space-y-3">
+                            {notifications.slice(0, 3).map(notif => (
+                                <NotificationCard
+                                    key={notif.id}
+                                    title={`${notif.childName}: ${notif.type}`}
+                                    message={notif.notes}
+                                    date={formatDistanceToNow(new Date(notif.date), { addSuffix: true, locale }) + ` from ${notif.teacherName}`}
+                                    icon={notificationIcons[notif.type]}
+                                    type={notif.type}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                ) : (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>{t.notifications}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {notifications.slice(0, 3).map(notif => (
+                                <div key={notif.id} className="flex items-start gap-4 p-4 rounded-lg border">
+                                    <div className="mt-1">{notificationIcons[notif.type]}</div>
+                                    <div>
+                                        <p className="font-semibold">{notif.childName}: {notif.type}</p>
+                                        <p className="text-sm text-muted-foreground">{notif.notes}</p>
+                                        <p className="text-xs text-muted-foreground mt-1">{formatDistanceToNow(new Date(notif.date), { addSuffix: true, locale })} from {notif.teacherName}</p>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                    </CardContent>
-                </Card>
+                            ))}
+                        </CardContent>
+                    </Card>
+                )
             )}
 
-            <Card>
-                <CardHeader>
+            {/* Children Information */}
+            {parentChildren.map((child) => (
+              isMobile ? (
+                <MobileCard
+                  key={child.id}
+                  title={child.name}
+                  icon={UserCheck}
+                  className="space-y-4"
+                >
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">{child.attendance}</div>
+                      <div className="text-sm text-muted-foreground">{t.attendance}</div>
+                    </div>
+                    <div className="text-center p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600">{awardCounts[child.id] ?? 0}</div>
+                      <div className="text-sm text-muted-foreground">{t.awards}</div>
+                    </div>
+                  </div>
+                  <div className="space-y-2 pt-2 border-t">
+                    <p className="text-sm flex justify-between">
+                      <span className="font-medium">{t.teacher}:</span>
+                      <span>{child.teacher}</span>
+                    </p>
+                    <p className="text-sm flex justify-between">
+                      <span className="font-medium">Year Group:</span>
+                      <span>{child.yearGroup}</span>
+                    </p>
+                  </div>
+                </MobileCard>
+              ) : (
+                <Card key={child.id}>
+                  <CardHeader>
                     <CardTitle>{t.children}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {parentChildren.map(child => (
-                        <div key={child.id} className="flex items-center gap-4 rounded-lg border p-4">
-                            <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <h3 className="font-bold text-lg">{child.name}</h3>
-                                    <p className="text-sm text-muted-foreground">{child.yearGroup}</p>
-                                </div>
-                                <div className="space-y-2">
-                                     <div className="flex items-center gap-2 text-sm">
-                                        <Percent className="h-4 w-4 text-primary" />
-                                        <span>{t.attendance}: <strong>{child.attendance}</strong></span>
-                                     </div>
-                                      <div className="flex items-center gap-2 text-sm">
-                                        <UserCheck className="h-4 w-4 text-primary" />
-                                        <span>{t.teacher}: <strong>{child.teacher}</strong></span>
-                                     </div>
-                                      <div className="flex items-center gap-2 text-sm">
-                                        <Trophy className="h-4 w-4 text-primary" />
-                                        <span>{t.awards}: <strong>{awardCounts[child.id] ?? t.loading}</strong></span>
-                                     </div>
-                                </div>
-                            </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-4 rounded-lg border p-4">
+                      <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <h3 className="font-bold text-lg">{child.name}</h3>
+                          <p className="text-sm text-muted-foreground">{child.yearGroup}</p>
                         </div>
-                    ))}
-                </CardContent>
-            </Card>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Percent className="h-4 w-4 text-primary" />
+                            <span>{t.attendance}: <strong>{child.attendance}</strong></span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <UserCheck className="h-4 w-4 text-primary" />
+                            <span>{t.teacher}: <strong>{child.teacher}</strong></span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Trophy className="h-4 w-4 text-primary" />
+                            <span>{t.awards}: <strong>{awardCounts[child.id] ?? t.loading}</strong></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            ))}
         </div>
 
         <div className="lg:col-span-1 space-y-6">
@@ -306,73 +380,103 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
           
-          <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Utensils className="h-5 w-5 text-primary" />
-                    <span>{t.lunch}</span>
-                </CardTitle>
-                <CardDescription>{t.lunchDesc}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
+          {isMobile ? (
+            <MobileCard
+              title={t.lunch}
+              icon={Utensils}
+              className="space-y-4"
+            >
               {isLoadingMenu ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-8 w-3/4" />
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-8 w-2/3" />
+                <div className="space-y-3">
+                  <div className="h-4 bg-muted rounded animate-pulse" />
+                  <div className="h-4 bg-muted rounded animate-pulse" />
+                  <div className="h-4 bg-muted rounded animate-pulse" />
                 </div>
               ) : (
-                <>
-                  <div className="flex items-start gap-3">
-                      <Pizza className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
-                      <div>
-                          <h4 className="font-semibold text-sm">{t.lunchMain}</h4>
-                          <p className="text-sm text-muted-foreground">{todayMenu?.main}</p>
-                      </div>
+                <div className="space-y-4">
+                  <div className="p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
+                    <h4 className="font-medium text-sm text-orange-700 dark:text-orange-300 mb-1">{t.lunchMain}</h4>
+                    <p className="text-sm">{todayMenu?.main}</p>
                   </div>
-                   <div className="flex items-start gap-3">
-                      <Salad className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
-                      <div>
-                          <h4 className="font-semibold text-sm">{t.lunchAlt}</h4>
-                          <p className="text-sm text-muted-foreground">{todayMenu?.alt}</p>
-                      </div>
+                  <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+                    <h4 className="font-medium text-sm text-green-700 dark:text-green-300 mb-1">{t.lunchAlt}</h4>
+                    <p className="text-sm">{todayMenu?.alt}</p>
                   </div>
-                  <div className="flex items-start gap-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground mt-0.5 shrink-0 h-5 w-5"><path d="M11 15.54c-2.31-1.39-3-4.24-3-6.54C8 5.42 9.79 3 12 3s4 2.42 4 6c0 2.3-1.02 5.15-3 6.54"/><path d="M12 21a6.5 6.5 0 0 0 6.5-6.5H12v6.5Z"/><path d="M12 21a6.5 6.5 0 0 1-6.5-6.5H12v6.5Z"/><path d="M12 3v18"/></svg>
-                      <div>
-                          <h4 className="font-semibold text-sm">{t.lunchDessert}</h4>
-                          <p className="text-sm text-muted-foreground">{todayMenu?.dessert}</p>
-                      </div>
+                  <div className="p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
+                    <h4 className="font-medium text-sm text-purple-700 dark:text-purple-300 mb-1">{t.lunchDessert}</h4>
+                    <p className="text-sm">{todayMenu?.dessert}</p>
                   </div>
-                </>
-              )}
-                <div className="pt-2">
-                    {isMobile ? (
-                        <Drawer>
-                            <DrawerTrigger asChild>
-                                <Button variant="secondary" className="w-full justify-start">
-                                    <Utensils className="mr-2 h-4 w-4" /> {t.viewMenu}
-                                </Button>
-                            </DrawerTrigger>
-                            <DrawerContent>
-                                <MenuDrawerContent weeklyMenu={weeklyMenu} isLoadingMenu={isLoadingMenu} t={t}/>
-                            </DrawerContent>
-                        </Drawer>
-                    ) : (
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button variant="secondary" className="w-full justify-start">
-                                    <Utensils className="mr-2 h-4 w-4" /> {t.viewMenu}
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-3xl">
-                                <MenuDialogContent weeklyMenu={weeklyMenu} isLoadingMenu={isLoadingMenu} t={t} />
-                            </DialogContent>
-                        </Dialog>
-                    )}
                 </div>
-            </CardContent>
-          </Card>
+              )}
+              <div className="pt-2">
+                <Drawer>
+                  <DrawerTrigger asChild>
+                    <Button variant="secondary" className="w-full justify-start mobile-touch-target">
+                      <Utensils className="mr-2 h-4 w-4" /> {t.viewMenu}
+                    </Button>
+                  </DrawerTrigger>
+                  <DrawerContent>
+                    <MenuDrawerContent weeklyMenu={weeklyMenu} isLoadingMenu={isLoadingMenu} t={t}/>
+                  </DrawerContent>
+                </Drawer>
+              </div>
+            </MobileCard>
+          ) : (
+            <Card>
+              <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                      <Utensils className="h-5 w-5 text-primary" />
+                      <span>{t.lunch}</span>
+                  </CardTitle>
+                  <CardDescription>{t.lunchDesc}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {isLoadingMenu ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-8 w-3/4" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-2/3" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-start gap-3">
+                        <Pizza className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+                        <div>
+                            <h4 className="font-semibold text-sm">{t.lunchMain}</h4>
+                            <p className="text-sm text-muted-foreground">{todayMenu?.main}</p>
+                        </div>
+                    </div>
+                     <div className="flex items-start gap-3">
+                        <Salad className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+                        <div>
+                            <h4 className="font-semibold text-sm">{t.lunchAlt}</h4>
+                            <p className="text-sm text-muted-foreground">{todayMenu?.alt}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground mt-0.5 shrink-0 h-5 w-5"><path d="M11 15.54c-2.31-1.39-3-4.24-3-6.54C8 5.42 9.79 3 12 3s4 2.42 4 6c0 2.3-1.02 5.15-3 6.54"/><path d="M12 21a6.5 6.5 0 0 0 6.5-6.5H12v6.5Z"/><path d="M12 21a6.5 6.5 0 0 1-6.5-6.5H12v6.5Z"/><path d="M12 3v18"/></svg>
+                        <div>
+                            <h4 className="font-semibold text-sm">{t.lunchDessert}</h4>
+                            <p className="text-sm text-muted-foreground">{todayMenu?.dessert}</p>
+                        </div>
+                    </div>
+                  </>
+                )}
+                  <div className="pt-2">
+                      <Dialog>
+                          <DialogTrigger asChild>
+                              <Button variant="secondary" className="w-full justify-start">
+                                  <Utensils className="mr-2 h-4 w-4" /> {t.viewMenu}
+                              </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-3xl">
+                              <MenuDialogContent weeklyMenu={weeklyMenu} isLoadingMenu={isLoadingMenu} t={t} />
+                          </DialogContent>
+                      </Dialog>
+                  </div>
+              </CardContent>
+            </Card>
+          )}
 
         </div>
 
